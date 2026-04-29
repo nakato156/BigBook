@@ -116,6 +116,10 @@ def main():
     
     # language_code: keep as string, fill nulls with 'unknown'
     master_df["language_code"] = master_df["language_code"].fillna("unknown").astype(str)
+
+    # description: keep as string, fill nulls with empty text
+    if "description" in master_df.columns:
+        master_df["description"] = master_df["description"].fillna("").astype(str)
     
     # title: string, drop rows where null
     master_df = master_df.dropna(subset=["title"])
@@ -129,7 +133,7 @@ def main():
     print("Saving final master table...")
     # Select only the columns we want to keep in the final table
     final_columns = [
-        "book_id", "title", "series", "language_code", "average_rating", 
+        "book_id", "title", "description", "series", "language_code", "average_rating", 
         "ratings_count", "text_reviews_count", "num_pages", "publication_year", 
         "author_count", "genre_fantasy", "genre_mystery", "genre_history", 
         "genre_ya", "genre_romance", "genre_count"
