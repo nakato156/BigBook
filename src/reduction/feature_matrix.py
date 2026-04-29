@@ -41,7 +41,6 @@ BOOK_FEATURE_COLUMNS = [
     "interaction_count_p99",
     "mean_rating",
     "is_cold_start",
-    "has_isbn",
 ]
 
 INTERACTION_FEATURE_COLUMNS = [
