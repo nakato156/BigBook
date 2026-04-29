@@ -16,6 +16,14 @@ Selected subset:
 
 [books_master](https://drive.google.com/drive/folders/17vpKc3Q4OvQtRkkvOc4GL8sTpjJB-7bv) -> processed book dataset for feature matrix + PCA. null handling is needed
 
+## Pipeline Flow
+
+`clean -> reduce -> curation -> merge`
+
+- `clean` and `reduce` write category artifacts to `data/interim/<category>/`
+- `curation` writes curated artifacts to `data/processed/<category>/`
+- `merge` builds `data/processed/books_master.parquet` from curated book outputs
+
 ## Repo Structure
 
 ```

@@ -1,17 +1,31 @@
 import pandas as pd
 from pathlib import Path
-import os
-from src.config import INTERIM_DIR, PROCESSED_DIR
+from src.config import CATEGORIES, PROCESSED_DIR
+
+
+LEGACY_PROCESSED_DIRS = {
+    "fantasy_paranormal": [PROCESSED_DIR / "fantasy"],
+    "history_biography": [PROCESSED_DIR / "history"],
+}
+
+
+def resolve_curated_books_path(category_key: str) -> Path | None:
+    cfg = CATEGORIES[category_key]
+    candidate_dirs = [cfg.processed_dir, *LEGACY_PROCESSED_DIRS.get(category_key, [])]
+    for processed_dir in candidate_dirs:
+        path = processed_dir / "books_curated.parquet"
+        if path.exists():
+            return path
+    return None
 
 def main():
-    # Define genre mapping and paths to the preprocessed parquet files
-    # We use 'books_reduced.parquet' as it contains the filtered author columns
+    # Merge happens after curation, so we consume curated books artifacts only.
     genre_paths = {
-        "fantasy": INTERIM_DIR / "fantasy_paranormal" / "books_reduced.parquet",
-        "mystery": INTERIM_DIR / "mystery_thriller_crime" / "books_reduced.parquet",
-        "history": INTERIM_DIR / "history_biography" / "books_reduced.parquet",
-        "ya": INTERIM_DIR / "young_adult" / "books_reduced.parquet",
-        "romance": INTERIM_DIR / "romance" / "books_reduced.parquet"
+        "fantasy": resolve_curated_books_path("fantasy_paranormal"),
+        "mystery": resolve_curated_books_path("mystery_thriller_crime"),
+        "history": resolve_curated_books_path("history_biography"),
+        "ya": resolve_curated_books_path("young_adult"),
+        "romance": resolve_curated_books_path("romance"),
     }
     
     genre_cols = [f"genre_{g}" for g in genre_paths.keys()]
@@ -21,7 +35,7 @@ def main():
     # This ensures consistent columns across all dataframes before concatenation
     print("Loading and tagging genre datasets...")
     for genre_key, path in genre_paths.items():
-        if not path.exists():
+        if path is None or not path.exists():
             print(f"Warning: {path} not found. Skipping.")
             continue
             
