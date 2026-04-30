@@ -12,6 +12,8 @@ data/features/*
 !data/features/.gitkeep
 data/interim/*
 !data/interim/.gitkeep
+data/embeddings/*
+!data/embeddings/.gitkeep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
