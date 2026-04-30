@@ -78,6 +78,8 @@ def main():
     print("Dropping unnecessary columns...")
     # These were explicitly listed to be dropped or ignored
     cols_to_drop = [
+        "authors",
+        "popular_shelves",
         "primary_author_id_role_filtered", 
         "author_fallback_id", 
         "work_id", 
@@ -116,17 +118,8 @@ def main():
     # author_count: int, fill nulls with 1
     master_df["author_count"] = pd.to_numeric(master_df["author_count"], errors="coerce").fillna(1).astype(int)
     
-    # series: convert to binary int (1 if book belongs to series, 0 otherwise)
-    # Check for non-empty list or non-null non-empty string
-    def is_in_series(val):
-        if isinstance(val, str):
-            return 1 if len(val.strip()) > 0 else 0
-        if hasattr(val, "__len__"): # Covers lists, numpy arrays, etc.
-            return 1 if len(val) > 0 else 0
-        if pd.isna(val):
-            return 0
-        return 1 if val else 0
-    master_df["series"] = master_df["series"].apply(is_in_series).astype(int)
+    # series: curated notebooks expose this as boolean is_in_series; map to int
+    master_df["series"] = master_df["is_in_series"].fillna(False).astype(int)
     
     # language_code: keep as string, fill nulls with 'unknown'
     master_df["language_code"] = master_df["language_code"].fillna("unknown").astype(str)
