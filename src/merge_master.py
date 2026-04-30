@@ -18,6 +18,19 @@ def resolve_curated_books_path(category_key: str) -> Path | None:
             return path
     return None
 
+
+def count_authors(authors) -> int:
+    if hasattr(authors, "tolist"):
+        authors = authors.tolist()
+    if not isinstance(authors, list):
+        return 0
+    return sum(
+        1
+        for item in authors
+        if isinstance(item, dict) and item.get("author_id")
+    )
+
+
 def main():
     # Merge happens after curation, so we consume curated books artifacts only.
     genre_paths = {
@@ -73,6 +86,10 @@ def main():
     # 4. Add derived column genre_count (how many genres each book belongs to)
     print("Calculating genre_count...")
     master_df["genre_count"] = master_df[genre_cols].sum(axis=1)
+
+    if "authors" in master_df.columns:
+        print("Recomputing author_count from authors...")
+        master_df["author_count"] = master_df["authors"].map(count_authors)
     
     # 5. Drop columns entirely that are not needed for the feature matrix
     print("Dropping unnecessary columns...")
