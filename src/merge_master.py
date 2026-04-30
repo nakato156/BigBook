@@ -78,6 +78,8 @@ def main():
     print("Dropping unnecessary columns...")
     # These were explicitly listed to be dropped or ignored
     cols_to_drop = [
+        "authors",
+        "popular_shelves",
         "primary_author_id_role_filtered", 
         "author_fallback_id", 
         "work_id", 

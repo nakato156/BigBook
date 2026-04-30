@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import pyarrow.parquet as pq
 
 
 def compressed_size_gb(path: Path) -> float:
@@ -35,6 +36,16 @@ def read_jsonl_chunks(path: Path, chunksize: int) -> Iterator[pd.DataFrame]:
     )
 
 
+def read_parquet_chunks(
+    path: Path,
+    chunksize: int,
+    columns: list[str] | None = None,
+) -> Iterator[pd.DataFrame]:
+    parquet = pq.ParquetFile(path)
+    for batch in parquet.iter_batches(batch_size=chunksize, columns=columns):
+        yield batch.to_pandas()
+
+
 def safe_write_parquet(df: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(path, index=False, engine="pyarrow")
@@ -49,4 +60,3 @@ def remove_path(path: Path) -> None:
         path.rmdir()
     else:
         path.unlink()
-
