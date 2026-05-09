@@ -1,0 +1,2784 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "config.py",
+      "file_type": "code",
+      "source_file": "src/config.py",
+      "source_location": "L1",
+      "community": 7,
+      "norm_label": "config.py",
+      "id": "src_config_py"
+    },
+    {
+      "label": "CategoryConfig",
+      "file_type": "code",
+      "source_file": "src/config.py",
+      "source_location": "L14",
+      "community": 7,
+      "norm_label": "categoryconfig",
+      "id": "src_config_categoryconfig"
+    },
+    {
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "src/__init__.py",
+      "source_location": "L1",
+      "community": 6,
+      "norm_label": "__init__.py",
+      "id": "src_init_py"
+    },
+    {
+      "label": "Goodreads data science pipeline package.",
+      "file_type": "rationale",
+      "source_file": "src/__init__.py",
+      "source_location": "L1",
+      "community": 6,
+      "norm_label": "goodreads data science pipeline package.",
+      "id": "src_init_rationale_1"
+    },
+    {
+      "label": "merge_master.py",
+      "file_type": "code",
+      "source_file": "src/merge_master.py",
+      "source_location": "L1",
+      "community": 3,
+      "norm_label": "merge_master.py",
+      "id": "src_merge_master_py"
+    },
+    {
+      "label": "resolve_curated_books_path()",
+      "file_type": "code",
+      "source_file": "src/merge_master.py",
+      "source_location": "L12",
+      "community": 3,
+      "norm_label": "resolve_curated_books_path()",
+      "id": "src_merge_master_resolve_curated_books_path"
+    },
+    {
+      "label": "count_authors()",
+      "file_type": "code",
+      "source_file": "src/merge_master.py",
+      "source_location": "L22",
+      "community": 3,
+      "norm_label": "count_authors()",
+      "id": "src_merge_master_count_authors"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "src/merge_master.py",
+      "source_location": "L34",
+      "community": 3,
+      "norm_label": "main()",
+      "id": "src_merge_master_main"
+    },
+    {
+      "label": "embeddings.py",
+      "file_type": "code",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L1",
+      "community": 5,
+      "norm_label": "embeddings.py",
+      "id": "src_reduction_embeddings_py"
+    },
+    {
+      "label": "embedding_columns()",
+      "file_type": "code",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L19",
+      "community": 5,
+      "norm_label": "embedding_columns()",
+      "id": "reduction_embeddings_embedding_columns"
+    },
+    {
+      "label": "clean_description_texts()",
+      "file_type": "code",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L23",
+      "community": 5,
+      "norm_label": "clean_description_texts()",
+      "id": "reduction_embeddings_clean_description_texts"
+    },
+    {
+      "label": "_get_huggingface_token()",
+      "file_type": "code",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L31",
+      "community": 5,
+      "norm_label": "_get_huggingface_token()",
+      "id": "reduction_embeddings_get_huggingface_token"
+    },
+    {
+      "label": "_require_huggingface_auth()",
+      "file_type": "code",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L45",
+      "community": 5,
+      "norm_label": "_require_huggingface_auth()",
+      "id": "reduction_embeddings_require_huggingface_auth"
+    },
+    {
+      "label": "_load_embedding_model()",
+      "file_type": "code",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L55",
+      "community": 5,
+      "norm_label": "_load_embedding_model()",
+      "id": "reduction_embeddings_load_embedding_model"
+    },
+    {
+      "label": "_validate_cache_schema()",
+      "file_type": "code",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L71",
+      "community": 5,
+      "norm_label": "_validate_cache_schema()",
+      "id": "reduction_embeddings_validate_cache_schema"
+    },
+    {
+      "label": "_read_cache()",
+      "file_type": "code",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L89",
+      "community": 5,
+      "norm_label": "_read_cache()",
+      "id": "reduction_embeddings_read_cache"
+    },
+    {
+      "label": "_encode_texts()",
+      "file_type": "code",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L95",
+      "community": 5,
+      "norm_label": "_encode_texts()",
+      "id": "reduction_embeddings_encode_texts"
+    },
+    {
+      "label": "load_or_create_description_embeddings()",
+      "file_type": "code",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L117",
+      "community": 5,
+      "norm_label": "load_or_create_description_embeddings()",
+      "id": "reduction_embeddings_load_or_create_description_embeddings"
+    },
+    {
+      "label": "build_master_feature_matrix.py",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L1",
+      "community": 0,
+      "norm_label": "build_master_feature_matrix.py",
+      "id": "src_reduction_build_master_feature_matrix_py"
+    },
+    {
+      "label": "_safe_median()",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L65",
+      "community": 0,
+      "norm_label": "_safe_median()",
+      "id": "reduction_build_master_feature_matrix_safe_median"
+    },
+    {
+      "label": "_numeric()",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L72",
+      "community": 0,
+      "norm_label": "_numeric()",
+      "id": "reduction_build_master_feature_matrix_numeric"
+    },
+    {
+      "label": "build_numeric_block()",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L79",
+      "community": 0,
+      "norm_label": "build_numeric_block()",
+      "id": "reduction_build_master_feature_matrix_build_numeric_block"
+    },
+    {
+      "label": "_sanitize_language_code()",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L106",
+      "community": 0,
+      "norm_label": "_sanitize_language_code()",
+      "id": "reduction_build_master_feature_matrix_sanitize_language_code"
+    },
+    {
+      "label": "_dedupe_column_names()",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L111",
+      "community": 0,
+      "norm_label": "_dedupe_column_names()",
+      "id": "reduction_build_master_feature_matrix_dedupe_column_names"
+    },
+    {
+      "label": "build_language_categories()",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L122",
+      "community": 0,
+      "norm_label": "build_language_categories()",
+      "id": "reduction_build_master_feature_matrix_build_language_categories"
+    },
+    {
+      "label": "build_binary_block()",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L128",
+      "community": 0,
+      "norm_label": "build_binary_block()",
+      "id": "reduction_build_master_feature_matrix_build_binary_block"
+    },
+    {
+      "label": "validate_master_columns()",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L149",
+      "community": 0,
+      "norm_label": "validate_master_columns()",
+      "id": "reduction_build_master_feature_matrix_validate_master_columns"
+    },
+    {
+      "label": "_cosine_distance()",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L157",
+      "community": 0,
+      "norm_label": "_cosine_distance()",
+      "id": "reduction_build_master_feature_matrix_cosine_distance"
+    },
+    {
+      "label": "semantic_spot_checks()",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L164",
+      "community": 0,
+      "norm_label": "semantic_spot_checks()",
+      "id": "reduction_build_master_feature_matrix_semantic_spot_checks"
+    },
+    {
+      "label": "build_feature_matrix()",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L191",
+      "community": 0,
+      "norm_label": "build_feature_matrix()",
+      "id": "reduction_build_master_feature_matrix_build_feature_matrix"
+    },
+    {
+      "label": "write_outputs()",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L266",
+      "community": 3,
+      "norm_label": "write_outputs()",
+      "id": "reduction_build_master_feature_matrix_write_outputs"
+    },
+    {
+      "label": "print_validations()",
+      "file_type": "code",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L277",
+      "community": 3,
+      "norm_label": "print_validations()",
+      "id": "reduction_build_master_feature_matrix_print_validations"
+    },
+    {
+      "label": "pca.py",
+      "file_type": "code",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L1",
+      "community": 0,
+      "norm_label": "pca.py",
+      "id": "src_reduction_pca_py"
+    },
+    {
+      "label": "ScaledBlocks",
+      "file_type": "code",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L14",
+      "community": 0,
+      "norm_label": "scaledblocks",
+      "id": "reduction_pca_scaledblocks"
+    },
+    {
+      "label": "_as_float_matrix()",
+      "file_type": "code",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L23",
+      "community": 0,
+      "norm_label": "_as_float_matrix()",
+      "id": "reduction_pca_as_float_matrix"
+    },
+    {
+      "label": "standardize_and_weight_blocks()",
+      "file_type": "code",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L35",
+      "community": 0,
+      "norm_label": "standardize_and_weight_blocks()",
+      "id": "reduction_pca_standardize_and_weight_blocks"
+    },
+    {
+      "label": "fit_variance_pca()",
+      "file_type": "code",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L83",
+      "community": 0,
+      "norm_label": "fit_variance_pca()",
+      "id": "reduction_pca_fit_variance_pca"
+    },
+    {
+      "label": "component_block_norm_shares()",
+      "file_type": "code",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L95",
+      "community": 0,
+      "norm_label": "component_block_norm_shares()",
+      "id": "reduction_pca_component_block_norm_shares"
+    },
+    {
+      "label": "count_embedding_dominated_components()",
+      "file_type": "code",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L125",
+      "community": 0,
+      "norm_label": "count_embedding_dominated_components()",
+      "id": "reduction_pca_count_embedding_dominated_components"
+    },
+    {
+      "label": "feature_matrix.py",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L1",
+      "community": 2,
+      "norm_label": "feature_matrix.py",
+      "id": "src_reduction_feature_matrix_py"
+    },
+    {
+      "label": "CategoryArtifacts",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L82",
+      "community": 2,
+      "norm_label": "categoryartifacts",
+      "id": "reduction_feature_matrix_categoryartifacts"
+    },
+    {
+      "label": "_has_curated_files()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L89",
+      "community": 2,
+      "norm_label": "_has_curated_files()",
+      "id": "reduction_feature_matrix_has_curated_files"
+    },
+    {
+      "label": "resolve_category_artifacts()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L93",
+      "community": 2,
+      "norm_label": "resolve_category_artifacts()",
+      "id": "reduction_feature_matrix_resolve_category_artifacts"
+    },
+    {
+      "label": "discover_available_artifacts()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L107",
+      "community": 2,
+      "norm_label": "discover_available_artifacts()",
+      "id": "reduction_feature_matrix_discover_available_artifacts"
+    },
+    {
+      "label": "_empty_series()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L126",
+      "community": 2,
+      "norm_label": "_empty_series()",
+      "id": "reduction_feature_matrix_empty_series"
+    },
+    {
+      "label": "_series_or_default()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L130",
+      "community": 2,
+      "norm_label": "_series_or_default()",
+      "id": "reduction_feature_matrix_series_or_default"
+    },
+    {
+      "label": "_with_canonical_p99_columns()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L136",
+      "community": 2,
+      "norm_label": "_with_canonical_p99_columns()",
+      "id": "reduction_feature_matrix_with_canonical_p99_columns"
+    },
+    {
+      "label": "_theme_columns()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L146",
+      "community": 2,
+      "norm_label": "_theme_columns()",
+      "id": "reduction_feature_matrix_theme_columns"
+    },
+    {
+      "label": "build_book_features()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L156",
+      "community": 2,
+      "norm_label": "build_book_features()",
+      "id": "reduction_feature_matrix_build_book_features"
+    },
+    {
+      "label": "build_interaction_features()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L177",
+      "community": 2,
+      "norm_label": "build_interaction_features()",
+      "id": "reduction_feature_matrix_build_interaction_features"
+    },
+    {
+      "label": "build_global_user_features()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L187",
+      "community": 2,
+      "norm_label": "build_global_user_features()",
+      "id": "reduction_feature_matrix_build_global_user_features"
+    },
+    {
+      "label": "validate_book_features()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L225",
+      "community": 2,
+      "norm_label": "validate_book_features()",
+      "id": "reduction_feature_matrix_validate_book_features"
+    },
+    {
+      "label": "validate_interaction_features()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L244",
+      "community": 2,
+      "norm_label": "validate_interaction_features()",
+      "id": "reduction_feature_matrix_validate_interaction_features"
+    },
+    {
+      "label": "validate_user_features()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L250",
+      "community": 2,
+      "norm_label": "validate_user_features()",
+      "id": "reduction_feature_matrix_validate_user_features"
+    },
+    {
+      "label": "generate_feature_matrices()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L255",
+      "community": 2,
+      "norm_label": "generate_feature_matrices()",
+      "id": "reduction_feature_matrix_generate_feature_matrices"
+    },
+    {
+      "label": "manifest_summary()",
+      "file_type": "code",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L305",
+      "community": 2,
+      "norm_label": "manifest_summary()",
+      "id": "reduction_feature_matrix_manifest_summary"
+    },
+    {
+      "label": "cleaning.py",
+      "file_type": "code",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L1",
+      "community": 4,
+      "norm_label": "cleaning.py",
+      "id": "src_utils_cleaning_py"
+    },
+    {
+      "label": "empty_strings_to_na()",
+      "file_type": "code",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L18",
+      "community": 4,
+      "norm_label": "empty_strings_to_na()",
+      "id": "utils_cleaning_empty_strings_to_na"
+    },
+    {
+      "label": "normalize_review_text()",
+      "file_type": "code",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L22",
+      "community": 4,
+      "norm_label": "normalize_review_text()",
+      "id": "utils_cleaning_normalize_review_text"
+    },
+    {
+      "label": "to_numeric_columns()",
+      "file_type": "code",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L31",
+      "community": 4,
+      "norm_label": "to_numeric_columns()",
+      "id": "utils_cleaning_to_numeric_columns"
+    },
+    {
+      "label": "parse_goodreads_dates()",
+      "file_type": "code",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L39",
+      "community": 4,
+      "norm_label": "parse_goodreads_dates()",
+      "id": "utils_cleaning_parse_goodreads_dates"
+    },
+    {
+      "label": "parse_bool_series()",
+      "file_type": "code",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L52",
+      "community": 4,
+      "norm_label": "parse_bool_series()",
+      "id": "utils_cleaning_parse_bool_series"
+    },
+    {
+      "label": "_json_dumps()",
+      "file_type": "code",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L61",
+      "community": 4,
+      "norm_label": "_json_dumps()",
+      "id": "utils_cleaning_json_dumps"
+    },
+    {
+      "label": "_authors_summary()",
+      "file_type": "code",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L67",
+      "community": 4,
+      "norm_label": "_authors_summary()",
+      "id": "utils_cleaning_authors_summary"
+    },
+    {
+      "label": "_shelves_summary()",
+      "file_type": "code",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L85",
+      "community": 4,
+      "norm_label": "_shelves_summary()",
+      "id": "utils_cleaning_shelves_summary"
+    },
+    {
+      "label": "clean_books()",
+      "file_type": "code",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L113",
+      "community": 4,
+      "norm_label": "clean_books()",
+      "id": "utils_cleaning_clean_books"
+    },
+    {
+      "label": "clean_interactions()",
+      "file_type": "code",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L163",
+      "community": 4,
+      "norm_label": "clean_interactions()",
+      "id": "utils_cleaning_clean_interactions"
+    },
+    {
+      "label": "add_interaction_aggregates()",
+      "file_type": "code",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L189",
+      "community": 4,
+      "norm_label": "add_interaction_aggregates()",
+      "id": "utils_cleaning_add_interaction_aggregates"
+    },
+    {
+      "label": "cap_outlier_features()",
+      "file_type": "code",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L203",
+      "community": 4,
+      "norm_label": "cap_outlier_features()",
+      "id": "utils_cleaning_cap_outlier_features"
+    },
+    {
+      "label": "io.py",
+      "file_type": "code",
+      "source_file": "src/utils/io.py",
+      "source_location": "L1",
+      "community": 3,
+      "norm_label": "io.py",
+      "id": "src_utils_io_py"
+    },
+    {
+      "label": "compressed_size_gb()",
+      "file_type": "code",
+      "source_file": "src/utils/io.py",
+      "source_location": "L13",
+      "community": 3,
+      "norm_label": "compressed_size_gb()",
+      "id": "utils_io_compressed_size_gb"
+    },
+    {
+      "label": "iter_jsonl_records()",
+      "file_type": "code",
+      "source_file": "src/utils/io.py",
+      "source_location": "L17",
+      "community": 3,
+      "norm_label": "iter_jsonl_records()",
+      "id": "utils_io_iter_jsonl_records"
+    },
+    {
+      "label": "read_jsonl_sample()",
+      "file_type": "code",
+      "source_file": "src/utils/io.py",
+      "source_location": "L26",
+      "community": 3,
+      "norm_label": "read_jsonl_sample()",
+      "id": "utils_io_read_jsonl_sample"
+    },
+    {
+      "label": "read_jsonl_chunks()",
+      "file_type": "code",
+      "source_file": "src/utils/io.py",
+      "source_location": "L30",
+      "community": 3,
+      "norm_label": "read_jsonl_chunks()",
+      "id": "utils_io_read_jsonl_chunks"
+    },
+    {
+      "label": "read_parquet_chunks()",
+      "file_type": "code",
+      "source_file": "src/utils/io.py",
+      "source_location": "L39",
+      "community": 3,
+      "norm_label": "read_parquet_chunks()",
+      "id": "utils_io_read_parquet_chunks"
+    },
+    {
+      "label": "safe_write_parquet()",
+      "file_type": "code",
+      "source_file": "src/utils/io.py",
+      "source_location": "L49",
+      "community": 3,
+      "norm_label": "safe_write_parquet()",
+      "id": "utils_io_safe_write_parquet"
+    },
+    {
+      "label": "remove_path()",
+      "file_type": "code",
+      "source_file": "src/utils/io.py",
+      "source_location": "L54",
+      "community": 3,
+      "norm_label": "remove_path()",
+      "id": "utils_io_remove_path"
+    },
+    {
+      "label": "Reusable helpers for the Goodreads pipeline.",
+      "file_type": "rationale",
+      "source_file": "src/utils/__init__.py",
+      "source_location": "L1",
+      "community": 6,
+      "norm_label": "reusable helpers for the goodreads pipeline.",
+      "id": "utils_init_rationale_1"
+    },
+    {
+      "label": "eda.py",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L1",
+      "community": 1,
+      "norm_label": "eda.py",
+      "id": "src_utils_eda_py"
+    },
+    {
+      "label": "schema_summary()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L13",
+      "community": 1,
+      "norm_label": "schema_summary()",
+      "id": "utils_eda_schema_summary"
+    },
+    {
+      "label": "missing_summary()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L35",
+      "community": 1,
+      "norm_label": "missing_summary()",
+      "id": "utils_eda_missing_summary"
+    },
+    {
+      "label": "duplicate_summary()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L51",
+      "community": 1,
+      "norm_label": "duplicate_summary()",
+      "id": "utils_eda_duplicate_summary"
+    },
+    {
+      "label": "numeric_profile()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L70",
+      "community": 1,
+      "norm_label": "numeric_profile()",
+      "id": "utils_eda_numeric_profile"
+    },
+    {
+      "label": "iqr_outlier_summary()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L78",
+      "community": 1,
+      "norm_label": "iqr_outlier_summary()",
+      "id": "utils_eda_iqr_outlier_summary"
+    },
+    {
+      "label": "categorical_profile()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L105",
+      "community": 1,
+      "norm_label": "categorical_profile()",
+      "id": "utils_eda_categorical_profile"
+    },
+    {
+      "label": "_iter_dicts()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L118",
+      "community": 1,
+      "norm_label": "_iter_dicts()",
+      "id": "utils_eda_iter_dicts"
+    },
+    {
+      "label": "_bin_counts()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L122",
+      "community": 1,
+      "norm_label": "_bin_counts()",
+      "id": "utils_eda_bin_counts"
+    },
+    {
+      "label": "author_profile()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L133",
+      "community": 1,
+      "norm_label": "author_profile()",
+      "id": "utils_eda_author_profile"
+    },
+    {
+      "label": "shelves_profile()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L169",
+      "community": 1,
+      "norm_label": "shelves_profile()",
+      "id": "utils_eda_shelves_profile"
+    },
+    {
+      "label": "series_profile()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L226",
+      "community": 1,
+      "norm_label": "series_profile()",
+      "id": "utils_eda_series_profile"
+    },
+    {
+      "label": "combine_books_interactions()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L249",
+      "community": 1,
+      "norm_label": "combine_books_interactions()",
+      "id": "utils_eda_combine_books_interactions"
+    },
+    {
+      "label": "engagement_profile()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L261",
+      "community": 1,
+      "norm_label": "engagement_profile()",
+      "id": "utils_eda_engagement_profile"
+    },
+    {
+      "label": "reading_duration_profile()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L303",
+      "community": 1,
+      "norm_label": "reading_duration_profile()",
+      "id": "utils_eda_reading_duration_profile"
+    },
+    {
+      "label": "user_rating_behavior()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L331",
+      "community": 1,
+      "norm_label": "user_rating_behavior()",
+      "id": "utils_eda_user_rating_behavior"
+    },
+    {
+      "label": "isbn_quality_profile()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L377",
+      "community": 1,
+      "norm_label": "isbn_quality_profile()",
+      "id": "utils_eda_isbn_quality_profile"
+    },
+    {
+      "label": "platform_growth_profile()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L393",
+      "community": 1,
+      "norm_label": "platform_growth_profile()",
+      "id": "utils_eda_platform_growth_profile"
+    },
+    {
+      "label": "build_eda_profile()",
+      "file_type": "code",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L418",
+      "community": 1,
+      "norm_label": "build_eda_profile()",
+      "id": "utils_eda_build_eda_profile"
+    },
+    {
+      "label": "Inner join between books and interactions to have a complete dataset for cross-a",
+      "file_type": "rationale",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L250",
+      "community": 1,
+      "norm_label": "inner join between books and interactions to have a complete dataset for cross-a",
+      "id": "utils_eda_rationale_250"
+    },
+    {
+      "label": "test_master_feature_matrix.py",
+      "file_type": "code",
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L1",
+      "community": 0,
+      "norm_label": "test_master_feature_matrix.py",
+      "id": "tests_test_master_feature_matrix_py"
+    },
+    {
+      "label": "_sample_master()",
+      "file_type": "code",
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L15",
+      "community": 0,
+      "norm_label": "_sample_master()",
+      "id": "tests_test_master_feature_matrix_sample_master"
+    },
+    {
+      "label": "test_build_blocks_and_block_weights()",
+      "file_type": "code",
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L39",
+      "community": 0,
+      "norm_label": "test_build_blocks_and_block_weights()",
+      "id": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights"
+    },
+    {
+      "label": "test_pca_smoke_preserves_row_count()",
+      "file_type": "code",
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L72",
+      "community": 0,
+      "norm_label": "test_pca_smoke_preserves_row_count()",
+      "id": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/config.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_config_py",
+      "target": "src_config_categoryconfig"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/__init__.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_init_rationale_1",
+      "target": "src_init_py"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/__init__.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_init_rationale_1",
+      "target": "src_init_py"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/merge_master.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_merge_master_py",
+      "target": "src_merge_master_resolve_curated_books_path"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/merge_master.py",
+      "source_location": "L22",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_merge_master_py",
+      "target": "src_merge_master_count_authors"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/merge_master.py",
+      "source_location": "L34",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_merge_master_py",
+      "target": "src_merge_master_main"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/merge_master.py",
+      "source_location": "L37",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_merge_master_main",
+      "target": "src_merge_master_resolve_curated_books_path"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L307",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "src_merge_master_main"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L314",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_merge_master_main",
+      "target": "reduction_build_master_feature_matrix_build_feature_matrix"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L315",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_merge_master_main",
+      "target": "reduction_build_master_feature_matrix_write_outputs"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L316",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_merge_master_main",
+      "target": "reduction_build_master_feature_matrix_print_validations"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_embeddings_py",
+      "target": "reduction_embeddings_embedding_columns"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L23",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_embeddings_py",
+      "target": "reduction_embeddings_clean_description_texts"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L31",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_embeddings_py",
+      "target": "reduction_embeddings_get_huggingface_token"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L45",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_embeddings_py",
+      "target": "reduction_embeddings_require_huggingface_auth"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_embeddings_py",
+      "target": "reduction_embeddings_load_embedding_model"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L71",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_embeddings_py",
+      "target": "reduction_embeddings_validate_cache_schema"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L89",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_embeddings_py",
+      "target": "reduction_embeddings_read_cache"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L95",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_embeddings_py",
+      "target": "reduction_embeddings_encode_texts"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L117",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_embeddings_py",
+      "target": "reduction_embeddings_load_or_create_description_embeddings"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L72",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_embeddings_validate_cache_schema",
+      "target": "reduction_embeddings_embedding_columns"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L91",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_embeddings_read_cache",
+      "target": "reduction_embeddings_embedding_columns"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L145",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_embeddings_load_or_create_description_embeddings",
+      "target": "reduction_embeddings_embedding_columns"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L199",
+      "weight": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
+      "target": "reduction_embeddings_embedding_columns"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L138",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_embeddings_load_or_create_description_embeddings",
+      "target": "reduction_embeddings_clean_description_texts"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_embeddings_require_huggingface_auth",
+      "target": "reduction_embeddings_get_huggingface_token"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L65",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_embeddings_load_embedding_model",
+      "target": "reduction_embeddings_require_huggingface_auth"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L102",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_embeddings_encode_texts",
+      "target": "reduction_embeddings_load_embedding_model"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L92",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_embeddings_read_cache",
+      "target": "reduction_embeddings_validate_cache_schema"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L148",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_embeddings_load_or_create_description_embeddings",
+      "target": "reduction_embeddings_validate_cache_schema"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L130",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_embeddings_load_or_create_description_embeddings",
+      "target": "reduction_embeddings_read_cache"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L139",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_embeddings_load_or_create_description_embeddings",
+      "target": "reduction_embeddings_encode_texts"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/reduction/embeddings.py",
+      "source_location": "L149",
+      "weight": 1.0,
+      "source": "reduction_embeddings_load_or_create_description_embeddings",
+      "target": "utils_io_safe_write_parquet"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L198",
+      "weight": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
+      "target": "reduction_embeddings_load_or_create_description_embeddings"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L65",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "reduction_build_master_feature_matrix_safe_median"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L72",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "reduction_build_master_feature_matrix_numeric"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L79",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "reduction_build_master_feature_matrix_build_numeric_block"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L106",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "reduction_build_master_feature_matrix_sanitize_language_code"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L111",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "reduction_build_master_feature_matrix_dedupe_column_names"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L122",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "reduction_build_master_feature_matrix_build_language_categories"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L128",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "reduction_build_master_feature_matrix_build_binary_block"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L149",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "reduction_build_master_feature_matrix_validate_master_columns"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L157",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "reduction_build_master_feature_matrix_cosine_distance"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L164",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "reduction_build_master_feature_matrix_semantic_spot_checks"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L191",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "reduction_build_master_feature_matrix_build_feature_matrix"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L266",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "reduction_build_master_feature_matrix_write_outputs"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L277",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_build_master_feature_matrix_py",
+      "target": "reduction_build_master_feature_matrix_print_validations"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L81",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_numeric_block",
+      "target": "reduction_build_master_feature_matrix_safe_median"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L89",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_numeric_block",
+      "target": "reduction_build_master_feature_matrix_numeric"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L138",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_binary_block",
+      "target": "reduction_build_master_feature_matrix_numeric"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L196",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
+      "target": "reduction_build_master_feature_matrix_build_numeric_block"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights",
+      "target": "reduction_build_master_feature_matrix_build_numeric_block"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L74",
+      "weight": 1.0,
+      "source": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count",
+      "target": "reduction_build_master_feature_matrix_build_numeric_block"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L115",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_build_master_feature_matrix_dedupe_column_names",
+      "target": "reduction_build_master_feature_matrix_sanitize_language_code"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L142",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_binary_block",
+      "target": "reduction_build_master_feature_matrix_dedupe_column_names"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L134",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_binary_block",
+      "target": "reduction_build_master_feature_matrix_build_language_categories"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L197",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
+      "target": "reduction_build_master_feature_matrix_build_binary_block"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights",
+      "target": "reduction_build_master_feature_matrix_build_binary_block"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count",
+      "target": "reduction_build_master_feature_matrix_build_binary_block"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L192",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
+      "target": "reduction_build_master_feature_matrix_validate_master_columns"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L182",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_build_master_feature_matrix_semantic_spot_checks",
+      "target": "reduction_build_master_feature_matrix_cosine_distance"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L222",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
+      "target": "reduction_build_master_feature_matrix_semantic_spot_checks"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L201",
+      "weight": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
+      "target": "reduction_pca_standardize_and_weight_blocks"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L208",
+      "weight": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
+      "target": "reduction_pca_fit_variance_pca"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L216",
+      "weight": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
+      "target": "reduction_pca_component_block_norm_shares"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L217",
+      "weight": 1.0,
+      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
+      "target": "reduction_pca_count_embedding_dominated_components"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/reduction/build_master_feature_matrix.py",
+      "source_location": "L271",
+      "weight": 1.0,
+      "source": "reduction_build_master_feature_matrix_write_outputs",
+      "target": "utils_io_safe_write_parquet"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_pca_py",
+      "target": "reduction_pca_scaledblocks"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L23",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_pca_py",
+      "target": "reduction_pca_as_float_matrix"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L35",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_pca_py",
+      "target": "reduction_pca_standardize_and_weight_blocks"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L83",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_pca_py",
+      "target": "reduction_pca_fit_variance_pca"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L95",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_pca_py",
+      "target": "reduction_pca_component_block_norm_shares"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L125",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_pca_py",
+      "target": "reduction_pca_count_embedding_dominated_components"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_pca_standardize_and_weight_blocks",
+      "target": "reduction_pca_scaledblocks"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L48",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_pca_standardize_and_weight_blocks",
+      "target": "reduction_pca_as_float_matrix"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights",
+      "target": "reduction_pca_standardize_and_weight_blocks"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count",
+      "target": "reduction_pca_standardize_and_weight_blocks"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L88",
+      "weight": 1.0,
+      "source": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count",
+      "target": "reduction_pca_fit_variance_pca"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/pca.py",
+      "source_location": "L133",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_pca_count_embedding_dominated_components",
+      "target": "reduction_pca_component_block_norm_shares"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L82",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_categoryartifacts"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L89",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_has_curated_files"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L93",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_resolve_category_artifacts"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L107",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_discover_available_artifacts"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L126",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_empty_series"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L130",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_series_or_default"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L136",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_with_canonical_p99_columns"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L146",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_theme_columns"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L156",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_build_book_features"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L177",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_build_interaction_features"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L187",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_build_global_user_features"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L225",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_validate_book_features"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L244",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_validate_interaction_features"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L250",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_validate_user_features"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L255",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_generate_feature_matrices"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L305",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_reduction_feature_matrix_py",
+      "target": "reduction_feature_matrix_manifest_summary"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L98",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_resolve_category_artifacts",
+      "target": "reduction_feature_matrix_categoryartifacts"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L97",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_resolve_category_artifacts",
+      "target": "reduction_feature_matrix_has_curated_files"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L111",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_discover_available_artifacts",
+      "target": "reduction_feature_matrix_resolve_category_artifacts"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L256",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_generate_feature_matrices",
+      "target": "reduction_feature_matrix_discover_available_artifacts"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L164",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_build_book_features",
+      "target": "reduction_feature_matrix_empty_series"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L183",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_build_interaction_features",
+      "target": "reduction_feature_matrix_empty_series"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L192",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_build_global_user_features",
+      "target": "reduction_feature_matrix_series_or_default"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L157",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_build_book_features",
+      "target": "reduction_feature_matrix_with_canonical_p99_columns"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L268",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_generate_feature_matrices",
+      "target": "reduction_feature_matrix_with_canonical_p99_columns"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L170",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_build_book_features",
+      "target": "reduction_feature_matrix_theme_columns"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L265",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_generate_feature_matrices",
+      "target": "reduction_feature_matrix_build_book_features"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L266",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_generate_feature_matrices",
+      "target": "reduction_feature_matrix_build_interaction_features"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L287",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_generate_feature_matrices",
+      "target": "reduction_feature_matrix_build_global_user_features"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L268",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_generate_feature_matrices",
+      "target": "reduction_feature_matrix_validate_book_features"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L269",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_generate_feature_matrices",
+      "target": "reduction_feature_matrix_validate_interaction_features"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L288",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "reduction_feature_matrix_generate_feature_matrices",
+      "target": "reduction_feature_matrix_validate_user_features"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/reduction/feature_matrix.py",
+      "source_location": "L271",
+      "weight": 1.0,
+      "source": "reduction_feature_matrix_generate_feature_matrices",
+      "target": "utils_io_safe_write_parquet"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_cleaning_py",
+      "target": "utils_cleaning_empty_strings_to_na"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L22",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_cleaning_py",
+      "target": "utils_cleaning_normalize_review_text"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L31",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_cleaning_py",
+      "target": "utils_cleaning_to_numeric_columns"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_cleaning_py",
+      "target": "utils_cleaning_parse_goodreads_dates"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L52",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_cleaning_py",
+      "target": "utils_cleaning_parse_bool_series"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_cleaning_py",
+      "target": "utils_cleaning_json_dumps"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L67",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_cleaning_py",
+      "target": "utils_cleaning_authors_summary"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L85",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_cleaning_py",
+      "target": "utils_cleaning_shelves_summary"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L113",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_cleaning_py",
+      "target": "utils_cleaning_clean_books"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L163",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_cleaning_py",
+      "target": "utils_cleaning_clean_interactions"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L189",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_cleaning_py",
+      "target": "utils_cleaning_add_interaction_aggregates"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L203",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_cleaning_py",
+      "target": "utils_cleaning_cap_outlier_features"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L114",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_cleaning_clean_books",
+      "target": "utils_cleaning_empty_strings_to_na"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L164",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_cleaning_clean_interactions",
+      "target": "utils_cleaning_empty_strings_to_na"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L115",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_cleaning_clean_books",
+      "target": "utils_cleaning_to_numeric_columns"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L165",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_cleaning_clean_interactions",
+      "target": "utils_cleaning_parse_goodreads_dates"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/cleaning.py",
+      "source_location": "L118",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_cleaning_clean_books",
+      "target": "utils_cleaning_parse_bool_series"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/utils/eda.py",
+      "source_location": "L424",
+      "weight": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_cleaning_clean_books"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/utils/eda.py",
+      "source_location": "L425",
+      "weight": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_cleaning_clean_interactions"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/io.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_io_py",
+      "target": "utils_io_compressed_size_gb"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/io.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_io_py",
+      "target": "utils_io_iter_jsonl_records"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/io.py",
+      "source_location": "L26",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_io_py",
+      "target": "utils_io_read_jsonl_sample"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/io.py",
+      "source_location": "L30",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_io_py",
+      "target": "utils_io_read_jsonl_chunks"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/io.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_io_py",
+      "target": "utils_io_read_parquet_chunks"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/io.py",
+      "source_location": "L49",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_io_py",
+      "target": "utils_io_safe_write_parquet"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/io.py",
+      "source_location": "L54",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_io_py",
+      "target": "utils_io_remove_path"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/io.py",
+      "source_location": "L27",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_io_read_jsonl_sample",
+      "target": "utils_io_iter_jsonl_records"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_schema_summary"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L35",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_missing_summary"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L51",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_duplicate_summary"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L70",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_numeric_profile"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L78",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_iqr_outlier_summary"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L105",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_categorical_profile"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L118",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_iter_dicts"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L122",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_bin_counts"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L133",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_author_profile"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L169",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_shelves_profile"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L226",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_series_profile"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L249",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_combine_books_interactions"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L261",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_engagement_profile"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L303",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_reading_duration_profile"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L331",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_user_rating_behavior"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L377",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_isbn_quality_profile"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L393",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_platform_growth_profile"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L418",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_eda_py",
+      "target": "utils_eda_build_eda_profile"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L428",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_eda_schema_summary"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L430",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_eda_missing_summary"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L436",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_eda_duplicate_summary"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L432",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_eda_numeric_profile"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L434",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_eda_iqr_outlier_summary"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L437",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_eda_categorical_profile"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L136",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_author_profile",
+      "target": "utils_eda_iter_dicts"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L176",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_shelves_profile",
+      "target": "utils_eda_iter_dicts"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L441",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_eda_author_profile"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L442",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_eda_shelves_profile"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L443",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_eda_series_profile"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L250",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_rationale_250",
+      "target": "utils_eda_combine_books_interactions"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L444",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_eda_engagement_profile"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L445",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_eda_reading_duration_profile"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/eda.py",
+      "source_location": "L446",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_eda_build_eda_profile",
+      "target": "utils_eda_user_rating_behavior"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_master_feature_matrix_py",
+      "target": "tests_test_master_feature_matrix_sample_master"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_master_feature_matrix_py",
+      "target": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L72",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_master_feature_matrix_py",
+      "target": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L40",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights",
+      "target": "tests_test_master_feature_matrix_sample_master"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_master_feature_matrix.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count",
+      "target": "tests_test_master_feature_matrix_sample_master"
+    }
+  ],
+  "hyperedges": [],
+  "built_at_commit": "3a763dd07b32d8bcf8f36a19f3e5c14ceb1a5f4c"
+}

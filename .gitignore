@@ -223,3 +223,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Grphify
+graphify-out/cache/
+#ignore  all graphify-out except graph.json
+graphify-out/*
+!graphify-out/graph.json
