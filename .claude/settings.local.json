@@ -16,7 +16,13 @@
       "Bash(PYTHONPATH=. env/bin/pytest tests/ -q)",
       "Bash(PYTHONPATH=. env/bin/pytest tests/ -v)",
       "Bash(python3)",
-      "Bash(python3 -c \"from pathlib import Path; import sys; PROJECT_ROOT = Path\\('.'\\); sys.path.insert\\(0, str\\(PROJECT_ROOT\\)\\); print\\('Path is:', PROJECT_ROOT\\); print\\('Exists:', PROJECT_ROOT.exists\\(\\)\\)\")"
+      "Bash(python3 -c \"from pathlib import Path; import sys; PROJECT_ROOT = Path\\('.'\\); sys.path.insert\\(0, str\\(PROJECT_ROOT\\)\\); print\\('Path is:', PROJECT_ROOT\\); print\\('Exists:', PROJECT_ROOT.exists\\(\\)\\)\")",
+      "Bash(env/bin/python -c \"import json; nb=json.load\\(open\\('notebooks/reduction/pca_interpretation.ipynb'\\)\\); [print\\(f'--- Cell {i} [{c[\\\\\"cell_type\\\\\"]}] ---'\\); print\\(''.join\\(c['source']\\)[:600]\\) for i,c in enumerate\\(nb['cells']\\)]\")",
+      "Bash(env/bin/python *)",
+      "Bash(env/bin/jupyter nbconvert *)"
     ]
+  },
+  "enabledPlugins": {
+    "sentrux@sentrux-marketplace": true
   }
 }
