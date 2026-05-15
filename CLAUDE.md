@@ -15,6 +15,22 @@ env/bin/python -m pytest tests/test_master_feature_matrix.py::test_pca_smoke_pre
 
 The two pipeline scripts are ordered: `merge_master` must run first because `build_master_feature_matrix` reads `data/processed/books_master.parquet` and refuses to start if the file is missing.
 
+## Product and Recommendation Logic
+
+The business goal is to build a book recommendation platform that helps users discover books aligned with their interests and supports the habit of reading: ayudar a mas personas a tener el habito de lectura. Recommendation work in this repo should optimize for approachable, relevant and motivating discovery, not only for surfacing the most popular books.
+
+Model user interests as multidimensional reading tastes, not as a single genre label. The platform should avoid basic logic like "if the user likes fantasy, recommend more fantasy." It should be able to discover cross-genre patterns such as: a reader likes youthful tone, romance, adventure, light fantasy and accessible reading, even when the books do not all belong to the exact same genre.
+
+For k-means and similar clustering work, use book-level granularity across the full catalog:
+
+```
+one row = one book_id = one book vector
+```
+
+The main clustering input should be `data/features/master_feature_matrix.parquet`, using `pc_0..pc_N` as the vector columns. Cluster `book_id` rows, not genres. Genres should be used as signals, filters, explanations or diversity controls, but not as the unit of the main clustering model.
+
+Avoid popularity bias. Popularity features such as `ratings_count`, `text_reviews_count` and `average_rating` are useful quality/confidence signals, but they should not become the whole recommendation objective. The current pipeline reduces popularity outlier influence with `log1p` transforms and block weighting. Downstream ranking should prioritize interest similarity first, then use popularity as a secondary signal.
+
 ## Pipeline Architecture
 
 The end-to-end flow is `clean -> reduce -> curation -> merge -> feature matrix -> PCA`. The first three phases live in genre-specific notebooks under `notebooks/{cleaning,processing,reduction}/`; the last three are Python modules under `src/`.

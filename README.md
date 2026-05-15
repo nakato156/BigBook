@@ -2,6 +2,62 @@
 
 Course project for Big Data. The project builds a hybrid book representation for recommendation and analysis by combining Goodreads metadata, genre labels, interaction-derived popularity signals and text embeddings from book descriptions. The final artifact is a PCA-reduced feature matrix with one vector per `book_id`.
 
+The business goal is to build a book recommendation platform that helps users discover books aligned with their interests and, more importantly, supports the habit of reading: ayudar a mas personas a tener el habito de lectura. The system should recommend books that feel approachable, relevant and motivating for each reader, not only the books that are already the most popular.
+
+## Business Logic
+
+The recommendation logic should model user interests as multidimensional reading tastes rather than as a single genre choice. A platform for reading habits should not be limited to:
+
+```text
+If you like fantasy, recommend more fantasy.
+```
+
+That behavior is too basic for the product goal. The system should be able to discover patterns such as:
+
+```text
+This reader likes books with a youthful tone, romance, adventure, light fantasy
+and accessible reading, even when the books do not all belong to the exact same genre.
+```
+
+For that reason, genre is treated as one useful signal, not as the full definition of a reader's interests. The hybrid representation also includes semantic description embeddings, ratings metadata, page count, publication information, language, series status and multi-genre structure.
+
+### K-Means Granularity
+
+K-means should be applied at the book level across the full catalog:
+
+```text
+one row = one book_id = one book vector
+```
+
+The recommended input for k-means is:
+
+```text
+data/features/master_feature_matrix.parquet
+```
+
+Use `pc_0` through `pc_172` as the clustering features. The clustering unit is `book_id`, not genre. Genres can still be used for interpretation, filtering and personalization, but they should not be the granularity of the main clustering model.
+
+This means clusters represent interest neighborhoods in the book catalog. A cluster may contain books that share tone, audience, themes, accessibility, popularity level or semantic content, even if they cross genre boundaries.
+
+Recommended recommendation flow:
+
+1. Cluster all books using the PCA vectors.
+2. Build a user interest vector from books the user likes, rates, saves or finishes.
+3. Find the closest clusters or nearest books to that user vector.
+4. Recommend books from those neighborhoods.
+5. Use genre as a filter, explanation or diversity control, not as the only recommendation rule.
+
+### Avoiding Popularity Bias
+
+The system should avoid popularity bias. A recommendation platform should not only surface books with the highest `ratings_count`, `text_reviews_count` or `average_rating`, because that would make popular books even more visible and reduce discovery for users with specific or emerging interests.
+
+Popularity signals are still useful, but they should be controlled:
+
+- `ratings_count` and `text_reviews_count` are transformed with `log1p` to reduce extreme outlier influence.
+- Numeric, binary and embedding blocks are standardized and weighted before PCA so one feature family does not dominate only because it has more columns.
+- Ranking should prioritize interest similarity first, then use popularity as a secondary quality or confidence signal.
+- Final recommendations should include diversity and discovery, especially for readers trying to build a sustainable reading habit.
+
 ## Dataset
 
 Source: [Goodreads Dataset Collection from UCSD](https://cseweb.ucsd.edu/~jmcauley/datasets/goodreads.html)
