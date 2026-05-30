@@ -4,6 +4,131 @@ Course project for Big Data. The project builds a hybrid book representation for
 
 The business goal is to build a book recommendation platform that helps users discover books aligned with their interests and, more importantly, supports the habit of reading: ayudar a mas personas a tener el habito de lectura. The system should recommend books that feel approachable, relevant and motivating for each reader, not only the books that are already the most popular.
 
+## Problem Definition
+
+This is the core statement of what the system does. Everything else in this README (representation, clustering, ranking) exists to serve it.
+
+> **We recommend books (`book_id`, each one a PCA vector `pc_0..pc_172`) to readers (`user_id`), based on the multidimensional reading taste inferred from their interaction history (reads, ratings, reviews) and on book-to-book similarity in the reduced feature space, in order to optimize relevant and motivating reading starts and completions — prioritizing interest similarity over popularity — so that readers sustain and grow the habit of reading.**
+
+The same idea in `X / Y / Z` form:
+
+```text
+We recommend  X = books from the catalog, as PCA vectors, grouped into taste clusters
+based on      Y = the user's interaction history + similarity in PCA space + book clusters
+                  (genre as a filter/explanation/diversity signal; popularity as a secondary signal)
+to optimize   Z = relevant readings started and finished (proxy: is_read + positive rating)
+                  that sustain the reading habit (retention), avoiding popularity bias
+                  and single-genre filter bubbles.
+```
+
+### What is a user
+
+A reader identified by `user_id`, represented by their **interaction history** over books — what they read (`is_read`), rated (`rating`) and reviewed (`has_review_text`), as captured in the curated `interactions_curated.parquet` and aggregated per user (`interaction_count`, `review_count`, `read_count`, `mean_rating`, `rating_std`, `user_rating_bias`).
+
+A user is **not** modeled as a single genre label. The user profile is a multidimensional taste vector built by aggregating the PCA vectors of the books they engaged with positively. A new user with no history (cold start) is represented by a few seed books/genres chosen at sign-up, or by an initial popularity-plus-diversity mix.
+
+### What is an item
+
+A book, identified by `book_id`, where **one row = one book vector** in PCA space (`pc_0..pc_172`). That vector is the unit of recommendation and of clustering. Genres are a signal, filter, explanation or diversity control — never the unit of the recommendation model.
+
+### What a useful recommendation means
+
+A short list of books the reader is likely to read and enjoy, that is also:
+
+- **Relevant**: close to the user's taste by interest similarity first (distance in PCA space / shared cluster), not by popularity.
+- **Approachable and motivating**: aligned with the product goal of building a reading habit, favoring accessible books rather than only the most popular ones.
+- **Diverse yet coherent**: it exploits cross-genre patterns (youthful tone + romance + adventure + light fantasy) instead of locking the reader into one genre.
+- **Explainable**: justifiable through its cluster / macro-cluster and genres ("because you liked X, from the same reading neighborhood").
+
+### Target action
+
+The primary action the system tries to provoke is **starting and completing a reading**. In Goodreads data the observable proxy is `is_read = True`, reinforced by a high `rating` and/or a written review. The ultimate objective is **retention of the reading habit**, not a single click or purchase.
+
+| Level | Signal in the data | Role |
+|---|---|---|
+| Target action | `is_read` (reading) | What we optimize |
+| Quality confirmation | high `rating`, `has_review_text` | Reinforcement |
+| Engagement / interest | click / open book page | Early proxy (to instrument in the product) |
+| Business objective | retention / habit | North-star metric |
+
+## Evaluation & Reading-Habit Metrics
+
+The problem statement optimizes for `Z = sustaining the reading habit`. That target is only meaningful if we can measure it, so this section defines how we measure reading habit and how we evaluate the recommender against it.
+
+### The measurement challenge
+
+"Reading habit" is a **longitudinal, causal** outcome: does a reader keep reading over time because of what we recommended? The Goodreads Dataset Collection (UCSD) is **observational and historical** — it is not a live A/B test, so we cannot measure causal impact directly. What we can do is:
+
+1. Derive **habit proxies** from the temporal and behavioral signals already present in the data.
+2. Evaluate the recommender **offline** with a temporal split, so the metric reflects "what the reader actually read next", not just "what they read in the past".
+3. Document the **production telemetry** that would be required to measure true causal impact, which is out of scope for the static dataset.
+
+### Features available for habit measurement
+
+These columns already exist in the interaction pipeline (`interactions_curated.parquet`), defined in `src/reduction/feature_matrix.py` and `src/config.py`. They are the raw material for any habit metric.
+
+Per-interaction signals:
+
+| Feature | What it captures | Reading-habit signal |
+|---|---|---|
+| `date_added`, `date_updated` | When each interaction happened | Cadence / frequency and temporal span — the basis of everything |
+| `started_at`, `read_at` | Reading start and end (raw `GOODREADS_DATE_COLUMNS`) | Completion of a reading, not just saving it |
+| `reading_duration_days`, `has_reading_duration` | Actual reading duration | Effective reading vs. mere intention |
+| `engagement_mode` | `shelf_only` vs. read | Separates "want to read" from "read" |
+| `is_read` | Reading completed | Target action (direct proxy) |
+| `rating`, `rating_clean`, `has_review_text` | Rated / reviewed | Depth of engagement (writing a review = high commitment) |
+
+Per-user aggregates (`build_global_user_features`):
+
+```text
+interaction_count        total interactions
+read_count               completed readings
+rated_count              ratings given
+review_count             written reviews
+shelf_only_count         saved-but-not-read interactions
+mean_rating, rating_std  rating level and dispersion
+user_rating_bias         user mean rating minus global mean
+avg_reading_duration_days     average reading duration
+has_reading_duration_rate     share of interactions with a known duration
+category_count, categories    breadth of reading across genres (anti-bubble signal)
+```
+
+### Derived habit metrics
+
+These are **not yet stored as columns**; they are computed from the `date_*` fields and the aggregates above. They are the operational definition of "reading habit" per user:
+
+```text
+active_span_days   = last_interaction_date − first_interaction_date
+reading_frequency  = read_count / active_span (e.g. readings per month)
+activity_recency   = days since last interaction        (churn proxy: higher = more at risk)
+completion_rate    = read_count / interaction_count
+reading_breadth    = category_count                     (diversity across genres)
+```
+
+A reader "with a habit" shows a wide `active_span`, regular `reading_frequency`, low `activity_recency`, and high `completion_rate`. These per-user values are what we use as the **outcome label** when evaluating the recommender.
+
+### Evaluation layers
+
+**Layer 1 — Offline evaluation with a temporal split (doable today).**
+For each user, sort interactions by `date_added`, train on the past and hold out the future. Measure whether the recommender would have surfaced the books the reader **actually read later** (`is_read = True`, ideally with a high rating):
+
+- `Recall@k`, `Precision@k`, `NDCG@k`, `MAP` — relevance of the ranked list.
+- `Coverage`, `Novelty`, intra-list `Diversity` — to confirm the model is not just amplifying popular books (enforces the popularity-bias rule from the Business Logic section).
+
+The temporal split is what turns a standard recsys metric into a habit-oriented one: the question is not "did it match past reads?" but "does what it recommends match what the reader keeps reading?".
+
+**Layer 2 — Habit-proxy evaluation.**
+Compare the interest-similarity recommender against a popularity baseline and check whether readers exposed to neighborhood-based recommendations show higher `completion_rate`, `reading_frequency` and `reading_breadth` (`category_count`). In an offline setting this is correlational, not causal.
+
+**Layer 3 — Product telemetry (out of scope for the dataset).**
+Measuring true causal impact on retention requires instrumenting the live platform: sessions, return visits, books finished *after* a recommendation, click → reading conversion. This is future product work, not available in the static Goodreads dump, and is listed here as an explicit limitation.
+
+### Honest limitations
+
+- The dataset is observational; offline metrics approximate, but do not prove, causal impact on the reading habit.
+- `started_at` / `read_at` and `reading_duration_days` can be sparse depending on what each user filled in, so duration-based metrics rely on `has_reading_duration` / `has_reading_duration_rate` to stay honest about coverage.
+- The per-user interaction pipeline (`src/reduction/feature_matrix.py`) is separate from, and older than, the PCA book-representation pipeline; wiring the two together for user→book recommendation is still pending work.
+
 ## Business Logic
 
 The recommendation logic should model user interests as multidimensional reading tastes rather than as a single genre choice. A platform for reading habits should not be limited to:
