@@ -1,14 +1,58 @@
 {
   "directed": false,
   "multigraph": false,
-  "graph": {},
+  "graph": {
+    "hyperedges": [
+      {
+        "id": "feature_matrix_three_blocks",
+        "label": "Three-block feature matrix assembly",
+        "nodes": [
+          "readme_numeric_block",
+          "readme_binary_block",
+          "readme_embedding_block",
+          "readme_block_weighting",
+          "readme_pca"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "README.md"
+      },
+      {
+        "id": "recommendation_design_principles",
+        "label": "Recommendation design principles",
+        "nodes": [
+          "readme_business_logic",
+          "readme_kmeans_granularity",
+          "readme_popularity_bias"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 0.85,
+        "source_file": "README.md"
+      },
+      {
+        "id": "pca_pipeline_artifacts",
+        "label": "PCA pipeline outputs",
+        "nodes": [
+          "readme_master_feature_matrix",
+          "readme_master_pca_model",
+          "readme_master_pca_meta"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "README.md"
+      }
+    ]
+  },
   "nodes": [
     {
       "label": "config.py",
       "file_type": "code",
       "source_file": "src/config.py",
       "source_location": "L1",
-      "community": 7,
+      "community": 14,
       "norm_label": "config.py",
       "id": "src_config_py"
     },
@@ -17,7 +61,7 @@
       "file_type": "code",
       "source_file": "src/config.py",
       "source_location": "L14",
-      "community": 7,
+      "community": 14,
       "norm_label": "categoryconfig",
       "id": "src_config_categoryconfig"
     },
@@ -26,7 +70,7 @@
       "file_type": "code",
       "source_file": "src/__init__.py",
       "source_location": "L1",
-      "community": 6,
+      "community": 13,
       "norm_label": "__init__.py",
       "id": "src_init_py"
     },
@@ -35,7 +79,7 @@
       "file_type": "rationale",
       "source_file": "src/__init__.py",
       "source_location": "L1",
-      "community": 6,
+      "community": 13,
       "norm_label": "goodreads data science pipeline package.",
       "id": "src_init_rationale_1"
     },
@@ -44,7 +88,7 @@
       "file_type": "code",
       "source_file": "src/merge_master.py",
       "source_location": "L1",
-      "community": 3,
+      "community": 1,
       "norm_label": "merge_master.py",
       "id": "src_merge_master_py"
     },
@@ -53,7 +97,7 @@
       "file_type": "code",
       "source_file": "src/merge_master.py",
       "source_location": "L12",
-      "community": 3,
+      "community": 1,
       "norm_label": "resolve_curated_books_path()",
       "id": "src_merge_master_resolve_curated_books_path"
     },
@@ -62,7 +106,7 @@
       "file_type": "code",
       "source_file": "src/merge_master.py",
       "source_location": "L22",
-      "community": 3,
+      "community": 1,
       "norm_label": "count_authors()",
       "id": "src_merge_master_count_authors"
     },
@@ -71,7 +115,7 @@
       "file_type": "code",
       "source_file": "src/merge_master.py",
       "source_location": "L34",
-      "community": 3,
+      "community": 1,
       "norm_label": "main()",
       "id": "src_merge_master_main"
     },
@@ -80,7 +124,7 @@
       "file_type": "code",
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L1",
-      "community": 5,
+      "community": 7,
       "norm_label": "embeddings.py",
       "id": "src_reduction_embeddings_py"
     },
@@ -89,7 +133,7 @@
       "file_type": "code",
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L19",
-      "community": 5,
+      "community": 7,
       "norm_label": "embedding_columns()",
       "id": "reduction_embeddings_embedding_columns"
     },
@@ -98,7 +142,7 @@
       "file_type": "code",
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L23",
-      "community": 5,
+      "community": 7,
       "norm_label": "clean_description_texts()",
       "id": "reduction_embeddings_clean_description_texts"
     },
@@ -107,7 +151,7 @@
       "file_type": "code",
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L31",
-      "community": 5,
+      "community": 7,
       "norm_label": "_get_huggingface_token()",
       "id": "reduction_embeddings_get_huggingface_token"
     },
@@ -116,7 +160,7 @@
       "file_type": "code",
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L45",
-      "community": 5,
+      "community": 7,
       "norm_label": "_require_huggingface_auth()",
       "id": "reduction_embeddings_require_huggingface_auth"
     },
@@ -125,7 +169,7 @@
       "file_type": "code",
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L55",
-      "community": 5,
+      "community": 7,
       "norm_label": "_load_embedding_model()",
       "id": "reduction_embeddings_load_embedding_model"
     },
@@ -134,7 +178,7 @@
       "file_type": "code",
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L71",
-      "community": 5,
+      "community": 7,
       "norm_label": "_validate_cache_schema()",
       "id": "reduction_embeddings_validate_cache_schema"
     },
@@ -143,7 +187,7 @@
       "file_type": "code",
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L89",
-      "community": 5,
+      "community": 7,
       "norm_label": "_read_cache()",
       "id": "reduction_embeddings_read_cache"
     },
@@ -152,7 +196,7 @@
       "file_type": "code",
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L95",
-      "community": 5,
+      "community": 7,
       "norm_label": "_encode_texts()",
       "id": "reduction_embeddings_encode_texts"
     },
@@ -161,7 +205,7 @@
       "file_type": "code",
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L117",
-      "community": 5,
+      "community": 7,
       "norm_label": "load_or_create_description_embeddings()",
       "id": "reduction_embeddings_load_or_create_description_embeddings"
     },
@@ -170,7 +214,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L1",
-      "community": 0,
+      "community": 1,
       "norm_label": "build_master_feature_matrix.py",
       "id": "src_reduction_build_master_feature_matrix_py"
     },
@@ -179,7 +223,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L65",
-      "community": 0,
+      "community": 1,
       "norm_label": "_safe_median()",
       "id": "reduction_build_master_feature_matrix_safe_median"
     },
@@ -188,7 +232,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L72",
-      "community": 0,
+      "community": 1,
       "norm_label": "_numeric()",
       "id": "reduction_build_master_feature_matrix_numeric"
     },
@@ -197,7 +241,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L79",
-      "community": 0,
+      "community": 1,
       "norm_label": "build_numeric_block()",
       "id": "reduction_build_master_feature_matrix_build_numeric_block"
     },
@@ -206,7 +250,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L106",
-      "community": 0,
+      "community": 1,
       "norm_label": "_sanitize_language_code()",
       "id": "reduction_build_master_feature_matrix_sanitize_language_code"
     },
@@ -215,7 +259,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L111",
-      "community": 0,
+      "community": 1,
       "norm_label": "_dedupe_column_names()",
       "id": "reduction_build_master_feature_matrix_dedupe_column_names"
     },
@@ -224,7 +268,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L122",
-      "community": 0,
+      "community": 1,
       "norm_label": "build_language_categories()",
       "id": "reduction_build_master_feature_matrix_build_language_categories"
     },
@@ -233,7 +277,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L128",
-      "community": 0,
+      "community": 1,
       "norm_label": "build_binary_block()",
       "id": "reduction_build_master_feature_matrix_build_binary_block"
     },
@@ -242,7 +286,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L149",
-      "community": 0,
+      "community": 1,
       "norm_label": "validate_master_columns()",
       "id": "reduction_build_master_feature_matrix_validate_master_columns"
     },
@@ -251,7 +295,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L157",
-      "community": 0,
+      "community": 1,
       "norm_label": "_cosine_distance()",
       "id": "reduction_build_master_feature_matrix_cosine_distance"
     },
@@ -260,7 +304,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L164",
-      "community": 0,
+      "community": 1,
       "norm_label": "semantic_spot_checks()",
       "id": "reduction_build_master_feature_matrix_semantic_spot_checks"
     },
@@ -269,7 +313,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L191",
-      "community": 0,
+      "community": 1,
       "norm_label": "build_feature_matrix()",
       "id": "reduction_build_master_feature_matrix_build_feature_matrix"
     },
@@ -278,7 +322,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L266",
-      "community": 3,
+      "community": 1,
       "norm_label": "write_outputs()",
       "id": "reduction_build_master_feature_matrix_write_outputs"
     },
@@ -287,7 +331,7 @@
       "file_type": "code",
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L277",
-      "community": 3,
+      "community": 1,
       "norm_label": "print_validations()",
       "id": "reduction_build_master_feature_matrix_print_validations"
     },
@@ -296,7 +340,7 @@
       "file_type": "code",
       "source_file": "src/reduction/pca.py",
       "source_location": "L1",
-      "community": 0,
+      "community": 1,
       "norm_label": "pca.py",
       "id": "src_reduction_pca_py"
     },
@@ -305,7 +349,7 @@
       "file_type": "code",
       "source_file": "src/reduction/pca.py",
       "source_location": "L14",
-      "community": 0,
+      "community": 1,
       "norm_label": "scaledblocks",
       "id": "reduction_pca_scaledblocks"
     },
@@ -314,7 +358,7 @@
       "file_type": "code",
       "source_file": "src/reduction/pca.py",
       "source_location": "L23",
-      "community": 0,
+      "community": 1,
       "norm_label": "_as_float_matrix()",
       "id": "reduction_pca_as_float_matrix"
     },
@@ -323,7 +367,7 @@
       "file_type": "code",
       "source_file": "src/reduction/pca.py",
       "source_location": "L35",
-      "community": 0,
+      "community": 1,
       "norm_label": "standardize_and_weight_blocks()",
       "id": "reduction_pca_standardize_and_weight_blocks"
     },
@@ -332,7 +376,7 @@
       "file_type": "code",
       "source_file": "src/reduction/pca.py",
       "source_location": "L83",
-      "community": 0,
+      "community": 1,
       "norm_label": "fit_variance_pca()",
       "id": "reduction_pca_fit_variance_pca"
     },
@@ -341,7 +385,7 @@
       "file_type": "code",
       "source_file": "src/reduction/pca.py",
       "source_location": "L95",
-      "community": 0,
+      "community": 1,
       "norm_label": "component_block_norm_shares()",
       "id": "reduction_pca_component_block_norm_shares"
     },
@@ -350,7 +394,7 @@
       "file_type": "code",
       "source_file": "src/reduction/pca.py",
       "source_location": "L125",
-      "community": 0,
+      "community": 1,
       "norm_label": "count_embedding_dominated_components()",
       "id": "reduction_pca_count_embedding_dominated_components"
     },
@@ -359,7 +403,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L1",
-      "community": 2,
+      "community": 3,
       "norm_label": "feature_matrix.py",
       "id": "src_reduction_feature_matrix_py"
     },
@@ -368,7 +412,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L82",
-      "community": 2,
+      "community": 3,
       "norm_label": "categoryartifacts",
       "id": "reduction_feature_matrix_categoryartifacts"
     },
@@ -377,7 +421,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L89",
-      "community": 2,
+      "community": 3,
       "norm_label": "_has_curated_files()",
       "id": "reduction_feature_matrix_has_curated_files"
     },
@@ -386,7 +430,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L93",
-      "community": 2,
+      "community": 3,
       "norm_label": "resolve_category_artifacts()",
       "id": "reduction_feature_matrix_resolve_category_artifacts"
     },
@@ -395,7 +439,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L107",
-      "community": 2,
+      "community": 3,
       "norm_label": "discover_available_artifacts()",
       "id": "reduction_feature_matrix_discover_available_artifacts"
     },
@@ -404,7 +448,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L126",
-      "community": 2,
+      "community": 3,
       "norm_label": "_empty_series()",
       "id": "reduction_feature_matrix_empty_series"
     },
@@ -413,7 +457,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L130",
-      "community": 2,
+      "community": 3,
       "norm_label": "_series_or_default()",
       "id": "reduction_feature_matrix_series_or_default"
     },
@@ -422,7 +466,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L136",
-      "community": 2,
+      "community": 3,
       "norm_label": "_with_canonical_p99_columns()",
       "id": "reduction_feature_matrix_with_canonical_p99_columns"
     },
@@ -431,7 +475,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L146",
-      "community": 2,
+      "community": 3,
       "norm_label": "_theme_columns()",
       "id": "reduction_feature_matrix_theme_columns"
     },
@@ -440,7 +484,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L156",
-      "community": 2,
+      "community": 3,
       "norm_label": "build_book_features()",
       "id": "reduction_feature_matrix_build_book_features"
     },
@@ -449,7 +493,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L177",
-      "community": 2,
+      "community": 3,
       "norm_label": "build_interaction_features()",
       "id": "reduction_feature_matrix_build_interaction_features"
     },
@@ -458,7 +502,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L187",
-      "community": 2,
+      "community": 3,
       "norm_label": "build_global_user_features()",
       "id": "reduction_feature_matrix_build_global_user_features"
     },
@@ -467,7 +511,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L225",
-      "community": 2,
+      "community": 3,
       "norm_label": "validate_book_features()",
       "id": "reduction_feature_matrix_validate_book_features"
     },
@@ -476,7 +520,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L244",
-      "community": 2,
+      "community": 3,
       "norm_label": "validate_interaction_features()",
       "id": "reduction_feature_matrix_validate_interaction_features"
     },
@@ -485,7 +529,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L250",
-      "community": 2,
+      "community": 3,
       "norm_label": "validate_user_features()",
       "id": "reduction_feature_matrix_validate_user_features"
     },
@@ -494,7 +538,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L255",
-      "community": 2,
+      "community": 3,
       "norm_label": "generate_feature_matrices()",
       "id": "reduction_feature_matrix_generate_feature_matrices"
     },
@@ -503,7 +547,7 @@
       "file_type": "code",
       "source_file": "src/reduction/feature_matrix.py",
       "source_location": "L305",
-      "community": 2,
+      "community": 3,
       "norm_label": "manifest_summary()",
       "id": "reduction_feature_matrix_manifest_summary"
     },
@@ -512,7 +556,7 @@
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L1",
-      "community": 4,
+      "community": 6,
       "norm_label": "cleaning.py",
       "id": "src_utils_cleaning_py"
     },
@@ -521,7 +565,7 @@
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L18",
-      "community": 4,
+      "community": 6,
       "norm_label": "empty_strings_to_na()",
       "id": "utils_cleaning_empty_strings_to_na"
     },
@@ -530,7 +574,7 @@
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L22",
-      "community": 4,
+      "community": 6,
       "norm_label": "normalize_review_text()",
       "id": "utils_cleaning_normalize_review_text"
     },
@@ -539,7 +583,7 @@
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L31",
-      "community": 4,
+      "community": 6,
       "norm_label": "to_numeric_columns()",
       "id": "utils_cleaning_to_numeric_columns"
     },
@@ -548,7 +592,7 @@
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L39",
-      "community": 4,
+      "community": 6,
       "norm_label": "parse_goodreads_dates()",
       "id": "utils_cleaning_parse_goodreads_dates"
     },
@@ -557,7 +601,7 @@
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L52",
-      "community": 4,
+      "community": 6,
       "norm_label": "parse_bool_series()",
       "id": "utils_cleaning_parse_bool_series"
     },
@@ -566,7 +610,7 @@
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L61",
-      "community": 4,
+      "community": 6,
       "norm_label": "_json_dumps()",
       "id": "utils_cleaning_json_dumps"
     },
@@ -575,7 +619,7 @@
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L67",
-      "community": 4,
+      "community": 6,
       "norm_label": "_authors_summary()",
       "id": "utils_cleaning_authors_summary"
     },
@@ -584,7 +628,7 @@
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L85",
-      "community": 4,
+      "community": 6,
       "norm_label": "_shelves_summary()",
       "id": "utils_cleaning_shelves_summary"
     },
@@ -593,7 +637,7 @@
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L113",
-      "community": 4,
+      "community": 6,
       "norm_label": "clean_books()",
       "id": "utils_cleaning_clean_books"
     },
@@ -602,7 +646,7 @@
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L163",
-      "community": 4,
+      "community": 6,
       "norm_label": "clean_interactions()",
       "id": "utils_cleaning_clean_interactions"
     },
@@ -611,7 +655,7 @@
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L189",
-      "community": 4,
+      "community": 6,
       "norm_label": "add_interaction_aggregates()",
       "id": "utils_cleaning_add_interaction_aggregates"
     },
@@ -620,7 +664,7 @@
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L203",
-      "community": 4,
+      "community": 6,
       "norm_label": "cap_outlier_features()",
       "id": "utils_cleaning_cap_outlier_features"
     },
@@ -629,7 +673,7 @@
       "file_type": "code",
       "source_file": "src/utils/io.py",
       "source_location": "L1",
-      "community": 3,
+      "community": 9,
       "norm_label": "io.py",
       "id": "src_utils_io_py"
     },
@@ -638,7 +682,7 @@
       "file_type": "code",
       "source_file": "src/utils/io.py",
       "source_location": "L13",
-      "community": 3,
+      "community": 9,
       "norm_label": "compressed_size_gb()",
       "id": "utils_io_compressed_size_gb"
     },
@@ -647,7 +691,7 @@
       "file_type": "code",
       "source_file": "src/utils/io.py",
       "source_location": "L17",
-      "community": 3,
+      "community": 9,
       "norm_label": "iter_jsonl_records()",
       "id": "utils_io_iter_jsonl_records"
     },
@@ -656,7 +700,7 @@
       "file_type": "code",
       "source_file": "src/utils/io.py",
       "source_location": "L26",
-      "community": 3,
+      "community": 9,
       "norm_label": "read_jsonl_sample()",
       "id": "utils_io_read_jsonl_sample"
     },
@@ -665,7 +709,7 @@
       "file_type": "code",
       "source_file": "src/utils/io.py",
       "source_location": "L30",
-      "community": 3,
+      "community": 9,
       "norm_label": "read_jsonl_chunks()",
       "id": "utils_io_read_jsonl_chunks"
     },
@@ -674,7 +718,7 @@
       "file_type": "code",
       "source_file": "src/utils/io.py",
       "source_location": "L39",
-      "community": 3,
+      "community": 9,
       "norm_label": "read_parquet_chunks()",
       "id": "utils_io_read_parquet_chunks"
     },
@@ -683,7 +727,7 @@
       "file_type": "code",
       "source_file": "src/utils/io.py",
       "source_location": "L49",
-      "community": 3,
+      "community": 1,
       "norm_label": "safe_write_parquet()",
       "id": "utils_io_safe_write_parquet"
     },
@@ -692,7 +736,7 @@
       "file_type": "code",
       "source_file": "src/utils/io.py",
       "source_location": "L54",
-      "community": 3,
+      "community": 9,
       "norm_label": "remove_path()",
       "id": "utils_io_remove_path"
     },
@@ -701,7 +745,7 @@
       "file_type": "rationale",
       "source_file": "src/utils/__init__.py",
       "source_location": "L1",
-      "community": 6,
+      "community": 13,
       "norm_label": "reusable helpers for the goodreads pipeline.",
       "id": "utils_init_rationale_1"
     },
@@ -710,7 +754,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L1",
-      "community": 1,
+      "community": 2,
       "norm_label": "eda.py",
       "id": "src_utils_eda_py"
     },
@@ -719,7 +763,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L13",
-      "community": 1,
+      "community": 2,
       "norm_label": "schema_summary()",
       "id": "utils_eda_schema_summary"
     },
@@ -728,7 +772,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L35",
-      "community": 1,
+      "community": 2,
       "norm_label": "missing_summary()",
       "id": "utils_eda_missing_summary"
     },
@@ -737,7 +781,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L51",
-      "community": 1,
+      "community": 2,
       "norm_label": "duplicate_summary()",
       "id": "utils_eda_duplicate_summary"
     },
@@ -746,7 +790,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L70",
-      "community": 1,
+      "community": 2,
       "norm_label": "numeric_profile()",
       "id": "utils_eda_numeric_profile"
     },
@@ -755,7 +799,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L78",
-      "community": 1,
+      "community": 2,
       "norm_label": "iqr_outlier_summary()",
       "id": "utils_eda_iqr_outlier_summary"
     },
@@ -764,7 +808,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L105",
-      "community": 1,
+      "community": 2,
       "norm_label": "categorical_profile()",
       "id": "utils_eda_categorical_profile"
     },
@@ -773,7 +817,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L118",
-      "community": 1,
+      "community": 2,
       "norm_label": "_iter_dicts()",
       "id": "utils_eda_iter_dicts"
     },
@@ -782,7 +826,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L122",
-      "community": 1,
+      "community": 2,
       "norm_label": "_bin_counts()",
       "id": "utils_eda_bin_counts"
     },
@@ -791,7 +835,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L133",
-      "community": 1,
+      "community": 2,
       "norm_label": "author_profile()",
       "id": "utils_eda_author_profile"
     },
@@ -800,7 +844,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L169",
-      "community": 1,
+      "community": 2,
       "norm_label": "shelves_profile()",
       "id": "utils_eda_shelves_profile"
     },
@@ -809,7 +853,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L226",
-      "community": 1,
+      "community": 2,
       "norm_label": "series_profile()",
       "id": "utils_eda_series_profile"
     },
@@ -818,7 +862,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L249",
-      "community": 1,
+      "community": 2,
       "norm_label": "combine_books_interactions()",
       "id": "utils_eda_combine_books_interactions"
     },
@@ -827,7 +871,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L261",
-      "community": 1,
+      "community": 2,
       "norm_label": "engagement_profile()",
       "id": "utils_eda_engagement_profile"
     },
@@ -836,7 +880,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L303",
-      "community": 1,
+      "community": 2,
       "norm_label": "reading_duration_profile()",
       "id": "utils_eda_reading_duration_profile"
     },
@@ -845,7 +889,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L331",
-      "community": 1,
+      "community": 2,
       "norm_label": "user_rating_behavior()",
       "id": "utils_eda_user_rating_behavior"
     },
@@ -854,7 +898,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L377",
-      "community": 1,
+      "community": 2,
       "norm_label": "isbn_quality_profile()",
       "id": "utils_eda_isbn_quality_profile"
     },
@@ -863,7 +907,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L393",
-      "community": 1,
+      "community": 2,
       "norm_label": "platform_growth_profile()",
       "id": "utils_eda_platform_growth_profile"
     },
@@ -872,7 +916,7 @@
       "file_type": "code",
       "source_file": "src/utils/eda.py",
       "source_location": "L418",
-      "community": 1,
+      "community": 2,
       "norm_label": "build_eda_profile()",
       "id": "utils_eda_build_eda_profile"
     },
@@ -881,7 +925,7 @@
       "file_type": "rationale",
       "source_file": "src/utils/eda.py",
       "source_location": "L250",
-      "community": 1,
+      "community": 2,
       "norm_label": "inner join between books and interactions to have a complete dataset for cross-a",
       "id": "utils_eda_rationale_250"
     },
@@ -890,7 +934,7 @@
       "file_type": "code",
       "source_file": "tests/test_master_feature_matrix.py",
       "source_location": "L1",
-      "community": 0,
+      "community": 1,
       "norm_label": "test_master_feature_matrix.py",
       "id": "tests_test_master_feature_matrix_py"
     },
@@ -899,7 +943,7 @@
       "file_type": "code",
       "source_file": "tests/test_master_feature_matrix.py",
       "source_location": "L15",
-      "community": 0,
+      "community": 1,
       "norm_label": "_sample_master()",
       "id": "tests_test_master_feature_matrix_sample_master"
     },
@@ -908,7 +952,7 @@
       "file_type": "code",
       "source_file": "tests/test_master_feature_matrix.py",
       "source_location": "L39",
-      "community": 0,
+      "community": 1,
       "norm_label": "test_build_blocks_and_block_weights()",
       "id": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights"
     },
@@ -917,9 +961,1184 @@
       "file_type": "code",
       "source_file": "tests/test_master_feature_matrix.py",
       "source_location": "L72",
-      "community": 0,
+      "community": 1,
       "norm_label": "test_pca_smoke_preserves_row_count()",
       "id": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count"
+    },
+    {
+      "label": "build_deliverable3_clustering_outputs.py",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L1",
+      "id": "build_deliverable3_clustering_outputs_py",
+      "community": 5,
+      "norm_label": "build_deliverable3_clustering_outputs.py"
+    },
+    {
+      "label": "pc_sort_key()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L34",
+      "id": "scripts_build_deliverable3_clustering_outputs_pc_sort_key",
+      "community": 5,
+      "norm_label": "pc_sort_key()"
+    },
+    {
+      "label": "load_feature_matrix()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L38",
+      "id": "scripts_build_deliverable3_clustering_outputs_load_feature_matrix",
+      "community": 5,
+      "norm_label": "load_feature_matrix()"
+    },
+    {
+      "label": "load_metadata()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L47",
+      "id": "scripts_build_deliverable3_clustering_outputs_load_metadata",
+      "community": 5,
+      "norm_label": "load_metadata()"
+    },
+    {
+      "label": "get_kmeans_model()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L70",
+      "id": "scripts_build_deliverable3_clustering_outputs_get_kmeans_model",
+      "community": 5,
+      "norm_label": "get_kmeans_model()"
+    },
+    {
+      "label": "cluster_size_stats()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L80",
+      "id": "scripts_build_deliverable3_clustering_outputs_cluster_size_stats",
+      "community": 5,
+      "norm_label": "cluster_size_stats()"
+    },
+    {
+      "label": "sampled_silhouette()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L93",
+      "id": "scripts_build_deliverable3_clustering_outputs_sampled_silhouette",
+      "community": 5,
+      "norm_label": "sampled_silhouette()"
+    },
+    {
+      "label": "write_k50_k100_comparison()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L104",
+      "id": "scripts_build_deliverable3_clustering_outputs_write_k50_k100_comparison",
+      "community": 5,
+      "norm_label": "write_k50_k100_comparison()"
+    },
+    {
+      "label": "quality_flag()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L130",
+      "id": "scripts_build_deliverable3_clustering_outputs_quality_flag",
+      "community": 5,
+      "norm_label": "quality_flag()"
+    },
+    {
+      "label": "write_assignments_and_quality()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L140",
+      "id": "scripts_build_deliverable3_clustering_outputs_write_assignments_and_quality",
+      "community": 5,
+      "norm_label": "write_assignments_and_quality()"
+    },
+    {
+      "label": "write_cluster_cohesion()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L168",
+      "id": "scripts_build_deliverable3_clustering_outputs_write_cluster_cohesion",
+      "community": 5,
+      "norm_label": "write_cluster_cohesion()"
+    },
+    {
+      "label": "write_cluster_examples()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L198",
+      "id": "scripts_build_deliverable3_clustering_outputs_write_cluster_examples",
+      "community": 5,
+      "norm_label": "write_cluster_examples()"
+    },
+    {
+      "label": "write_hierarchical_centroid_outputs()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L220",
+      "id": "scripts_build_deliverable3_clustering_outputs_write_hierarchical_centroid_outputs",
+      "community": 5,
+      "norm_label": "write_hierarchical_centroid_outputs()"
+    },
+    {
+      "label": "print_logs()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L266",
+      "id": "scripts_build_deliverable3_clustering_outputs_print_logs",
+      "community": 5,
+      "norm_label": "print_logs()"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L290",
+      "id": "scripts_build_deliverable3_clustering_outputs_main",
+      "community": 5,
+      "norm_label": "main()"
+    },
+    {
+      "label": "Book Recommendation System",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_book_recommendation_system",
+      "community": 0,
+      "norm_label": "book recommendation system"
+    },
+    {
+      "label": "Business Logic: multidimensional reading tastes",
+      "file_type": "rationale",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_business_logic",
+      "community": 0,
+      "norm_label": "business logic: multidimensional reading tastes"
+    },
+    {
+      "label": "K-Means book-level granularity",
+      "file_type": "rationale",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_kmeans_granularity",
+      "community": 0,
+      "norm_label": "k-means book-level granularity"
+    },
+    {
+      "label": "Avoiding Popularity Bias",
+      "file_type": "rationale",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_popularity_bias",
+      "community": 0,
+      "norm_label": "avoiding popularity bias"
+    },
+    {
+      "label": "Goodreads Dataset Collection (UCSD)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": "https://cseweb.ucsd.edu/~jmcauley/datasets/goodreads.html",
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_goodreads_dataset",
+      "community": 0,
+      "norm_label": "goodreads dataset collection (ucsd)"
+    },
+    {
+      "label": "Pipeline flow: clean->reduce->curation->merge->feature matrix->PCA",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_pipeline_flow",
+      "community": 0,
+      "norm_label": "pipeline flow: clean->reduce->curation->merge->feature matrix->pca"
+    },
+    {
+      "label": "src/merge_master.py master merge",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_merge_master",
+      "community": 0,
+      "norm_label": "src/merge_master.py master merge"
+    },
+    {
+      "label": "data/processed/books_master.parquet",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_books_master_parquet",
+      "community": 0,
+      "norm_label": "data/processed/books_master.parquet"
+    },
+    {
+      "label": "books_curated.parquet (per genre)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_books_curated_parquet",
+      "community": 0,
+      "norm_label": "books_curated.parquet (per genre)"
+    },
+    {
+      "label": "data/features/master_feature_matrix.parquet",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_master_feature_matrix",
+      "community": 0,
+      "norm_label": "data/features/master_feature_matrix.parquet"
+    },
+    {
+      "label": "data/features/master_pca_meta.json",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_master_pca_meta",
+      "community": 0,
+      "norm_label": "data/features/master_pca_meta.json"
+    },
+    {
+      "label": "data/features/master_pca_model.joblib",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_master_pca_model",
+      "community": 0,
+      "norm_label": "data/features/master_pca_model.joblib"
+    },
+    {
+      "label": "data/embeddings/description_embeddings.parquet",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_description_embeddings",
+      "community": 0,
+      "norm_label": "data/embeddings/description_embeddings.parquet"
+    },
+    {
+      "label": "src/reduction/build_master_feature_matrix.py",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_build_master_feature_matrix",
+      "community": 0,
+      "norm_label": "src/reduction/build_master_feature_matrix.py"
+    },
+    {
+      "label": "Numeric block (9 columns)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_numeric_block",
+      "community": 0,
+      "norm_label": "numeric block (9 columns)"
+    },
+    {
+      "label": "Binary and categorical block (11 columns)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_binary_block",
+      "community": 0,
+      "norm_label": "binary and categorical block (11 columns)"
+    },
+    {
+      "label": "Embedding block (256 columns)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_embedding_block",
+      "community": 0,
+      "norm_label": "embedding block (256 columns)"
+    },
+    {
+      "label": "google/embeddinggemma-300m",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_embeddinggemma_300m",
+      "community": 0,
+      "norm_label": "google/embeddinggemma-300m"
+    },
+    {
+      "label": "Standardization and block weighting (1/sqrt(dim))",
+      "file_type": "rationale",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_block_weighting",
+      "community": 0,
+      "norm_label": "standardization and block weighting (1/sqrt(dim))"
+    },
+    {
+      "label": "PCA(n_components=0.95, svd_solver=full)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_pca",
+      "community": 0,
+      "norm_label": "pca(n_components=0.95, svd_solver=full)"
+    },
+    {
+      "label": "log1p popularity transform",
+      "file_type": "rationale",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_log1p_transform",
+      "community": 0,
+      "norm_label": "log1p popularity transform"
+    },
+    {
+      "label": "Missingness flags as signal",
+      "file_type": "rationale",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_missingness_flags",
+      "community": 0,
+      "norm_label": "missingness flags as signal"
+    },
+    {
+      "label": "Semantic spot checks (cosine distance)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_semantic_spot_checks",
+      "community": 0,
+      "norm_label": "semantic spot checks (cosine distance)"
+    },
+    {
+      "label": "PCA loading interpretation report",
+      "file_type": "document",
+      "source_file": "data/features/viz_cache/pca_interpretation_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "pca_interpretation_report",
+      "community": 0,
+      "norm_label": "pca loading interpretation report"
+    },
+    {
+      "label": "PC0 engagement/popularity axis",
+      "file_type": "document",
+      "source_file": "data/features/viz_cache/pca_interpretation_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "pca_interpretation_report_pc0",
+      "community": 0,
+      "norm_label": "pc0 engagement/popularity axis"
+    },
+    {
+      "label": "PC5 genre-separation axis",
+      "file_type": "document",
+      "source_file": "data/features/viz_cache/pca_interpretation_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "pca_interpretation_report_pc5",
+      "community": 0,
+      "norm_label": "pc5 genre-separation axis"
+    },
+    {
+      "label": "PC14 metadata-completeness axis",
+      "file_type": "document",
+      "source_file": "data/features/viz_cache/pca_interpretation_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "pca_interpretation_report_pc14",
+      "community": 0,
+      "norm_label": "pc14 metadata-completeness axis"
+    },
+    {
+      "label": "PC15 first embedding-dominated semantic theme",
+      "file_type": "document",
+      "source_file": "data/features/viz_cache/pca_interpretation_report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "pca_interpretation_report_pc15",
+      "community": 0,
+      "norm_label": "pc15 first embedding-dominated semantic theme"
+    },
+    {
+      "label": "scikit-learn==1.8.0",
+      "file_type": "document",
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "requirements_scikit_learn",
+      "community": 0,
+      "norm_label": "scikit-learn==1.8.0"
+    },
+    {
+      "label": "sentence-transformers==5.4.1",
+      "file_type": "document",
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "requirements_sentence_transformers",
+      "community": 0,
+      "norm_label": "sentence-transformers==5.4.1"
+    },
+    {
+      "label": "transformers==5.7.0",
+      "file_type": "document",
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "requirements_transformers",
+      "community": 0,
+      "norm_label": "transformers==5.7.0"
+    },
+    {
+      "label": "huggingface_hub==1.13.0",
+      "file_type": "document",
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "requirements_huggingface_hub",
+      "community": 0,
+      "norm_label": "huggingface_hub==1.13.0"
+    },
+    {
+      "label": "torch==2.11.0",
+      "file_type": "document",
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "requirements_torch",
+      "community": 0,
+      "norm_label": "torch==2.11.0"
+    },
+    {
+      "label": "pandas==3.0.2",
+      "file_type": "document",
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "requirements_pandas",
+      "community": 15,
+      "norm_label": "pandas==3.0.2"
+    },
+    {
+      "label": "pyarrow==24.0.0",
+      "file_type": "document",
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "requirements_pyarrow",
+      "community": 0,
+      "norm_label": "pyarrow==24.0.0"
+    },
+    {
+      "label": "umap-learn>=0.5.6",
+      "file_type": "document",
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "requirements_umap_learn",
+      "community": 16,
+      "norm_label": "umap-learn>=0.5.6"
+    },
+    {
+      "label": "joblib==1.5.3",
+      "file_type": "document",
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "requirements_joblib",
+      "community": 0,
+      "norm_label": "joblib==1.5.3"
+    },
+    {
+      "label": "graphifyy==0.7.10",
+      "file_type": "document",
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "requirements_graphifyy",
+      "community": 17,
+      "norm_label": "graphifyy==0.7.10"
+    },
+    {
+      "label": "Hierarchical Cut Quality chart (k100 ward)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "hclust_silhouette_chart",
+      "community": 10,
+      "norm_label": "hierarchical cut quality chart (k100 ward)"
+    },
+    {
+      "label": "Silhouette score on K-Means centroids",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "silhouette_metric",
+      "community": 10,
+      "norm_label": "silhouette score on k-means centroids"
+    },
+    {
+      "label": "Hierarchical clustering (Ward linkage)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "hierarchical_clustering_ward",
+      "community": 10,
+      "norm_label": "hierarchical clustering (ward linkage)"
+    },
+    {
+      "label": "K-Means centroids (k=100)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "kmeans_centroids_k100",
+      "community": 10,
+      "norm_label": "k-means centroids (k=100)"
+    },
+    {
+      "label": "Number of hierarchical groups (cut level 5-25)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "hierarchical_groups_count",
+      "community": 10,
+      "norm_label": "number of hierarchical groups (cut level 5-25)"
+    },
+    {
+      "label": "Cluster count selection via silhouette",
+      "file_type": "rationale",
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "cluster_count_selection",
+      "community": 10,
+      "norm_label": "cluster count selection via silhouette"
+    },
+    {
+      "label": "Silhouette by K chart",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "silhouette_by_k_chart",
+      "community": 4,
+      "norm_label": "silhouette by k chart"
+    },
+    {
+      "label": "Sampled silhouette score",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "silhouette_score_metric",
+      "community": 4,
+      "norm_label": "sampled silhouette score"
+    },
+    {
+      "label": "K (number of clusters)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "k_cluster_count",
+      "community": 4,
+      "norm_label": "k (number of clusters)"
+    },
+    {
+      "label": "KMeans clustering",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "kmeans_clustering",
+      "community": 4,
+      "norm_label": "kmeans clustering"
+    },
+    {
+      "label": "K selection via silhouette (monotonic decrease, peak at low K)",
+      "file_type": "rationale",
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "k_selection_rationale",
+      "community": 4,
+      "norm_label": "k selection via silhouette (monotonic decrease, peak at low k)"
+    },
+    {
+      "label": "master_feature_matrix.parquet (PCA vectors)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "master_feature_matrix",
+      "community": 4,
+      "norm_label": "master_feature_matrix.parquet (pca vectors)"
+    },
+    {
+      "label": "K=100 Cluster Cohesion Chart",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/cluster_cohesion_k100.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "cluster_cohesion_k100_chart",
+      "community": 4,
+      "norm_label": "k=100 cluster cohesion chart"
+    },
+    {
+      "label": "Mean Distance to Centroid",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/cluster_cohesion_k100.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "mean_distance_to_centroid_metric",
+      "community": 4,
+      "norm_label": "mean distance to centroid"
+    },
+    {
+      "label": "Cluster Cohesion",
+      "file_type": "rationale",
+      "source_file": "data/outputs/clustering/cluster_cohesion_k100.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "cluster_cohesion_concept",
+      "community": 4,
+      "norm_label": "cluster cohesion"
+    },
+    {
+      "label": "Master Feature Matrix (PCA vectors)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/cluster_cohesion_k100.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "master_feature_matrix_pca",
+      "community": 12,
+      "norm_label": "master feature matrix (pca vectors)"
+    },
+    {
+      "label": "Low-Cohesion Outlier Clusters (21, 10, 41, 43)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/cluster_cohesion_k100.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "low_cohesion_outlier_clusters",
+      "community": 4,
+      "norm_label": "low-cohesion outlier clusters (21, 10, 41, 43)"
+    },
+    {
+      "label": "Hierarchical Group Sizes (h=10) bar chart",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "chart_hclust_group_sizes",
+      "community": 11,
+      "norm_label": "hierarchical group sizes (h=10) bar chart"
+    },
+    {
+      "label": "Books per hierarchical cluster",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "metric_books_per_cluster",
+      "community": 11,
+      "norm_label": "books per hierarchical cluster"
+    },
+    {
+      "label": "Hierarchical (Ward) clustering",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "method_hierarchical_clustering",
+      "community": 11,
+      "norm_label": "hierarchical (ward) clustering"
+    },
+    {
+      "label": "Dendrogram height cut h=10 (10 groups)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "param_height_cut_h10",
+      "community": 11,
+      "norm_label": "dendrogram height cut h=10 (10 groups)"
+    },
+    {
+      "label": "Highly imbalanced cluster sizes (cluster 1 dominant ~53k, several near-empty)",
+      "file_type": "rationale",
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "insight_imbalanced_cluster_sizes",
+      "community": 11,
+      "norm_label": "highly imbalanced cluster sizes (cluster 1 dominant ~53k, several near-empty)"
+    },
+    {
+      "label": "master_feature_matrix.parquet (pc_0..pc_N book vectors)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "data_master_feature_matrix",
+      "community": 11,
+      "norm_label": "master_feature_matrix.parquet (pc_0..pc_n book vectors)"
+    },
+    {
+      "label": "Cluster Size Distribution (K=100) Chart",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/cluster_size_distribution_k100.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "cluster_size_distribution_chart",
+      "community": 12,
+      "norm_label": "cluster size distribution (k=100) chart"
+    },
+    {
+      "label": "Cluster Size (Books per Cluster)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/cluster_size_distribution_k100.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "cluster_size_metric",
+      "community": 12,
+      "norm_label": "cluster size (books per cluster)"
+    },
+    {
+      "label": "KMeans Clustering K=100",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/cluster_size_distribution_k100.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "kmeans_k100_clustering",
+      "community": 12,
+      "norm_label": "kmeans clustering k=100"
+    },
+    {
+      "label": "Book Clusters",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/cluster_size_distribution_k100.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "book_clusters",
+      "community": 12,
+      "norm_label": "book clusters"
+    },
+    {
+      "label": "Cluster Balance / Imbalance Insight",
+      "file_type": "rationale",
+      "source_file": "data/outputs/clustering/cluster_size_distribution_k100.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "cluster_balance_rationale",
+      "community": 12,
+      "norm_label": "cluster balance / imbalance insight"
+    },
+    {
+      "label": "Ward Hierarchical Clustering Dendrogram over K=100 Centroids",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "hclust_dendrogram_k100_ward_chart",
+      "community": 8,
+      "norm_label": "ward hierarchical clustering dendrogram over k=100 centroids"
+    },
+    {
+      "label": "Ward Hierarchical Clustering Method",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ward_hierarchical_clustering_method",
+      "community": 8,
+      "norm_label": "ward hierarchical clustering method"
+    },
+    {
+      "label": "K-Means K=100 Cluster Centroids",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "kmeans_k100_centroids",
+      "community": 8,
+      "norm_label": "k-means k=100 cluster centroids"
+    },
+    {
+      "label": "Ward Distance (y-axis, 0 to 25)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ward_distance_axis",
+      "community": 8,
+      "norm_label": "ward distance (y-axis, 0 to 25)"
+    },
+    {
+      "label": "K-Means Cluster Leaf Labels (x-axis, 100 clusters)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "kmeans_cluster_leaf_axis",
+      "community": 8,
+      "norm_label": "k-means cluster leaf labels (x-axis, 100 clusters)"
+    },
+    {
+      "label": "Outlier Cluster 21 Splits Off at Ward Distance ~24",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "outlier_cluster_21_split",
+      "community": 8,
+      "norm_label": "outlier cluster 21 splits off at ward distance ~24"
+    },
+    {
+      "label": "Meta-Hierarchy of Book-Cluster Centroids (genre/taste super-groups)",
+      "file_type": "rationale",
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "centroid_meta_hierarchy_insight",
+      "community": 8,
+      "norm_label": "meta-hierarchy of book-cluster centroids (genre/taste super-groups)"
+    },
+    {
+      "label": "PCA Book Vectors (pc_0..pc_N) Clustering Input",
+      "file_type": "rationale",
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "pca_book_vectors_clustering_input",
+      "community": 8,
+      "norm_label": "pca book vectors (pc_0..pc_n) clustering input"
+    },
+    {
+      "label": "K-Means Elbow Plot",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "kmeans_elbow_plot",
+      "community": 4,
+      "norm_label": "k-means elbow plot"
+    },
+    {
+      "label": "Inertia (within-cluster sum of squares)",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "inertia_metric",
+      "community": 4,
+      "norm_label": "inertia (within-cluster sum of squares)"
+    },
+    {
+      "label": "Number of Clusters K",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "cluster_count_k",
+      "community": 4,
+      "norm_label": "number of clusters k"
+    },
+    {
+      "label": "Elbow Method for K Selection",
+      "file_type": "rationale",
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "elbow_method",
+      "community": 4,
+      "norm_label": "elbow method for k selection"
+    },
+    {
+      "label": "K Sweep Range 25 to 150",
+      "file_type": "image",
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "k_sweep_range",
+      "community": 4,
+      "norm_label": "k sweep range 25 to 150"
+    },
+    {
+      "label": "Elbow Knee Region (K~50-75)",
+      "file_type": "rationale",
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "elbow_knee_region",
+      "community": 4,
+      "norm_label": "elbow knee region (k~50-75)"
     }
   ],
   "links": [
@@ -940,8 +2159,8 @@
       "source_location": "L1",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_init_rationale_1",
-      "target": "src_init_py"
+      "source": "src_init_py",
+      "target": "src_init_rationale_1"
     },
     {
       "relation": "rationale_for",
@@ -950,8 +2169,8 @@
       "source_location": "L1",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_init_rationale_1",
-      "target": "src_init_py"
+      "source": "src_init_py",
+      "target": "utils_init_rationale_1"
     },
     {
       "relation": "contains",
@@ -991,8 +2210,8 @@
       "source_location": "L37",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_merge_master_main",
-      "target": "src_merge_master_resolve_curated_books_path"
+      "source": "src_merge_master_resolve_curated_books_path",
+      "target": "src_merge_master_main"
     },
     {
       "relation": "contains",
@@ -1001,8 +2220,8 @@
       "source_location": "L307",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "src_reduction_build_master_feature_matrix_py",
-      "target": "src_merge_master_main"
+      "source": "src_merge_master_main",
+      "target": "src_reduction_build_master_feature_matrix_py"
     },
     {
       "relation": "calls",
@@ -1135,8 +2354,8 @@
       "source_location": "L72",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_embeddings_validate_cache_schema",
-      "target": "reduction_embeddings_embedding_columns"
+      "source": "reduction_embeddings_embedding_columns",
+      "target": "reduction_embeddings_validate_cache_schema"
     },
     {
       "relation": "calls",
@@ -1146,8 +2365,8 @@
       "source_location": "L91",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_embeddings_read_cache",
-      "target": "reduction_embeddings_embedding_columns"
+      "source": "reduction_embeddings_embedding_columns",
+      "target": "reduction_embeddings_read_cache"
     },
     {
       "relation": "calls",
@@ -1157,8 +2376,8 @@
       "source_location": "L145",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_embeddings_load_or_create_description_embeddings",
-      "target": "reduction_embeddings_embedding_columns"
+      "source": "reduction_embeddings_embedding_columns",
+      "target": "reduction_embeddings_load_or_create_description_embeddings"
     },
     {
       "relation": "calls",
@@ -1168,8 +2387,8 @@
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L199",
       "weight": 1.0,
-      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
-      "target": "reduction_embeddings_embedding_columns"
+      "source": "reduction_embeddings_embedding_columns",
+      "target": "reduction_build_master_feature_matrix_build_feature_matrix"
     },
     {
       "relation": "calls",
@@ -1179,8 +2398,8 @@
       "source_location": "L138",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_embeddings_load_or_create_description_embeddings",
-      "target": "reduction_embeddings_clean_description_texts"
+      "source": "reduction_embeddings_clean_description_texts",
+      "target": "reduction_embeddings_load_or_create_description_embeddings"
     },
     {
       "relation": "calls",
@@ -1190,8 +2409,8 @@
       "source_location": "L46",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_embeddings_require_huggingface_auth",
-      "target": "reduction_embeddings_get_huggingface_token"
+      "source": "reduction_embeddings_get_huggingface_token",
+      "target": "reduction_embeddings_require_huggingface_auth"
     },
     {
       "relation": "calls",
@@ -1201,8 +2420,8 @@
       "source_location": "L65",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_embeddings_load_embedding_model",
-      "target": "reduction_embeddings_require_huggingface_auth"
+      "source": "reduction_embeddings_require_huggingface_auth",
+      "target": "reduction_embeddings_load_embedding_model"
     },
     {
       "relation": "calls",
@@ -1212,8 +2431,8 @@
       "source_location": "L102",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_embeddings_encode_texts",
-      "target": "reduction_embeddings_load_embedding_model"
+      "source": "reduction_embeddings_load_embedding_model",
+      "target": "reduction_embeddings_encode_texts"
     },
     {
       "relation": "calls",
@@ -1223,8 +2442,8 @@
       "source_location": "L92",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_embeddings_read_cache",
-      "target": "reduction_embeddings_validate_cache_schema"
+      "source": "reduction_embeddings_validate_cache_schema",
+      "target": "reduction_embeddings_read_cache"
     },
     {
       "relation": "calls",
@@ -1234,8 +2453,8 @@
       "source_location": "L148",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_embeddings_load_or_create_description_embeddings",
-      "target": "reduction_embeddings_validate_cache_schema"
+      "source": "reduction_embeddings_validate_cache_schema",
+      "target": "reduction_embeddings_load_or_create_description_embeddings"
     },
     {
       "relation": "calls",
@@ -1245,8 +2464,8 @@
       "source_location": "L130",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_embeddings_load_or_create_description_embeddings",
-      "target": "reduction_embeddings_read_cache"
+      "source": "reduction_embeddings_read_cache",
+      "target": "reduction_embeddings_load_or_create_description_embeddings"
     },
     {
       "relation": "calls",
@@ -1256,8 +2475,8 @@
       "source_location": "L139",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_embeddings_load_or_create_description_embeddings",
-      "target": "reduction_embeddings_encode_texts"
+      "source": "reduction_embeddings_encode_texts",
+      "target": "reduction_embeddings_load_or_create_description_embeddings"
     },
     {
       "relation": "calls",
@@ -1278,8 +2497,8 @@
       "source_file": "src/reduction/build_master_feature_matrix.py",
       "source_location": "L198",
       "weight": 1.0,
-      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
-      "target": "reduction_embeddings_load_or_create_description_embeddings"
+      "source": "reduction_embeddings_load_or_create_description_embeddings",
+      "target": "reduction_build_master_feature_matrix_build_feature_matrix"
     },
     {
       "relation": "contains",
@@ -1419,8 +2638,8 @@
       "source_location": "L81",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_build_numeric_block",
-      "target": "reduction_build_master_feature_matrix_safe_median"
+      "source": "reduction_build_master_feature_matrix_safe_median",
+      "target": "reduction_build_master_feature_matrix_build_numeric_block"
     },
     {
       "relation": "calls",
@@ -1430,8 +2649,8 @@
       "source_location": "L89",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_build_numeric_block",
-      "target": "reduction_build_master_feature_matrix_numeric"
+      "source": "reduction_build_master_feature_matrix_numeric",
+      "target": "reduction_build_master_feature_matrix_build_numeric_block"
     },
     {
       "relation": "calls",
@@ -1441,8 +2660,8 @@
       "source_location": "L138",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_build_binary_block",
-      "target": "reduction_build_master_feature_matrix_numeric"
+      "source": "reduction_build_master_feature_matrix_numeric",
+      "target": "reduction_build_master_feature_matrix_build_binary_block"
     },
     {
       "relation": "calls",
@@ -1452,8 +2671,8 @@
       "source_location": "L196",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
-      "target": "reduction_build_master_feature_matrix_build_numeric_block"
+      "source": "reduction_build_master_feature_matrix_build_numeric_block",
+      "target": "reduction_build_master_feature_matrix_build_feature_matrix"
     },
     {
       "relation": "calls",
@@ -1463,8 +2682,8 @@
       "source_file": "tests/test_master_feature_matrix.py",
       "source_location": "L41",
       "weight": 1.0,
-      "source": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights",
-      "target": "reduction_build_master_feature_matrix_build_numeric_block"
+      "source": "reduction_build_master_feature_matrix_build_numeric_block",
+      "target": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights"
     },
     {
       "relation": "calls",
@@ -1474,8 +2693,8 @@
       "source_file": "tests/test_master_feature_matrix.py",
       "source_location": "L74",
       "weight": 1.0,
-      "source": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count",
-      "target": "reduction_build_master_feature_matrix_build_numeric_block"
+      "source": "reduction_build_master_feature_matrix_build_numeric_block",
+      "target": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count"
     },
     {
       "relation": "calls",
@@ -1485,8 +2704,8 @@
       "source_location": "L115",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_dedupe_column_names",
-      "target": "reduction_build_master_feature_matrix_sanitize_language_code"
+      "source": "reduction_build_master_feature_matrix_sanitize_language_code",
+      "target": "reduction_build_master_feature_matrix_dedupe_column_names"
     },
     {
       "relation": "calls",
@@ -1496,8 +2715,8 @@
       "source_location": "L142",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_build_binary_block",
-      "target": "reduction_build_master_feature_matrix_dedupe_column_names"
+      "source": "reduction_build_master_feature_matrix_dedupe_column_names",
+      "target": "reduction_build_master_feature_matrix_build_binary_block"
     },
     {
       "relation": "calls",
@@ -1507,8 +2726,8 @@
       "source_location": "L134",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_build_binary_block",
-      "target": "reduction_build_master_feature_matrix_build_language_categories"
+      "source": "reduction_build_master_feature_matrix_build_language_categories",
+      "target": "reduction_build_master_feature_matrix_build_binary_block"
     },
     {
       "relation": "calls",
@@ -1518,8 +2737,8 @@
       "source_location": "L197",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
-      "target": "reduction_build_master_feature_matrix_build_binary_block"
+      "source": "reduction_build_master_feature_matrix_build_binary_block",
+      "target": "reduction_build_master_feature_matrix_build_feature_matrix"
     },
     {
       "relation": "calls",
@@ -1529,8 +2748,8 @@
       "source_file": "tests/test_master_feature_matrix.py",
       "source_location": "L42",
       "weight": 1.0,
-      "source": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights",
-      "target": "reduction_build_master_feature_matrix_build_binary_block"
+      "source": "reduction_build_master_feature_matrix_build_binary_block",
+      "target": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights"
     },
     {
       "relation": "calls",
@@ -1540,8 +2759,8 @@
       "source_file": "tests/test_master_feature_matrix.py",
       "source_location": "L75",
       "weight": 1.0,
-      "source": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count",
-      "target": "reduction_build_master_feature_matrix_build_binary_block"
+      "source": "reduction_build_master_feature_matrix_build_binary_block",
+      "target": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count"
     },
     {
       "relation": "calls",
@@ -1551,8 +2770,8 @@
       "source_location": "L192",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
-      "target": "reduction_build_master_feature_matrix_validate_master_columns"
+      "source": "reduction_build_master_feature_matrix_validate_master_columns",
+      "target": "reduction_build_master_feature_matrix_build_feature_matrix"
     },
     {
       "relation": "calls",
@@ -1562,8 +2781,8 @@
       "source_location": "L182",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_semantic_spot_checks",
-      "target": "reduction_build_master_feature_matrix_cosine_distance"
+      "source": "reduction_build_master_feature_matrix_cosine_distance",
+      "target": "reduction_build_master_feature_matrix_semantic_spot_checks"
     },
     {
       "relation": "calls",
@@ -1573,8 +2792,8 @@
       "source_location": "L222",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
-      "target": "reduction_build_master_feature_matrix_semantic_spot_checks"
+      "source": "reduction_build_master_feature_matrix_semantic_spot_checks",
+      "target": "reduction_build_master_feature_matrix_build_feature_matrix"
     },
     {
       "relation": "calls",
@@ -1699,8 +2918,8 @@
       "source_location": "L73",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_pca_standardize_and_weight_blocks",
-      "target": "reduction_pca_scaledblocks"
+      "source": "reduction_pca_scaledblocks",
+      "target": "reduction_pca_standardize_and_weight_blocks"
     },
     {
       "relation": "calls",
@@ -1710,8 +2929,8 @@
       "source_location": "L48",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_pca_standardize_and_weight_blocks",
-      "target": "reduction_pca_as_float_matrix"
+      "source": "reduction_pca_as_float_matrix",
+      "target": "reduction_pca_standardize_and_weight_blocks"
     },
     {
       "relation": "calls",
@@ -1721,8 +2940,8 @@
       "source_file": "tests/test_master_feature_matrix.py",
       "source_location": "L55",
       "weight": 1.0,
-      "source": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights",
-      "target": "reduction_pca_standardize_and_weight_blocks"
+      "source": "reduction_pca_standardize_and_weight_blocks",
+      "target": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights"
     },
     {
       "relation": "calls",
@@ -1732,8 +2951,8 @@
       "source_file": "tests/test_master_feature_matrix.py",
       "source_location": "L81",
       "weight": 1.0,
-      "source": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count",
-      "target": "reduction_pca_standardize_and_weight_blocks"
+      "source": "reduction_pca_standardize_and_weight_blocks",
+      "target": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count"
     },
     {
       "relation": "calls",
@@ -1743,8 +2962,8 @@
       "source_file": "tests/test_master_feature_matrix.py",
       "source_location": "L88",
       "weight": 1.0,
-      "source": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count",
-      "target": "reduction_pca_fit_variance_pca"
+      "source": "reduction_pca_fit_variance_pca",
+      "target": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count"
     },
     {
       "relation": "calls",
@@ -1754,8 +2973,8 @@
       "source_location": "L133",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_pca_count_embedding_dominated_components",
-      "target": "reduction_pca_component_block_norm_shares"
+      "source": "reduction_pca_component_block_norm_shares",
+      "target": "reduction_pca_count_embedding_dominated_components"
     },
     {
       "relation": "contains",
@@ -1925,8 +3144,8 @@
       "source_location": "L98",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_resolve_category_artifacts",
-      "target": "reduction_feature_matrix_categoryartifacts"
+      "source": "reduction_feature_matrix_categoryartifacts",
+      "target": "reduction_feature_matrix_resolve_category_artifacts"
     },
     {
       "relation": "calls",
@@ -1936,8 +3155,8 @@
       "source_location": "L97",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_resolve_category_artifacts",
-      "target": "reduction_feature_matrix_has_curated_files"
+      "source": "reduction_feature_matrix_has_curated_files",
+      "target": "reduction_feature_matrix_resolve_category_artifacts"
     },
     {
       "relation": "calls",
@@ -1947,8 +3166,8 @@
       "source_location": "L111",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_discover_available_artifacts",
-      "target": "reduction_feature_matrix_resolve_category_artifacts"
+      "source": "reduction_feature_matrix_resolve_category_artifacts",
+      "target": "reduction_feature_matrix_discover_available_artifacts"
     },
     {
       "relation": "calls",
@@ -1958,8 +3177,8 @@
       "source_location": "L256",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_generate_feature_matrices",
-      "target": "reduction_feature_matrix_discover_available_artifacts"
+      "source": "reduction_feature_matrix_discover_available_artifacts",
+      "target": "reduction_feature_matrix_generate_feature_matrices"
     },
     {
       "relation": "calls",
@@ -1969,8 +3188,8 @@
       "source_location": "L164",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_build_book_features",
-      "target": "reduction_feature_matrix_empty_series"
+      "source": "reduction_feature_matrix_empty_series",
+      "target": "reduction_feature_matrix_build_book_features"
     },
     {
       "relation": "calls",
@@ -1980,8 +3199,8 @@
       "source_location": "L183",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_build_interaction_features",
-      "target": "reduction_feature_matrix_empty_series"
+      "source": "reduction_feature_matrix_empty_series",
+      "target": "reduction_feature_matrix_build_interaction_features"
     },
     {
       "relation": "calls",
@@ -1991,8 +3210,8 @@
       "source_location": "L192",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_build_global_user_features",
-      "target": "reduction_feature_matrix_series_or_default"
+      "source": "reduction_feature_matrix_series_or_default",
+      "target": "reduction_feature_matrix_build_global_user_features"
     },
     {
       "relation": "calls",
@@ -2002,8 +3221,8 @@
       "source_location": "L157",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_build_book_features",
-      "target": "reduction_feature_matrix_with_canonical_p99_columns"
+      "source": "reduction_feature_matrix_with_canonical_p99_columns",
+      "target": "reduction_feature_matrix_build_book_features"
     },
     {
       "relation": "calls",
@@ -2013,8 +3232,8 @@
       "source_location": "L268",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_generate_feature_matrices",
-      "target": "reduction_feature_matrix_with_canonical_p99_columns"
+      "source": "reduction_feature_matrix_with_canonical_p99_columns",
+      "target": "reduction_feature_matrix_generate_feature_matrices"
     },
     {
       "relation": "calls",
@@ -2024,8 +3243,8 @@
       "source_location": "L170",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_build_book_features",
-      "target": "reduction_feature_matrix_theme_columns"
+      "source": "reduction_feature_matrix_theme_columns",
+      "target": "reduction_feature_matrix_build_book_features"
     },
     {
       "relation": "calls",
@@ -2035,8 +3254,8 @@
       "source_location": "L265",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_generate_feature_matrices",
-      "target": "reduction_feature_matrix_build_book_features"
+      "source": "reduction_feature_matrix_build_book_features",
+      "target": "reduction_feature_matrix_generate_feature_matrices"
     },
     {
       "relation": "calls",
@@ -2046,8 +3265,8 @@
       "source_location": "L266",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_generate_feature_matrices",
-      "target": "reduction_feature_matrix_build_interaction_features"
+      "source": "reduction_feature_matrix_build_interaction_features",
+      "target": "reduction_feature_matrix_generate_feature_matrices"
     },
     {
       "relation": "calls",
@@ -2057,8 +3276,8 @@
       "source_location": "L287",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_generate_feature_matrices",
-      "target": "reduction_feature_matrix_build_global_user_features"
+      "source": "reduction_feature_matrix_build_global_user_features",
+      "target": "reduction_feature_matrix_generate_feature_matrices"
     },
     {
       "relation": "calls",
@@ -2068,8 +3287,8 @@
       "source_location": "L268",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_generate_feature_matrices",
-      "target": "reduction_feature_matrix_validate_book_features"
+      "source": "reduction_feature_matrix_validate_book_features",
+      "target": "reduction_feature_matrix_generate_feature_matrices"
     },
     {
       "relation": "calls",
@@ -2079,8 +3298,8 @@
       "source_location": "L269",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_generate_feature_matrices",
-      "target": "reduction_feature_matrix_validate_interaction_features"
+      "source": "reduction_feature_matrix_validate_interaction_features",
+      "target": "reduction_feature_matrix_generate_feature_matrices"
     },
     {
       "relation": "calls",
@@ -2090,8 +3309,8 @@
       "source_location": "L288",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_generate_feature_matrices",
-      "target": "reduction_feature_matrix_validate_user_features"
+      "source": "reduction_feature_matrix_validate_user_features",
+      "target": "reduction_feature_matrix_generate_feature_matrices"
     },
     {
       "relation": "calls",
@@ -2232,8 +3451,8 @@
       "source_location": "L114",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_cleaning_clean_books",
-      "target": "utils_cleaning_empty_strings_to_na"
+      "source": "utils_cleaning_empty_strings_to_na",
+      "target": "utils_cleaning_clean_books"
     },
     {
       "relation": "calls",
@@ -2243,8 +3462,8 @@
       "source_location": "L164",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_cleaning_clean_interactions",
-      "target": "utils_cleaning_empty_strings_to_na"
+      "source": "utils_cleaning_empty_strings_to_na",
+      "target": "utils_cleaning_clean_interactions"
     },
     {
       "relation": "calls",
@@ -2254,8 +3473,8 @@
       "source_location": "L115",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_cleaning_clean_books",
-      "target": "utils_cleaning_to_numeric_columns"
+      "source": "utils_cleaning_to_numeric_columns",
+      "target": "utils_cleaning_clean_books"
     },
     {
       "relation": "calls",
@@ -2265,8 +3484,8 @@
       "source_location": "L165",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_cleaning_clean_interactions",
-      "target": "utils_cleaning_parse_goodreads_dates"
+      "source": "utils_cleaning_parse_goodreads_dates",
+      "target": "utils_cleaning_clean_interactions"
     },
     {
       "relation": "calls",
@@ -2276,8 +3495,8 @@
       "source_location": "L118",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_cleaning_clean_books",
-      "target": "utils_cleaning_parse_bool_series"
+      "source": "utils_cleaning_parse_bool_series",
+      "target": "utils_cleaning_clean_books"
     },
     {
       "relation": "calls",
@@ -2287,8 +3506,8 @@
       "source_file": "src/utils/eda.py",
       "source_location": "L424",
       "weight": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_cleaning_clean_books"
+      "source": "utils_cleaning_clean_books",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "calls",
@@ -2298,8 +3517,8 @@
       "source_file": "src/utils/eda.py",
       "source_location": "L425",
       "weight": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_cleaning_clean_interactions"
+      "source": "utils_cleaning_clean_interactions",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "contains",
@@ -2379,8 +3598,8 @@
       "source_location": "L27",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_io_read_jsonl_sample",
-      "target": "utils_io_iter_jsonl_records"
+      "source": "utils_io_iter_jsonl_records",
+      "target": "utils_io_read_jsonl_sample"
     },
     {
       "relation": "contains",
@@ -2570,8 +3789,8 @@
       "source_location": "L428",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_eda_schema_summary"
+      "source": "utils_eda_schema_summary",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "calls",
@@ -2581,8 +3800,8 @@
       "source_location": "L430",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_eda_missing_summary"
+      "source": "utils_eda_missing_summary",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "calls",
@@ -2592,8 +3811,8 @@
       "source_location": "L436",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_eda_duplicate_summary"
+      "source": "utils_eda_duplicate_summary",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "calls",
@@ -2603,8 +3822,8 @@
       "source_location": "L432",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_eda_numeric_profile"
+      "source": "utils_eda_numeric_profile",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "calls",
@@ -2614,8 +3833,8 @@
       "source_location": "L434",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_eda_iqr_outlier_summary"
+      "source": "utils_eda_iqr_outlier_summary",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "calls",
@@ -2625,8 +3844,8 @@
       "source_location": "L437",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_eda_categorical_profile"
+      "source": "utils_eda_categorical_profile",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "calls",
@@ -2636,8 +3855,8 @@
       "source_location": "L136",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_author_profile",
-      "target": "utils_eda_iter_dicts"
+      "source": "utils_eda_iter_dicts",
+      "target": "utils_eda_author_profile"
     },
     {
       "relation": "calls",
@@ -2647,8 +3866,8 @@
       "source_location": "L176",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_shelves_profile",
-      "target": "utils_eda_iter_dicts"
+      "source": "utils_eda_iter_dicts",
+      "target": "utils_eda_shelves_profile"
     },
     {
       "relation": "calls",
@@ -2658,8 +3877,8 @@
       "source_location": "L441",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_eda_author_profile"
+      "source": "utils_eda_author_profile",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "calls",
@@ -2669,8 +3888,8 @@
       "source_location": "L442",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_eda_shelves_profile"
+      "source": "utils_eda_shelves_profile",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "calls",
@@ -2680,8 +3899,8 @@
       "source_location": "L443",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_eda_series_profile"
+      "source": "utils_eda_series_profile",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "rationale_for",
@@ -2690,8 +3909,8 @@
       "source_location": "L250",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_rationale_250",
-      "target": "utils_eda_combine_books_interactions"
+      "source": "utils_eda_combine_books_interactions",
+      "target": "utils_eda_rationale_250"
     },
     {
       "relation": "calls",
@@ -2701,8 +3920,8 @@
       "source_location": "L444",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_eda_engagement_profile"
+      "source": "utils_eda_engagement_profile",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "calls",
@@ -2712,8 +3931,8 @@
       "source_location": "L445",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_eda_reading_duration_profile"
+      "source": "utils_eda_reading_duration_profile",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "calls",
@@ -2723,8 +3942,8 @@
       "source_location": "L446",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_eda_build_eda_profile",
-      "target": "utils_eda_user_rating_behavior"
+      "source": "utils_eda_user_rating_behavior",
+      "target": "utils_eda_build_eda_profile"
     },
     {
       "relation": "contains",
@@ -2764,8 +3983,8 @@
       "source_location": "L40",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights",
-      "target": "tests_test_master_feature_matrix_sample_master"
+      "source": "tests_test_master_feature_matrix_sample_master",
+      "target": "tests_test_master_feature_matrix_test_build_blocks_and_block_weights"
     },
     {
       "relation": "calls",
@@ -2775,10 +3994,1334 @@
       "source_location": "L73",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count",
-      "target": "tests_test_master_feature_matrix_sample_master"
+      "source": "tests_test_master_feature_matrix_sample_master",
+      "target": "tests_test_master_feature_matrix_test_pca_smoke_preserves_row_count"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_pc_sort_key",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_load_feature_matrix",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L47",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_load_metadata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L70",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_get_kmeans_model",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_cluster_size_stats",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L93",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_sampled_silhouette",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L104",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_write_k50_k100_comparison",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L130",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_quality_flag",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L140",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_write_assignments_and_quality",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L168",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_write_cluster_cohesion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L198",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_write_cluster_examples",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L220",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_write_hierarchical_centroid_outputs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L266",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_print_logs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L290",
+      "weight": 1.0,
+      "source": "build_deliverable3_clustering_outputs_py",
+      "target": "scripts_build_deliverable3_clustering_outputs_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L292",
+      "weight": 1.0,
+      "source": "scripts_build_deliverable3_clustering_outputs_load_feature_matrix",
+      "target": "scripts_build_deliverable3_clustering_outputs_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L293",
+      "weight": 1.0,
+      "source": "scripts_build_deliverable3_clustering_outputs_load_metadata",
+      "target": "scripts_build_deliverable3_clustering_outputs_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L111",
+      "weight": 1.0,
+      "source": "scripts_build_deliverable3_clustering_outputs_get_kmeans_model",
+      "target": "scripts_build_deliverable3_clustering_outputs_write_k50_k100_comparison",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L297",
+      "weight": 1.0,
+      "source": "scripts_build_deliverable3_clustering_outputs_get_kmeans_model",
+      "target": "scripts_build_deliverable3_clustering_outputs_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L113",
+      "weight": 1.0,
+      "source": "scripts_build_deliverable3_clustering_outputs_cluster_size_stats",
+      "target": "scripts_build_deliverable3_clustering_outputs_write_k50_k100_comparison",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L114",
+      "weight": 1.0,
+      "source": "scripts_build_deliverable3_clustering_outputs_sampled_silhouette",
+      "target": "scripts_build_deliverable3_clustering_outputs_write_k50_k100_comparison",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L295",
+      "weight": 1.0,
+      "source": "scripts_build_deliverable3_clustering_outputs_write_k50_k100_comparison",
+      "target": "scripts_build_deliverable3_clustering_outputs_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L305",
+      "weight": 1.0,
+      "source": "scripts_build_deliverable3_clustering_outputs_write_assignments_and_quality",
+      "target": "scripts_build_deliverable3_clustering_outputs_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L306",
+      "weight": 1.0,
+      "source": "scripts_build_deliverable3_clustering_outputs_write_cluster_cohesion",
+      "target": "scripts_build_deliverable3_clustering_outputs_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L307",
+      "weight": 1.0,
+      "source": "scripts_build_deliverable3_clustering_outputs_write_cluster_examples",
+      "target": "scripts_build_deliverable3_clustering_outputs_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L308",
+      "weight": 1.0,
+      "source": "scripts_build_deliverable3_clustering_outputs_write_hierarchical_centroid_outputs",
+      "target": "scripts_build_deliverable3_clustering_outputs_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "build_deliverable3_clustering_outputs.py",
+      "source_location": "L327",
+      "weight": 1.0,
+      "source": "scripts_build_deliverable3_clustering_outputs_print_logs",
+      "target": "scripts_build_deliverable3_clustering_outputs_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_book_recommendation_system",
+      "target": "readme_business_logic"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_book_recommendation_system",
+      "target": "readme_pipeline_flow"
+    },
+    {
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_book_recommendation_system",
+      "target": "readme_goodreads_dataset"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_business_logic",
+      "target": "readme_kmeans_granularity"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_business_logic",
+      "target": "readme_popularity_bias"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_kmeans_granularity",
+      "target": "readme_master_feature_matrix"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_popularity_bias",
+      "target": "readme_block_weighting"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_popularity_bias",
+      "target": "readme_log1p_transform"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_merge_master",
+      "target": "readme_books_curated_parquet"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_merge_master",
+      "target": "readme_books_master_parquet"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_books_master_parquet",
+      "target": "readme_build_master_feature_matrix"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_books_master_parquet",
+      "target": "requirements_pyarrow"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_master_feature_matrix",
+      "target": "readme_pca"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_master_pca_meta",
+      "target": "readme_pca"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_master_pca_meta",
+      "target": "readme_semantic_spot_checks"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_master_pca_model",
+      "target": "readme_pca"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/features/viz_cache/pca_interpretation_report.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_master_pca_model",
+      "target": "pca_interpretation_report"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_master_pca_model",
+      "target": "requirements_joblib"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_description_embeddings",
+      "target": "readme_embedding_block"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_build_master_feature_matrix",
+      "target": "readme_numeric_block"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_build_master_feature_matrix",
+      "target": "readme_binary_block"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_build_master_feature_matrix",
+      "target": "readme_embedding_block"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_numeric_block",
+      "target": "readme_block_weighting"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_numeric_block",
+      "target": "readme_log1p_transform"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_numeric_block",
+      "target": "readme_missingness_flags"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_binary_block",
+      "target": "readme_block_weighting"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_embedding_block",
+      "target": "readme_embeddinggemma_300m"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_embedding_block",
+      "target": "readme_block_weighting"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_embeddinggemma_300m",
+      "target": "requirements_sentence_transformers"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_embeddinggemma_300m",
+      "target": "requirements_transformers"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_embeddinggemma_300m",
+      "target": "requirements_huggingface_hub"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_block_weighting",
+      "target": "readme_pca"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "data/features/viz_cache/pca_interpretation_report.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_block_weighting",
+      "target": "pca_interpretation_report_pc15"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_block_weighting",
+      "target": "readme_log1p_transform"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/features/viz_cache/pca_interpretation_report.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_pca",
+      "target": "pca_interpretation_report"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_pca",
+      "target": "requirements_scikit_learn"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "data/features/viz_cache/pca_interpretation_report.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_semantic_spot_checks",
+      "target": "pca_interpretation_report_pc0"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/features/viz_cache/pca_interpretation_report.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "pca_interpretation_report",
+      "target": "pca_interpretation_report_pc0"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/features/viz_cache/pca_interpretation_report.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "pca_interpretation_report",
+      "target": "pca_interpretation_report_pc5"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/features/viz_cache/pca_interpretation_report.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "pca_interpretation_report",
+      "target": "pca_interpretation_report_pc14"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/features/viz_cache/pca_interpretation_report.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "pca_interpretation_report",
+      "target": "pca_interpretation_report_pc15"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "requirements_sentence_transformers",
+      "target": "requirements_torch"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "hclust_silhouette_chart",
+      "target": "silhouette_metric"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "hclust_silhouette_chart",
+      "target": "hierarchical_groups_count"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "hclust_silhouette_chart",
+      "target": "hierarchical_clustering_ward"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "silhouette_metric",
+      "target": "kmeans_centroids_k100"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "silhouette_metric",
+      "target": "cluster_count_selection"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "hierarchical_clustering_ward",
+      "target": "kmeans_centroids_k100"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "hierarchical_clustering_ward",
+      "target": "hierarchical_groups_count"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "data/outputs/clustering/hclust_silhouette_by_groups_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "hierarchical_groups_count",
+      "target": "cluster_count_selection"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "silhouette_by_k_chart",
+      "target": "silhouette_score_metric"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "silhouette_by_k_chart",
+      "target": "k_cluster_count"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "silhouette_by_k_chart",
+      "target": "k_selection_rationale"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "silhouette_by_k_chart",
+      "target": "master_feature_matrix"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "silhouette_score_metric",
+      "target": "k_cluster_count"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "silhouette_score_metric",
+      "target": "kmeans_clustering"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "k_cluster_count",
+      "target": "kmeans_clustering"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "kmeans_clustering",
+      "target": "k_selection_rationale"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "data/outputs/clustering/silhouette_by_k.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "kmeans_clustering",
+      "target": "master_feature_matrix"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/cluster_cohesion_k100.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "kmeans_clustering",
+      "target": "cluster_cohesion_k100_chart"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/outputs/clustering/cluster_cohesion_k100.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "kmeans_clustering",
+      "target": "cluster_cohesion_concept"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/outputs/clustering/cluster_cohesion_k100.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "kmeans_clustering",
+      "target": "master_feature_matrix_pca"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "kmeans_clustering",
+      "target": "kmeans_elbow_plot"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "kmeans_clustering",
+      "target": "inertia_metric"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/cluster_cohesion_k100.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "cluster_cohesion_k100_chart",
+      "target": "mean_distance_to_centroid_metric"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/outputs/clustering/cluster_cohesion_k100.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "cluster_cohesion_k100_chart",
+      "target": "low_cohesion_outlier_clusters"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "data/outputs/clustering/cluster_cohesion_k100.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "mean_distance_to_centroid_metric",
+      "target": "cluster_cohesion_concept"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "data/outputs/clustering/cluster_cohesion_k100.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "mean_distance_to_centroid_metric",
+      "target": "low_cohesion_outlier_clusters"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "data/outputs/clustering/cluster_size_distribution_k100.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "master_feature_matrix_pca",
+      "target": "kmeans_k100_clustering"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "chart_hclust_group_sizes",
+      "target": "metric_books_per_cluster"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "chart_hclust_group_sizes",
+      "target": "method_hierarchical_clustering"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "chart_hclust_group_sizes",
+      "target": "param_height_cut_h10"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "chart_hclust_group_sizes",
+      "target": "insight_imbalanced_cluster_sizes"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "chart_hclust_group_sizes",
+      "target": "data_master_feature_matrix"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "metric_books_per_cluster",
+      "target": "insight_imbalanced_cluster_sizes"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "method_hierarchical_clustering",
+      "target": "param_height_cut_h10"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "data/outputs/clustering/hclust_group_sizes_k100_h10_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "method_hierarchical_clustering",
+      "target": "data_master_feature_matrix"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/cluster_size_distribution_k100.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "cluster_size_distribution_chart",
+      "target": "cluster_size_metric"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/cluster_size_distribution_k100.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "cluster_size_distribution_chart",
+      "target": "kmeans_k100_clustering"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/outputs/clustering/cluster_size_distribution_k100.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "cluster_size_distribution_chart",
+      "target": "cluster_balance_rationale"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/cluster_size_distribution_k100.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "cluster_size_metric",
+      "target": "book_clusters"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "data/outputs/clustering/cluster_size_distribution_k100.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "kmeans_k100_clustering",
+      "target": "book_clusters"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "hclust_dendrogram_k100_ward_chart",
+      "target": "ward_hierarchical_clustering_method"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "hclust_dendrogram_k100_ward_chart",
+      "target": "kmeans_k100_centroids"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "hclust_dendrogram_k100_ward_chart",
+      "target": "ward_distance_axis"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "hclust_dendrogram_k100_ward_chart",
+      "target": "kmeans_cluster_leaf_axis"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "hclust_dendrogram_k100_ward_chart",
+      "target": "outlier_cluster_21_split"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "ward_hierarchical_clustering_method",
+      "target": "kmeans_k100_centroids"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "ward_hierarchical_clustering_method",
+      "target": "centroid_meta_hierarchy_insight"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "kmeans_k100_centroids",
+      "target": "centroid_meta_hierarchy_insight"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "kmeans_k100_centroids",
+      "target": "pca_book_vectors_clustering_input"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "data/outputs/clustering/hclust_dendrogram_k100_ward.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "ward_distance_axis",
+      "target": "outlier_cluster_21_split"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "kmeans_elbow_plot",
+      "target": "inertia_metric"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "kmeans_elbow_plot",
+      "target": "cluster_count_k"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "kmeans_elbow_plot",
+      "target": "elbow_method"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "inertia_metric",
+      "target": "cluster_count_k"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "inertia_metric",
+      "target": "elbow_method"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "cluster_count_k",
+      "target": "elbow_method"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "cluster_count_k",
+      "target": "k_sweep_range"
+    },
+    {
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "cluster_count_k",
+      "target": "elbow_knee_region"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "data/outputs/clustering/elbow_inertia.png",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "elbow_method",
+      "target": "elbow_knee_region"
     }
   ],
-  "hyperedges": [],
-  "built_at_commit": "3a763dd07b32d8bcf8f36a19f3e5c14ceb1a5f4c"
+  "hyperedges": [
+    {
+      "id": "feature_matrix_three_blocks",
+      "label": "Three-block feature matrix assembly",
+      "nodes": [
+        "readme_numeric_block",
+        "readme_binary_block",
+        "readme_embedding_block",
+        "readme_block_weighting",
+        "readme_pca"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md"
+    },
+    {
+      "id": "recommendation_design_principles",
+      "label": "Recommendation design principles",
+      "nodes": [
+        "readme_business_logic",
+        "readme_kmeans_granularity",
+        "readme_popularity_bias"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.85,
+      "source_file": "README.md"
+    },
+    {
+      "id": "pca_pipeline_artifacts",
+      "label": "PCA pipeline outputs",
+      "nodes": [
+        "readme_master_feature_matrix",
+        "readme_master_pca_model",
+        "readme_master_pca_meta"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md"
+    }
+  ],
+  "built_at_commit": "59248798a5a41d4b456bf40285b0f8a287a5bcca"
 }
