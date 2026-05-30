@@ -11,9 +11,10 @@ env/bin/python -m src.merge_master                          # build data/process
 env/bin/python -m src.reduction.build_master_feature_matrix # build PCA feature matrix + model + meta
 env/bin/python -m pytest                                    # run all tests
 env/bin/python -m pytest tests/test_master_feature_matrix.py::test_pca_smoke_preserves_row_count  # single test
+env/bin/python scripts/build_deliverable3_clustering_outputs.py  # KMeans + hierarchical clustering outputs
 ```
 
-The two pipeline scripts are ordered: `merge_master` must run first because `build_master_feature_matrix` reads `data/processed/books_master.parquet` and refuses to start if the file is missing.
+The two pipeline scripts are ordered: `merge_master` must run first because `build_master_feature_matrix` reads `data/processed/books_master.parquet` and refuses to start if the file is missing. The clustering script is downstream of both: it consumes `data/features/master_feature_matrix.parquet` and `data/processed/books_master.parquet`. Unlike the `src/` modules, it is a standalone file (not a package module), so it is invoked by file path, not `-m`.
 
 ## Product and Recommendation Logic
 
@@ -73,6 +74,14 @@ data/features/master_pca_meta.json           # diagnostics, explained variance, 
 ```
 
 The `.joblib` bundle is the only supported way to transform new books consistently — it stores everything needed (per-block scaler, numeric medians, language category list, block weights, fitted PCA) so callers don't have to reproduce the preprocessing.
+
+### `scripts/build_deliverable3_clustering_outputs.py` — clustering outputs
+
+The concrete clustering implementation of the recommendation logic above. Clusters `book_id` rows on the `pc_*` columns of `master_feature_matrix.parquet` (one row = one book vector), joining `books_master.parquet` only for human-readable labels (`title`, `genres`, `average_rating`, `ratings_count`) — genres are explanation/diversity signals, not the clustering unit.
+
+It runs KMeans at two granularities (`COMPARISON_KS = [50, 100]`, `RANDOM_STATE = 42`) and writes a `k50_vs_k100_comparison.csv` with inertia, sampled silhouette (sample size 10000), and size stats. `SELECTED_K = 100` is the production cut; its centroids feed a Ward hierarchical `linkage` that is cut into `N_MACRO_CLUSTERS = 10` macro-clusters, giving a two-level cluster hierarchy. Fitted KMeans models are cached as `kmeans_model_k{K}.joblib` and reused if the cached `n_clusters` matches.
+
+Outputs go to `data/outputs/clustering/`: `book_clusters_k{K}.parquet` (book_id → cluster), per-cluster cohesion/quality/examples CSVs (+ PNG plots), macro-cluster assignments/summary, and the K=100 centroids (`.npy`). Clusters are flagged `very_small`/`small`/`very_large` by size for quality review.
 
 ## Conventions
 
