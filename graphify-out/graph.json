@@ -53,7 +53,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L1",
       "id": "scripts_build_deliverable3_clustering_outputs_py",
-      "community": 8,
+      "community": 7,
       "norm_label": "build_deliverable3_clustering_outputs.py"
     },
     {
@@ -62,7 +62,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L34",
       "id": "scripts_build_deliverable3_clustering_outputs_pc_sort_key",
-      "community": 8,
+      "community": 7,
       "norm_label": "pc_sort_key()"
     },
     {
@@ -71,7 +71,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L38",
       "id": "scripts_build_deliverable3_clustering_outputs_load_feature_matrix",
-      "community": 8,
+      "community": 7,
       "norm_label": "load_feature_matrix()"
     },
     {
@@ -80,7 +80,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L47",
       "id": "scripts_build_deliverable3_clustering_outputs_load_metadata",
-      "community": 8,
+      "community": 7,
       "norm_label": "load_metadata()"
     },
     {
@@ -89,7 +89,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L70",
       "id": "scripts_build_deliverable3_clustering_outputs_get_kmeans_model",
-      "community": 8,
+      "community": 7,
       "norm_label": "get_kmeans_model()"
     },
     {
@@ -98,7 +98,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L80",
       "id": "scripts_build_deliverable3_clustering_outputs_cluster_size_stats",
-      "community": 8,
+      "community": 7,
       "norm_label": "cluster_size_stats()"
     },
     {
@@ -107,7 +107,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L93",
       "id": "scripts_build_deliverable3_clustering_outputs_sampled_silhouette",
-      "community": 8,
+      "community": 7,
       "norm_label": "sampled_silhouette()"
     },
     {
@@ -116,7 +116,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L104",
       "id": "scripts_build_deliverable3_clustering_outputs_write_k50_k100_comparison",
-      "community": 8,
+      "community": 7,
       "norm_label": "write_k50_k100_comparison()"
     },
     {
@@ -125,7 +125,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L130",
       "id": "scripts_build_deliverable3_clustering_outputs_quality_flag",
-      "community": 8,
+      "community": 7,
       "norm_label": "quality_flag()"
     },
     {
@@ -134,7 +134,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L140",
       "id": "scripts_build_deliverable3_clustering_outputs_write_assignments_and_quality",
-      "community": 8,
+      "community": 7,
       "norm_label": "write_assignments_and_quality()"
     },
     {
@@ -143,7 +143,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L168",
       "id": "scripts_build_deliverable3_clustering_outputs_write_cluster_cohesion",
-      "community": 8,
+      "community": 7,
       "norm_label": "write_cluster_cohesion()"
     },
     {
@@ -152,7 +152,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L198",
       "id": "scripts_build_deliverable3_clustering_outputs_write_cluster_examples",
-      "community": 8,
+      "community": 7,
       "norm_label": "write_cluster_examples()"
     },
     {
@@ -161,7 +161,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L220",
       "id": "scripts_build_deliverable3_clustering_outputs_write_hierarchical_centroid_outputs",
-      "community": 8,
+      "community": 7,
       "norm_label": "write_hierarchical_centroid_outputs()"
     },
     {
@@ -170,7 +170,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L266",
       "id": "scripts_build_deliverable3_clustering_outputs_print_logs",
-      "community": 8,
+      "community": 7,
       "norm_label": "print_logs()"
     },
     {
@@ -179,7 +179,7 @@
       "source_file": "scripts/build_deliverable3_clustering_outputs.py",
       "source_location": "L290",
       "id": "scripts_build_deliverable3_clustering_outputs_main",
-      "community": 8,
+      "community": 7,
       "norm_label": "main()"
     },
     {
@@ -188,7 +188,7 @@
       "source_file": "src/config.py",
       "source_location": "L1",
       "id": "src_config_py",
-      "community": 17,
+      "community": 19,
       "norm_label": "config.py"
     },
     {
@@ -197,7 +197,7 @@
       "source_file": "src/config.py",
       "source_location": "L14",
       "id": "src_config_categoryconfig",
-      "community": 17,
+      "community": 19,
       "norm_label": "categoryconfig"
     },
     {
@@ -206,7 +206,7 @@
       "source_file": "src/__init__.py",
       "source_location": "L1",
       "id": "src_init_py",
-      "community": 16,
+      "community": 18,
       "norm_label": "__init__.py"
     },
     {
@@ -215,7 +215,7 @@
       "source_file": "src/__init__.py",
       "source_location": "L1",
       "id": "src_init_rationale_1",
-      "community": 16,
+      "community": 18,
       "norm_label": "goodreads data science pipeline package."
     },
     {
@@ -260,7 +260,7 @@
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L1",
       "id": "src_reduction_embeddings_py",
-      "community": 11,
+      "community": 10,
       "norm_label": "embeddings.py"
     },
     {
@@ -269,7 +269,7 @@
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L19",
       "id": "reduction_embeddings_embedding_columns",
-      "community": 11,
+      "community": 10,
       "norm_label": "embedding_columns()"
     },
     {
@@ -278,7 +278,7 @@
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L23",
       "id": "reduction_embeddings_clean_description_texts",
-      "community": 11,
+      "community": 10,
       "norm_label": "clean_description_texts()"
     },
     {
@@ -287,7 +287,7 @@
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L31",
       "id": "reduction_embeddings_get_huggingface_token",
-      "community": 11,
+      "community": 10,
       "norm_label": "_get_huggingface_token()"
     },
     {
@@ -296,7 +296,7 @@
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L45",
       "id": "reduction_embeddings_require_huggingface_auth",
-      "community": 11,
+      "community": 10,
       "norm_label": "_require_huggingface_auth()"
     },
     {
@@ -305,7 +305,7 @@
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L55",
       "id": "reduction_embeddings_load_embedding_model",
-      "community": 11,
+      "community": 10,
       "norm_label": "_load_embedding_model()"
     },
     {
@@ -314,7 +314,7 @@
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L71",
       "id": "reduction_embeddings_validate_cache_schema",
-      "community": 11,
+      "community": 10,
       "norm_label": "_validate_cache_schema()"
     },
     {
@@ -323,7 +323,7 @@
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L89",
       "id": "reduction_embeddings_read_cache",
-      "community": 11,
+      "community": 10,
       "norm_label": "_read_cache()"
     },
     {
@@ -332,7 +332,7 @@
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L95",
       "id": "reduction_embeddings_encode_texts",
-      "community": 11,
+      "community": 10,
       "norm_label": "_encode_texts()"
     },
     {
@@ -341,7 +341,7 @@
       "source_file": "src/reduction/embeddings.py",
       "source_location": "L117",
       "id": "reduction_embeddings_load_or_create_description_embeddings",
-      "community": 11,
+      "community": 10,
       "norm_label": "load_or_create_description_embeddings()"
     },
     {
@@ -543,165 +543,12 @@
       "norm_label": "count_embedding_dominated_components()"
     },
     {
-      "label": "feature_matrix.py",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L1",
-      "id": "src_reduction_feature_matrix_py",
-      "community": 7,
-      "norm_label": "feature_matrix.py"
-    },
-    {
-      "label": "CategoryArtifacts",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L82",
-      "id": "reduction_feature_matrix_categoryartifacts",
-      "community": 7,
-      "norm_label": "categoryartifacts"
-    },
-    {
-      "label": "_has_curated_files()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L89",
-      "id": "reduction_feature_matrix_has_curated_files",
-      "community": 7,
-      "norm_label": "_has_curated_files()"
-    },
-    {
-      "label": "resolve_category_artifacts()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L93",
-      "id": "reduction_feature_matrix_resolve_category_artifacts",
-      "community": 7,
-      "norm_label": "resolve_category_artifacts()"
-    },
-    {
-      "label": "discover_available_artifacts()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L107",
-      "id": "reduction_feature_matrix_discover_available_artifacts",
-      "community": 7,
-      "norm_label": "discover_available_artifacts()"
-    },
-    {
-      "label": "_empty_series()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L126",
-      "id": "reduction_feature_matrix_empty_series",
-      "community": 7,
-      "norm_label": "_empty_series()"
-    },
-    {
-      "label": "_series_or_default()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L130",
-      "id": "reduction_feature_matrix_series_or_default",
-      "community": 7,
-      "norm_label": "_series_or_default()"
-    },
-    {
-      "label": "_with_canonical_p99_columns()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L136",
-      "id": "reduction_feature_matrix_with_canonical_p99_columns",
-      "community": 7,
-      "norm_label": "_with_canonical_p99_columns()"
-    },
-    {
-      "label": "_theme_columns()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L146",
-      "id": "reduction_feature_matrix_theme_columns",
-      "community": 7,
-      "norm_label": "_theme_columns()"
-    },
-    {
-      "label": "build_book_features()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L156",
-      "id": "reduction_feature_matrix_build_book_features",
-      "community": 7,
-      "norm_label": "build_book_features()"
-    },
-    {
-      "label": "build_interaction_features()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L177",
-      "id": "reduction_feature_matrix_build_interaction_features",
-      "community": 7,
-      "norm_label": "build_interaction_features()"
-    },
-    {
-      "label": "build_global_user_features()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L187",
-      "id": "reduction_feature_matrix_build_global_user_features",
-      "community": 7,
-      "norm_label": "build_global_user_features()"
-    },
-    {
-      "label": "validate_book_features()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L225",
-      "id": "reduction_feature_matrix_validate_book_features",
-      "community": 7,
-      "norm_label": "validate_book_features()"
-    },
-    {
-      "label": "validate_interaction_features()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L244",
-      "id": "reduction_feature_matrix_validate_interaction_features",
-      "community": 7,
-      "norm_label": "validate_interaction_features()"
-    },
-    {
-      "label": "validate_user_features()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L250",
-      "id": "reduction_feature_matrix_validate_user_features",
-      "community": 7,
-      "norm_label": "validate_user_features()"
-    },
-    {
-      "label": "generate_feature_matrices()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L255",
-      "id": "reduction_feature_matrix_generate_feature_matrices",
-      "community": 7,
-      "norm_label": "generate_feature_matrices()"
-    },
-    {
-      "label": "manifest_summary()",
-      "file_type": "code",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L305",
-      "id": "reduction_feature_matrix_manifest_summary",
-      "community": 7,
-      "norm_label": "manifest_summary()"
-    },
-    {
       "label": "cleaning.py",
       "file_type": "code",
       "source_file": "src/utils/cleaning.py",
       "source_location": "L1",
       "id": "src_utils_cleaning_py",
-      "community": 10,
+      "community": 9,
       "norm_label": "cleaning.py"
     },
     {
@@ -710,7 +557,7 @@
       "source_file": "src/utils/cleaning.py",
       "source_location": "L18",
       "id": "utils_cleaning_empty_strings_to_na",
-      "community": 10,
+      "community": 9,
       "norm_label": "empty_strings_to_na()"
     },
     {
@@ -719,7 +566,7 @@
       "source_file": "src/utils/cleaning.py",
       "source_location": "L22",
       "id": "utils_cleaning_normalize_review_text",
-      "community": 10,
+      "community": 9,
       "norm_label": "normalize_review_text()"
     },
     {
@@ -728,7 +575,7 @@
       "source_file": "src/utils/cleaning.py",
       "source_location": "L31",
       "id": "utils_cleaning_to_numeric_columns",
-      "community": 10,
+      "community": 9,
       "norm_label": "to_numeric_columns()"
     },
     {
@@ -737,7 +584,7 @@
       "source_file": "src/utils/cleaning.py",
       "source_location": "L39",
       "id": "utils_cleaning_parse_goodreads_dates",
-      "community": 10,
+      "community": 9,
       "norm_label": "parse_goodreads_dates()"
     },
     {
@@ -746,7 +593,7 @@
       "source_file": "src/utils/cleaning.py",
       "source_location": "L52",
       "id": "utils_cleaning_parse_bool_series",
-      "community": 10,
+      "community": 9,
       "norm_label": "parse_bool_series()"
     },
     {
@@ -755,7 +602,7 @@
       "source_file": "src/utils/cleaning.py",
       "source_location": "L61",
       "id": "utils_cleaning_json_dumps",
-      "community": 10,
+      "community": 9,
       "norm_label": "_json_dumps()"
     },
     {
@@ -764,7 +611,7 @@
       "source_file": "src/utils/cleaning.py",
       "source_location": "L67",
       "id": "utils_cleaning_authors_summary",
-      "community": 10,
+      "community": 9,
       "norm_label": "_authors_summary()"
     },
     {
@@ -773,7 +620,7 @@
       "source_file": "src/utils/cleaning.py",
       "source_location": "L85",
       "id": "utils_cleaning_shelves_summary",
-      "community": 10,
+      "community": 9,
       "norm_label": "_shelves_summary()"
     },
     {
@@ -782,7 +629,7 @@
       "source_file": "src/utils/cleaning.py",
       "source_location": "L113",
       "id": "utils_cleaning_clean_books",
-      "community": 10,
+      "community": 9,
       "norm_label": "clean_books()"
     },
     {
@@ -791,7 +638,7 @@
       "source_file": "src/utils/cleaning.py",
       "source_location": "L163",
       "id": "utils_cleaning_clean_interactions",
-      "community": 10,
+      "community": 9,
       "norm_label": "clean_interactions()"
     },
     {
@@ -800,7 +647,7 @@
       "source_file": "src/utils/cleaning.py",
       "source_location": "L189",
       "id": "utils_cleaning_add_interaction_aggregates",
-      "community": 10,
+      "community": 9,
       "norm_label": "add_interaction_aggregates()"
     },
     {
@@ -809,7 +656,7 @@
       "source_file": "src/utils/cleaning.py",
       "source_location": "L203",
       "id": "utils_cleaning_cap_outlier_features",
-      "community": 10,
+      "community": 9,
       "norm_label": "cap_outlier_features()"
     },
     {
@@ -890,7 +737,7 @@
       "source_file": "src/utils/__init__.py",
       "source_location": "L1",
       "id": "src_utils_init_py",
-      "community": 16,
+      "community": 18,
       "norm_label": "__init__.py"
     },
     {
@@ -899,7 +746,7 @@
       "source_file": "src/utils/__init__.py",
       "source_location": "L1",
       "id": "utils_init_rationale_1",
-      "community": 16,
+      "community": 18,
       "norm_label": "reusable helpers for the goodreads pipeline."
     },
     {
@@ -1124,7 +971,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L1",
       "id": "claude_md",
-      "community": 9,
+      "community": 8,
       "norm_label": "claude.md"
     },
     {
@@ -1133,7 +980,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L1",
       "id": "bigbook_claude_claude_md",
-      "community": 9,
+      "community": 8,
       "norm_label": "claude.md"
     },
     {
@@ -1142,7 +989,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L5",
       "id": "bigbook_claude_commands",
-      "community": 9,
+      "community": 8,
       "norm_label": "commands"
     },
     {
@@ -1151,7 +998,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L9",
       "id": "bigbook_claude_codeblock_1",
-      "community": 9,
+      "community": 8,
       "norm_label": "code:bash (env/bin/python -m src.merge_master                          )"
     },
     {
@@ -1160,7 +1007,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L19",
       "id": "bigbook_claude_product_and_recommendation_logic",
-      "community": 9,
+      "community": 8,
       "norm_label": "product and recommendation logic"
     },
     {
@@ -1169,7 +1016,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L27",
       "id": "bigbook_claude_codeblock_2",
-      "community": 9,
+      "community": 8,
       "norm_label": "code:block2 (one row = one book_id = one book vector)"
     },
     {
@@ -1178,7 +1025,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L35",
       "id": "bigbook_claude_pipeline_architecture",
-      "community": 9,
+      "community": 8,
       "norm_label": "pipeline architecture"
     },
     {
@@ -1187,7 +1034,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L39",
       "id": "bigbook_claude_stage_boundary_curated_parquets_per_genre",
-      "community": 9,
+      "community": 8,
       "norm_label": "stage boundary: curated parquets per genre"
     },
     {
@@ -1196,7 +1043,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L43",
       "id": "bigbook_claude_codeblock_3",
-      "community": 9,
+      "community": 8,
       "norm_label": "code:block3 (data/processed/<category>/books_curated.parquet)"
     },
     {
@@ -1205,7 +1052,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L50",
       "id": "bigbook_claude_src_merge_master_py_master_table",
-      "community": 9,
+      "community": 8,
       "norm_label": "`src/merge_master.py` \u2014 master table"
     },
     {
@@ -1214,7 +1061,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L56",
       "id": "bigbook_claude_src_reduction_build_master_feature_matrix_py_pca_representation",
-      "community": 9,
+      "community": 8,
       "norm_label": "`src/reduction/build_master_feature_matrix.py` \u2014 pca representation"
     },
     {
@@ -1223,7 +1070,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L68",
       "id": "bigbook_claude_outputs",
-      "community": 9,
+      "community": 8,
       "norm_label": "outputs"
     },
     {
@@ -1232,7 +1079,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L70",
       "id": "bigbook_claude_codeblock_4",
-      "community": 9,
+      "community": 8,
       "norm_label": "code:block4 (data/features/master_feature_matrix.parquet  # book_id + pc_)"
     },
     {
@@ -1241,7 +1088,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L78",
       "id": "bigbook_claude_scripts_build_deliverable3_clustering_outputs_py_clustering_outputs",
-      "community": 9,
+      "community": 8,
       "norm_label": "`scripts/build_deliverable3_clustering_outputs.py` \u2014 clustering outputs"
     },
     {
@@ -1250,7 +1097,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L86",
       "id": "bigbook_claude_conventions",
-      "community": 9,
+      "community": 8,
       "norm_label": "conventions"
     },
     {
@@ -1259,7 +1106,7 @@
       "source_file": "CLAUDE.md",
       "source_location": "L93",
       "id": "bigbook_claude_graphify",
-      "community": 9,
+      "community": 8,
       "norm_label": "graphify"
     },
     {
@@ -1286,7 +1133,7 @@
       "source_file": "README.md",
       "source_location": "L7",
       "id": "bigbook_readme_problem_definition",
-      "community": 0,
+      "community": 15,
       "norm_label": "problem definition"
     },
     {
@@ -1295,7 +1142,7 @@
       "source_file": "README.md",
       "source_location": "L15",
       "id": "bigbook_readme_codeblock_1",
-      "community": 0,
+      "community": 15,
       "norm_label": "code:text (we recommend  x = books from the catalog, as pca vectors, gr)"
     },
     {
@@ -1304,7 +1151,7 @@
       "source_file": "README.md",
       "source_location": "L24",
       "id": "bigbook_readme_what_is_a_user",
-      "community": 0,
+      "community": 15,
       "norm_label": "what is a user"
     },
     {
@@ -1313,7 +1160,7 @@
       "source_file": "README.md",
       "source_location": "L30",
       "id": "bigbook_readme_what_is_an_item",
-      "community": 0,
+      "community": 15,
       "norm_label": "what is an item"
     },
     {
@@ -1322,7 +1169,7 @@
       "source_file": "README.md",
       "source_location": "L34",
       "id": "bigbook_readme_what_a_useful_recommendation_means",
-      "community": 0,
+      "community": 15,
       "norm_label": "what a useful recommendation means"
     },
     {
@@ -1331,7 +1178,7 @@
       "source_file": "README.md",
       "source_location": "L43",
       "id": "bigbook_readme_target_action",
-      "community": 0,
+      "community": 15,
       "norm_label": "target action"
     },
     {
@@ -2118,11 +1965,164 @@
       "norm_label": "pc19 \u2014 rating volume (log) \u2194 review activity (log) (semantic theme)"
     },
     {
+      "label": "informacion_disponible.md",
+      "file_type": "document",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L1",
+      "id": "docs_informacion_disponible_md",
+      "community": 11,
+      "norm_label": "informacion_disponible.md"
+    },
+    {
+      "label": "Informaci\u00f3n disponible para construir el recomendador",
+      "file_type": "document",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L1",
+      "id": "docs_informacion_disponible_informaci_n_disponible_para_construir_el_recomendador",
+      "community": 11,
+      "norm_label": "informacion disponible para construir el recomendador"
+    },
+    {
+      "label": "Mapa r\u00e1pido del cat\u00e1logo",
+      "file_type": "document",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L9",
+      "id": "docs_informacion_disponible_mapa_r_pido_del_cat_logo",
+      "community": 11,
+      "norm_label": "mapa rapido del catalogo"
+    },
+    {
+      "label": "1. Datos de \u00edtems (libros)",
+      "file_type": "document",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L20",
+      "id": "docs_informacion_disponible_1_datos_de_tems_libros",
+      "community": 11,
+      "norm_label": "1. datos de items (libros)"
+    },
+    {
+      "label": "2. Datos de usuarios",
+      "file_type": "document",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L54",
+      "id": "docs_informacion_disponible_2_datos_de_usuarios",
+      "community": 11,
+      "norm_label": "2. datos de usuarios"
+    },
+    {
+      "label": "3. Historial de interacciones",
+      "file_type": "document",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L80",
+      "id": "docs_informacion_disponible_3_historial_de_interacciones",
+      "community": 11,
+      "norm_label": "3. historial de interacciones"
+    },
+    {
+      "label": "Tipos de feedback: qu\u00e9 tenemos y qu\u00e9 no",
+      "file_type": "document",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L101",
+      "id": "docs_informacion_disponible_tipos_de_feedback_qu_tenemos_y_qu_no",
+      "community": 11,
+      "norm_label": "tipos de feedback: que tenemos y que no"
+    },
+    {
+      "label": "4. Qu\u00e9 datos faltan o son d\u00e9biles",
+      "file_type": "document",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L117",
+      "id": "docs_informacion_disponible_4_qu_datos_faltan_o_son_d_biles",
+      "community": 11,
+      "norm_label": "4. que datos faltan o son debiles"
+    },
+    {
+      "label": "5. Qu\u00e9 variables usaremos en el recomendador",
+      "file_type": "document",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L145",
+      "id": "docs_informacion_disponible_5_qu_variables_usaremos_en_el_recomendador",
+      "community": 11,
+      "norm_label": "5. que variables usaremos en el recomendador"
+    },
+    {
+      "label": "Conclusi\u00f3n",
+      "file_type": "document",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L176",
+      "id": "docs_informacion_disponible_conclusi_n",
+      "community": 11,
+      "norm_label": "conclusion"
+    },
+    {
+      "label": "justificacion_recommender.md",
+      "file_type": "document",
+      "source_file": "docs/justificacion_recommender.md",
+      "source_location": "L1",
+      "id": "docs_justificacion_recommender_md",
+      "community": 14,
+      "norm_label": "justificacion_recommender.md"
+    },
+    {
+      "label": "\u00bfTiene sentido un recommender por similitud en nuestro dominio?",
+      "file_type": "document",
+      "source_file": "docs/justificacion_recommender.md",
+      "source_location": "L1",
+      "id": "docs_justificacion_recommender_tiene_sentido_un_recommender_por_similitud_en_nuestro_dominio",
+      "community": 14,
+      "norm_label": "\u00bftiene sentido un recommender por similitud en nuestro dominio?"
+    },
+    {
+      "label": "Resumen ejecutivo",
+      "file_type": "document",
+      "source_file": "docs/justificacion_recommender.md",
+      "source_location": "L9",
+      "id": "docs_justificacion_recommender_resumen_ejecutivo",
+      "community": 14,
+      "norm_label": "resumen ejecutivo"
+    },
+    {
+      "label": "1. \u00bfConviene recomendar cosas parecidas o complementarias?",
+      "file_type": "document",
+      "source_file": "docs/justificacion_recommender.md",
+      "source_location": "L20",
+      "id": "docs_justificacion_recommender_1_conviene_recomendar_cosas_parecidas_o_complementarias",
+      "community": 14,
+      "norm_label": "1. \u00bfconviene recomendar cosas parecidas o complementarias?"
+    },
+    {
+      "label": "2. \u00bfLa similitud entre \u00edtems representa realmente valor para el usuario?",
+      "file_type": "document",
+      "source_file": "docs/justificacion_recommender.md",
+      "source_location": "L38",
+      "id": "docs_justificacion_recommender_2_la_similitud_entre_tems_representa_realmente_valor_para_el_usuario",
+      "community": 14,
+      "norm_label": "2. \u00bfla similitud entre items representa realmente valor para el usuario?"
+    },
+    {
+      "label": "3. \u00bfHay riesgo de recomendar \"m\u00e1s de lo mismo\"?",
+      "file_type": "document",
+      "source_file": "docs/justificacion_recommender.md",
+      "source_location": "L72",
+      "id": "docs_justificacion_recommender_3_hay_riesgo_de_recomendar_m_s_de_lo_mismo",
+      "community": 14,
+      "norm_label": "3. \u00bfhay riesgo de recomendar \"mas de lo mismo\"?"
+    },
+    {
+      "label": "4. Justificaci\u00f3n final (para el entregable)",
+      "file_type": "document",
+      "source_file": "docs/justificacion_recommender.md",
+      "source_location": "L100",
+      "id": "docs_justificacion_recommender_4_justificaci_n_final_para_el_entregable",
+      "community": 14,
+      "norm_label": "4. justificacion final (para el entregable)"
+    },
+    {
       "label": "build_deliverable3_clustering_outputs.py",
       "file_type": "code",
       "source_file": "build_deliverable3_clustering_outputs.py",
       "source_location": "L1",
-      "community": 8,
+      "community": 7,
       "norm_label": "build_deliverable3_clustering_outputs.py",
       "id": "build_deliverable3_clustering_outputs_py"
     },
@@ -2564,7 +2564,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 20,
       "norm_label": "pandas==3.0.2",
       "id": "requirements_pandas"
     },
@@ -2590,7 +2590,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 19,
+      "community": 21,
       "norm_label": "umap-learn>=0.5.6",
       "id": "requirements_umap_learn"
     },
@@ -2616,7 +2616,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 20,
+      "community": 22,
       "norm_label": "graphifyy==0.7.10",
       "id": "requirements_graphifyy"
     },
@@ -2629,7 +2629,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 16,
       "norm_label": "hierarchical cut quality chart (k100 ward)",
       "id": "hclust_silhouette_chart"
     },
@@ -2642,7 +2642,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 16,
       "norm_label": "silhouette score on k-means centroids",
       "id": "silhouette_metric"
     },
@@ -2655,7 +2655,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 16,
       "norm_label": "hierarchical clustering (ward linkage)",
       "id": "hierarchical_clustering_ward"
     },
@@ -2668,7 +2668,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 16,
       "norm_label": "k-means centroids (k=100)",
       "id": "kmeans_centroids_k100"
     },
@@ -2681,7 +2681,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 16,
       "norm_label": "number of hierarchical groups (cut level 5-25)",
       "id": "hierarchical_groups_count"
     },
@@ -2694,7 +2694,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 16,
       "norm_label": "cluster count selection via silhouette",
       "id": "cluster_count_selection"
     },
@@ -2850,7 +2850,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 15,
+      "community": 17,
       "norm_label": "hierarchical group sizes (h=10) bar chart",
       "id": "chart_hclust_group_sizes"
     },
@@ -2863,7 +2863,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 15,
+      "community": 17,
       "norm_label": "books per hierarchical cluster",
       "id": "metric_books_per_cluster"
     },
@@ -2876,7 +2876,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 15,
+      "community": 17,
       "norm_label": "hierarchical (ward) clustering",
       "id": "method_hierarchical_clustering"
     },
@@ -2889,7 +2889,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 15,
+      "community": 17,
       "norm_label": "dendrogram height cut h=10 (10 groups)",
       "id": "param_height_cut_h10"
     },
@@ -2902,7 +2902,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 15,
+      "community": 17,
       "norm_label": "highly imbalanced cluster sizes (cluster 1 dominant ~53k, several near-empty)",
       "id": "insight_imbalanced_cluster_sizes"
     },
@@ -2915,7 +2915,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 15,
+      "community": 17,
       "norm_label": "master_feature_matrix.parquet (pc_0..pc_n book vectors)",
       "id": "data_master_feature_matrix"
     },
@@ -3315,8 +3315,8 @@
       "source_location": "L34",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_pc_sort_key"
+      "source": "scripts_build_deliverable3_clustering_outputs_pc_sort_key",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "calls",
@@ -3336,8 +3336,8 @@
       "source_location": "L38",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_load_feature_matrix"
+      "source": "scripts_build_deliverable3_clustering_outputs_load_feature_matrix",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "calls",
@@ -3357,8 +3357,8 @@
       "source_location": "L47",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_load_metadata"
+      "source": "scripts_build_deliverable3_clustering_outputs_load_metadata",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "calls",
@@ -3389,8 +3389,8 @@
       "source_location": "L70",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_get_kmeans_model"
+      "source": "scripts_build_deliverable3_clustering_outputs_get_kmeans_model",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "calls",
@@ -3410,8 +3410,8 @@
       "source_location": "L80",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_cluster_size_stats"
+      "source": "scripts_build_deliverable3_clustering_outputs_cluster_size_stats",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "calls",
@@ -3431,8 +3431,8 @@
       "source_location": "L93",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_sampled_silhouette"
+      "source": "scripts_build_deliverable3_clustering_outputs_sampled_silhouette",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "calls",
@@ -3452,8 +3452,8 @@
       "source_location": "L104",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_write_k50_k100_comparison"
+      "source": "scripts_build_deliverable3_clustering_outputs_write_k50_k100_comparison",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "contains",
@@ -3462,8 +3462,8 @@
       "source_location": "L130",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_quality_flag"
+      "source": "scripts_build_deliverable3_clustering_outputs_quality_flag",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "calls",
@@ -3483,8 +3483,8 @@
       "source_location": "L140",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_write_assignments_and_quality"
+      "source": "scripts_build_deliverable3_clustering_outputs_write_assignments_and_quality",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "calls",
@@ -3504,8 +3504,8 @@
       "source_location": "L168",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_write_cluster_cohesion"
+      "source": "scripts_build_deliverable3_clustering_outputs_write_cluster_cohesion",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "calls",
@@ -3525,8 +3525,8 @@
       "source_location": "L198",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_write_cluster_examples"
+      "source": "scripts_build_deliverable3_clustering_outputs_write_cluster_examples",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "calls",
@@ -3546,8 +3546,8 @@
       "source_location": "L220",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_write_hierarchical_centroid_outputs"
+      "source": "scripts_build_deliverable3_clustering_outputs_write_hierarchical_centroid_outputs",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "calls",
@@ -3567,8 +3567,8 @@
       "source_location": "L266",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_print_logs"
+      "source": "scripts_build_deliverable3_clustering_outputs_print_logs",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "contains",
@@ -3577,8 +3577,8 @@
       "source_location": "L290",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "build_deliverable3_clustering_outputs_py",
-      "target": "scripts_build_deliverable3_clustering_outputs_main"
+      "source": "scripts_build_deliverable3_clustering_outputs_main",
+      "target": "build_deliverable3_clustering_outputs_py"
     },
     {
       "relation": "contains",
@@ -4251,8 +4251,8 @@
       "source_location": "L314",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_main",
-      "target": "reduction_build_master_feature_matrix_build_feature_matrix"
+      "source": "reduction_build_master_feature_matrix_build_feature_matrix",
+      "target": "reduction_build_master_feature_matrix_main"
     },
     {
       "relation": "calls",
@@ -4306,8 +4306,8 @@
       "source_location": "L315",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_main",
-      "target": "reduction_build_master_feature_matrix_write_outputs"
+      "source": "reduction_build_master_feature_matrix_write_outputs",
+      "target": "reduction_build_master_feature_matrix_main"
     },
     {
       "relation": "calls",
@@ -4328,8 +4328,8 @@
       "source_location": "L316",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "reduction_build_master_feature_matrix_main",
-      "target": "reduction_build_master_feature_matrix_print_validations"
+      "source": "reduction_build_master_feature_matrix_print_validations",
+      "target": "reduction_build_master_feature_matrix_main"
     },
     {
       "relation": "contains",
@@ -4467,353 +4467,6 @@
       "confidence_score": 1.0,
       "source": "reduction_pca_component_block_norm_shares",
       "target": "reduction_pca_count_embedding_dominated_components"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L82",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_categoryartifacts"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L89",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_has_curated_files"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L93",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_resolve_category_artifacts"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L107",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_discover_available_artifacts"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L126",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_empty_series"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L130",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_series_or_default"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L136",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_with_canonical_p99_columns"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L146",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_theme_columns"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L156",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_build_book_features"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L177",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_build_interaction_features"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L187",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_build_global_user_features"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L225",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_validate_book_features"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L244",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_validate_interaction_features"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L250",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_validate_user_features"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L255",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_generate_feature_matrices"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L305",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_reduction_feature_matrix_py",
-      "target": "reduction_feature_matrix_manifest_summary"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L98",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_categoryartifacts",
-      "target": "reduction_feature_matrix_resolve_category_artifacts"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L97",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_has_curated_files",
-      "target": "reduction_feature_matrix_resolve_category_artifacts"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L111",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_resolve_category_artifacts",
-      "target": "reduction_feature_matrix_discover_available_artifacts"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L256",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_discover_available_artifacts",
-      "target": "reduction_feature_matrix_generate_feature_matrices"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L164",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_empty_series",
-      "target": "reduction_feature_matrix_build_book_features"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L183",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_empty_series",
-      "target": "reduction_feature_matrix_build_interaction_features"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L192",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_series_or_default",
-      "target": "reduction_feature_matrix_build_global_user_features"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L157",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_with_canonical_p99_columns",
-      "target": "reduction_feature_matrix_build_book_features"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L268",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_with_canonical_p99_columns",
-      "target": "reduction_feature_matrix_generate_feature_matrices"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L170",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_theme_columns",
-      "target": "reduction_feature_matrix_build_book_features"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L265",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_build_book_features",
-      "target": "reduction_feature_matrix_generate_feature_matrices"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L266",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_build_interaction_features",
-      "target": "reduction_feature_matrix_generate_feature_matrices"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L287",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_build_global_user_features",
-      "target": "reduction_feature_matrix_generate_feature_matrices"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L268",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_validate_book_features",
-      "target": "reduction_feature_matrix_generate_feature_matrices"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L269",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_validate_interaction_features",
-      "target": "reduction_feature_matrix_generate_feature_matrices"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L288",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "reduction_feature_matrix_validate_user_features",
-      "target": "reduction_feature_matrix_generate_feature_matrices"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/reduction/feature_matrix.py",
-      "source_location": "L271",
-      "weight": 1.0,
-      "source": "reduction_feature_matrix_generate_feature_matrices",
-      "target": "utils_io_safe_write_parquet"
     },
     {
       "relation": "contains",
@@ -5100,8 +4753,8 @@
       "source_location": "L1",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "utils_init_rationale_1",
-      "target": "src_utils_init_py"
+      "source": "src_utils_init_py",
+      "target": "utils_init_rationale_1"
     },
     {
       "relation": "contains",
@@ -5675,9 +5328,9 @@
       "source_file": "README.md",
       "source_location": "L54",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_book_recommendation_system",
-      "target": "bigbook_readme_evaluation_reading_habit_metrics",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_evaluation_reading_habit_metrics"
     },
     {
       "relation": "contains",
@@ -5905,9 +5558,9 @@
       "source_file": "README.md",
       "source_location": "L58",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_evaluation_reading_habit_metrics",
-      "target": "bigbook_readme_the_measurement_challenge",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_the_measurement_challenge"
     },
     {
       "relation": "contains",
@@ -5915,9 +5568,9 @@
       "source_file": "README.md",
       "source_location": "L66",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_evaluation_reading_habit_metrics",
-      "target": "bigbook_readme_features_available_for_habit_measurement",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_features_available_for_habit_measurement"
     },
     {
       "relation": "contains",
@@ -5925,9 +5578,9 @@
       "source_file": "README.md",
       "source_location": "L96",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_evaluation_reading_habit_metrics",
-      "target": "bigbook_readme_derived_habit_metrics",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_derived_habit_metrics"
     },
     {
       "relation": "contains",
@@ -5935,9 +5588,9 @@
       "source_file": "README.md",
       "source_location": "L110",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_evaluation_reading_habit_metrics",
-      "target": "bigbook_readme_evaluation_layers",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_evaluation_layers"
     },
     {
       "relation": "contains",
@@ -5945,9 +5598,9 @@
       "source_file": "README.md",
       "source_location": "L126",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_evaluation_reading_habit_metrics",
-      "target": "bigbook_readme_honest_limitations",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_honest_limitations"
     },
     {
       "relation": "contains",
@@ -5955,9 +5608,9 @@
       "source_file": "README.md",
       "source_location": "L83",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_features_available_for_habit_measurement",
-      "target": "bigbook_readme_codeblock_2",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_2"
     },
     {
       "relation": "contains",
@@ -5966,8 +5619,8 @@
       "source_location": "L58",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_business_logic",
-      "target": "bigbook_readme_codeblock_2"
+      "source": "bigbook_readme_codeblock_2",
+      "target": "bigbook_readme_business_logic"
     },
     {
       "relation": "contains",
@@ -5975,9 +5628,9 @@
       "source_file": "README.md",
       "source_location": "L100",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_derived_habit_metrics",
-      "target": "bigbook_readme_codeblock_3",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_3"
     },
     {
       "relation": "contains",
@@ -5986,8 +5639,8 @@
       "source_location": "L64",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_business_logic",
-      "target": "bigbook_readme_codeblock_3"
+      "source": "bigbook_readme_codeblock_3",
+      "target": "bigbook_readme_business_logic"
     },
     {
       "relation": "contains",
@@ -5995,9 +5648,9 @@
       "source_file": "README.md",
       "source_location": "L136",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_business_logic",
-      "target": "bigbook_readme_codeblock_4",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_4"
     },
     {
       "relation": "contains",
@@ -6005,9 +5658,9 @@
       "source_file": "README.md",
       "source_location": "L142",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_business_logic",
-      "target": "bigbook_readme_codeblock_5",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_5"
     },
     {
       "relation": "contains",
@@ -6036,8 +5689,8 @@
       "source_location": "L75",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_k_means_granularity",
-      "target": "bigbook_readme_codeblock_4"
+      "source": "bigbook_readme_codeblock_4",
+      "target": "bigbook_readme_k_means_granularity"
     },
     {
       "relation": "contains",
@@ -6046,8 +5699,8 @@
       "source_location": "L81",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_k_means_granularity",
-      "target": "bigbook_readme_codeblock_5"
+      "source": "bigbook_readme_codeblock_5",
+      "target": "bigbook_readme_k_means_granularity"
     },
     {
       "relation": "contains",
@@ -6055,9 +5708,9 @@
       "source_file": "README.md",
       "source_location": "L153",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_k_means_granularity",
-      "target": "bigbook_readme_codeblock_6",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_6"
     },
     {
       "relation": "contains",
@@ -6065,9 +5718,9 @@
       "source_file": "README.md",
       "source_location": "L159",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_k_means_granularity",
-      "target": "bigbook_readme_codeblock_7",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_7"
     },
     {
       "relation": "contains",
@@ -6076,8 +5729,8 @@
       "source_location": "L126",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_repository_structure",
-      "target": "bigbook_readme_codeblock_6"
+      "source": "bigbook_readme_codeblock_6",
+      "target": "bigbook_readme_repository_structure"
     },
     {
       "relation": "contains",
@@ -6086,8 +5739,8 @@
       "source_location": "L153",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_pipeline",
-      "target": "bigbook_readme_codeblock_7"
+      "source": "bigbook_readme_codeblock_7",
+      "target": "bigbook_readme_pipeline"
     },
     {
       "relation": "contains",
@@ -6095,9 +5748,9 @@
       "source_file": "README.md",
       "source_location": "L204",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_repository_structure",
-      "target": "bigbook_readme_codeblock_8",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_8"
     },
     {
       "relation": "contains",
@@ -6106,8 +5759,8 @@
       "source_location": "L159",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_pipeline",
-      "target": "bigbook_readme_codeblock_8"
+      "source": "bigbook_readme_codeblock_8",
+      "target": "bigbook_readme_pipeline"
     },
     {
       "relation": "contains",
@@ -6125,9 +5778,9 @@
       "source_file": "README.md",
       "source_location": "L237",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_pipeline",
-      "target": "bigbook_readme_codeblock_10",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_10"
     },
     {
       "relation": "contains",
@@ -6135,9 +5788,9 @@
       "source_file": "README.md",
       "source_location": "L244",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_pipeline",
-      "target": "bigbook_readme_codeblock_11",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_11"
     },
     {
       "relation": "contains",
@@ -6146,8 +5799,8 @@
       "source_location": "L182",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_running_the_pipeline",
-      "target": "bigbook_readme_codeblock_10"
+      "source": "bigbook_readme_codeblock_10",
+      "target": "bigbook_readme_running_the_pipeline"
     },
     {
       "relation": "contains",
@@ -6156,8 +5809,8 @@
       "source_location": "L188",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_running_the_pipeline",
-      "target": "bigbook_readme_codeblock_11"
+      "source": "bigbook_readme_codeblock_11",
+      "target": "bigbook_readme_running_the_pipeline"
     },
     {
       "relation": "contains",
@@ -6175,9 +5828,9 @@
       "source_file": "README.md",
       "source_location": "L266",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_running_the_pipeline",
-      "target": "bigbook_readme_codeblock_13",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_13"
     },
     {
       "relation": "contains",
@@ -6185,9 +5838,9 @@
       "source_file": "README.md",
       "source_location": "L272",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_running_the_pipeline",
-      "target": "bigbook_readme_codeblock_14",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_14"
     },
     {
       "relation": "contains",
@@ -6196,8 +5849,8 @@
       "source_location": "L202",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_master_merge",
-      "target": "bigbook_readme_codeblock_13"
+      "source": "bigbook_readme_codeblock_13",
+      "target": "bigbook_readme_master_merge"
     },
     {
       "relation": "contains",
@@ -6206,8 +5859,8 @@
       "source_location": "L208",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_master_merge",
-      "target": "bigbook_readme_codeblock_14"
+      "source": "bigbook_readme_codeblock_14",
+      "target": "bigbook_readme_master_merge"
     },
     {
       "relation": "contains",
@@ -6235,9 +5888,9 @@
       "source_file": "README.md",
       "source_location": "L303",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_master_merge",
-      "target": "bigbook_readme_codeblock_17",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_17"
     },
     {
       "relation": "contains",
@@ -6245,9 +5898,9 @@
       "source_file": "README.md",
       "source_location": "L309",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_master_merge",
-      "target": "bigbook_readme_codeblock_18",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_18"
     },
     {
       "relation": "contains",
@@ -6256,8 +5909,8 @@
       "source_location": "L263",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_current_artifacts",
-      "target": "bigbook_readme_codeblock_17"
+      "source": "bigbook_readme_codeblock_17",
+      "target": "bigbook_readme_current_artifacts"
     },
     {
       "relation": "contains",
@@ -6266,8 +5919,8 @@
       "source_location": "L342",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_data_dictionary",
-      "target": "bigbook_readme_codeblock_18"
+      "source": "bigbook_readme_codeblock_18",
+      "target": "bigbook_readme_data_dictionary"
     },
     {
       "relation": "contains",
@@ -6275,9 +5928,9 @@
       "source_file": "README.md",
       "source_location": "L341",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_current_artifacts",
-      "target": "bigbook_readme_codeblock_19",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_19"
     },
     {
       "relation": "contains",
@@ -6286,8 +5939,8 @@
       "source_location": "L356",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_feature_matrix_construction",
-      "target": "bigbook_readme_codeblock_19"
+      "source": "bigbook_readme_codeblock_19",
+      "target": "bigbook_readme_feature_matrix_construction"
     },
     {
       "relation": "contains",
@@ -6295,9 +5948,9 @@
       "source_file": "README.md",
       "source_location": "L420",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_data_dictionary",
-      "target": "bigbook_readme_codeblock_20",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_20"
     },
     {
       "relation": "contains",
@@ -6306,8 +5959,8 @@
       "source_location": "L368",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_numeric_block",
-      "target": "bigbook_readme_codeblock_20"
+      "source": "bigbook_readme_codeblock_20",
+      "target": "bigbook_readme_numeric_block"
     },
     {
       "relation": "contains",
@@ -6315,9 +5968,9 @@
       "source_file": "README.md",
       "source_location": "L434",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_feature_matrix_construction",
-      "target": "bigbook_readme_codeblock_21",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_21"
     },
     {
       "relation": "contains",
@@ -6356,8 +6009,8 @@
       "source_location": "L390",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_numeric_block",
-      "target": "bigbook_readme_codeblock_21"
+      "source": "bigbook_readme_codeblock_21",
+      "target": "bigbook_readme_numeric_block"
     },
     {
       "relation": "contains",
@@ -6365,9 +6018,9 @@
       "source_file": "README.md",
       "source_location": "L446",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_numeric_block",
-      "target": "bigbook_readme_codeblock_22",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_22"
     },
     {
       "relation": "contains",
@@ -6375,9 +6028,9 @@
       "source_file": "README.md",
       "source_location": "L468",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_numeric_block",
-      "target": "bigbook_readme_codeblock_23",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_23"
     },
     {
       "relation": "contains",
@@ -6386,8 +6039,8 @@
       "source_location": "L400",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_binary_and_categorical_block",
-      "target": "bigbook_readme_codeblock_22"
+      "source": "bigbook_readme_codeblock_22",
+      "target": "bigbook_readme_binary_and_categorical_block"
     },
     {
       "relation": "contains",
@@ -6396,8 +6049,8 @@
       "source_location": "L406",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_binary_and_categorical_block",
-      "target": "bigbook_readme_codeblock_23"
+      "source": "bigbook_readme_codeblock_23",
+      "target": "bigbook_readme_binary_and_categorical_block"
     },
     {
       "relation": "contains",
@@ -6405,9 +6058,9 @@
       "source_file": "README.md",
       "source_location": "L478",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_binary_and_categorical_block",
-      "target": "bigbook_readme_codeblock_24",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_24"
     },
     {
       "relation": "contains",
@@ -6415,9 +6068,9 @@
       "source_file": "README.md",
       "source_location": "L484",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_binary_and_categorical_block",
-      "target": "bigbook_readme_codeblock_25",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_25"
     },
     {
       "relation": "contains",
@@ -6426,8 +6079,8 @@
       "source_location": "L426",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_embedding_block",
-      "target": "bigbook_readme_codeblock_24"
+      "source": "bigbook_readme_codeblock_24",
+      "target": "bigbook_readme_embedding_block"
     },
     {
       "relation": "contains",
@@ -6436,8 +6089,8 @@
       "source_location": "L432",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_embedding_block",
-      "target": "bigbook_readme_codeblock_25"
+      "source": "bigbook_readme_codeblock_25",
+      "target": "bigbook_readme_embedding_block"
     },
     {
       "relation": "contains",
@@ -6465,9 +6118,9 @@
       "source_file": "README.md",
       "source_location": "L516",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_embedding_block",
-      "target": "bigbook_readme_codeblock_28",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_28"
     },
     {
       "relation": "contains",
@@ -6475,9 +6128,9 @@
       "source_file": "README.md",
       "source_location": "L522",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_embedding_block",
-      "target": "bigbook_readme_codeblock_29",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_29"
     },
     {
       "relation": "contains",
@@ -6486,8 +6139,8 @@
       "source_location": "L460",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_standardization_and_block_weighting",
-      "target": "bigbook_readme_codeblock_28"
+      "source": "bigbook_readme_codeblock_28",
+      "target": "bigbook_readme_standardization_and_block_weighting"
     },
     {
       "relation": "contains",
@@ -6496,8 +6149,8 @@
       "source_location": "L476",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_standardization_and_block_weighting",
-      "target": "bigbook_readme_codeblock_29"
+      "source": "bigbook_readme_codeblock_29",
+      "target": "bigbook_readme_standardization_and_block_weighting"
     },
     {
       "relation": "contains",
@@ -6505,9 +6158,9 @@
       "source_file": "README.md",
       "source_location": "L538",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_standardization_and_block_weighting",
-      "target": "bigbook_readme_codeblock_30",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_30"
     },
     {
       "relation": "contains",
@@ -6515,9 +6168,9 @@
       "source_file": "README.md",
       "source_location": "L554",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_standardization_and_block_weighting",
-      "target": "bigbook_readme_codeblock_31",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_31"
     },
     {
       "relation": "contains",
@@ -6526,8 +6179,8 @@
       "source_location": "L484",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_pca",
-      "target": "bigbook_readme_codeblock_30"
+      "source": "bigbook_readme_codeblock_30",
+      "target": "bigbook_readme_pca"
     },
     {
       "relation": "contains",
@@ -6536,8 +6189,8 @@
       "source_location": "L492",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_pca",
-      "target": "bigbook_readme_codeblock_31"
+      "source": "bigbook_readme_codeblock_31",
+      "target": "bigbook_readme_pca"
     },
     {
       "relation": "contains",
@@ -6555,9 +6208,9 @@
       "source_file": "README.md",
       "source_location": "L570",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_pca",
-      "target": "bigbook_readme_codeblock_33",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_33"
     },
     {
       "relation": "contains",
@@ -6565,9 +6218,9 @@
       "source_file": "README.md",
       "source_location": "L579",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_pca",
-      "target": "bigbook_readme_codeblock_34",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_34"
     },
     {
       "relation": "contains",
@@ -6596,8 +6249,8 @@
       "source_location": "L565",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_pca_block_diagnostics",
-      "target": "bigbook_readme_codeblock_33"
+      "source": "bigbook_readme_codeblock_33",
+      "target": "bigbook_readme_pca_block_diagnostics"
     },
     {
       "relation": "contains",
@@ -6606,8 +6259,8 @@
       "source_location": "L571",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "bigbook_readme_pca_block_diagnostics",
-      "target": "bigbook_readme_codeblock_34"
+      "source": "bigbook_readme_codeblock_34",
+      "target": "bigbook_readme_pca_block_diagnostics"
     },
     {
       "relation": "contains",
@@ -6615,9 +6268,9 @@
       "source_file": "README.md",
       "source_location": "L643",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_pca_block_diagnostics",
-      "target": "bigbook_readme_codeblock_35",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_35"
     },
     {
       "relation": "contains",
@@ -6625,9 +6278,9 @@
       "source_file": "README.md",
       "source_location": "L649",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "bigbook_readme_pca_block_diagnostics",
-      "target": "bigbook_readme_codeblock_36",
-      "confidence_score": 1.0
+      "target": "bigbook_readme_codeblock_36"
     },
     {
       "relation": "contains",
@@ -6838,6 +6491,156 @@
       "confidence_score": 1.0,
       "source": "viz_cache_pca_interpretation_report_pca_loading_interpretation_report",
       "target": "viz_cache_pca_interpretation_report_pc19_rating_volume_log_review_activity_log_semantic_theme"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "docs_informacion_disponible_md",
+      "target": "docs_informacion_disponible_informaci_n_disponible_para_construir_el_recomendador",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "docs_informacion_disponible_informaci_n_disponible_para_construir_el_recomendador",
+      "target": "docs_informacion_disponible_mapa_r_pido_del_cat_logo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "docs_informacion_disponible_informaci_n_disponible_para_construir_el_recomendador",
+      "target": "docs_informacion_disponible_1_datos_de_tems_libros",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "docs_informacion_disponible_informaci_n_disponible_para_construir_el_recomendador",
+      "target": "docs_informacion_disponible_2_datos_de_usuarios",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "docs_informacion_disponible_informaci_n_disponible_para_construir_el_recomendador",
+      "target": "docs_informacion_disponible_3_historial_de_interacciones",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L117",
+      "weight": 1.0,
+      "source": "docs_informacion_disponible_informaci_n_disponible_para_construir_el_recomendador",
+      "target": "docs_informacion_disponible_4_qu_datos_faltan_o_son_d_biles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L145",
+      "weight": 1.0,
+      "source": "docs_informacion_disponible_informaci_n_disponible_para_construir_el_recomendador",
+      "target": "docs_informacion_disponible_5_qu_variables_usaremos_en_el_recomendador",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "docs_informacion_disponible_3_historial_de_interacciones",
+      "target": "docs_informacion_disponible_tipos_de_feedback_qu_tenemos_y_qu_no",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/informacion_disponible.md",
+      "source_location": "L176",
+      "weight": 1.0,
+      "source": "docs_informacion_disponible_5_qu_variables_usaremos_en_el_recomendador",
+      "target": "docs_informacion_disponible_conclusi_n",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/justificacion_recommender.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "docs_justificacion_recommender_md",
+      "target": "docs_justificacion_recommender_tiene_sentido_un_recommender_por_similitud_en_nuestro_dominio",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/justificacion_recommender.md",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "docs_justificacion_recommender_tiene_sentido_un_recommender_por_similitud_en_nuestro_dominio",
+      "target": "docs_justificacion_recommender_resumen_ejecutivo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/justificacion_recommender.md",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "docs_justificacion_recommender_tiene_sentido_un_recommender_por_similitud_en_nuestro_dominio",
+      "target": "docs_justificacion_recommender_1_conviene_recomendar_cosas_parecidas_o_complementarias",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/justificacion_recommender.md",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "docs_justificacion_recommender_tiene_sentido_un_recommender_por_similitud_en_nuestro_dominio",
+      "target": "docs_justificacion_recommender_2_la_similitud_entre_tems_representa_realmente_valor_para_el_usuario",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/justificacion_recommender.md",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "docs_justificacion_recommender_tiene_sentido_un_recommender_por_similitud_en_nuestro_dominio",
+      "target": "docs_justificacion_recommender_3_hay_riesgo_de_recomendar_m_s_de_lo_mismo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/justificacion_recommender.md",
+      "source_location": "L100",
+      "weight": 1.0,
+      "source": "docs_justificacion_recommender_tiene_sentido_un_recommender_por_similitud_en_nuestro_dominio",
+      "target": "docs_justificacion_recommender_4_justificaci_n_final_para_el_entregable",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -7893,5 +7696,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "22c5c154e48db6919db1082312a4c02367a6b2bf"
+  "built_at_commit": "5191bcd55a28d1acdd7e5148e2654fd5ae01965f"
 }
