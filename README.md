@@ -232,11 +232,10 @@ The main flow is:
 clean -> reduce -> curation -> merge -> feature matrix -> PCA
 ```
 
-The `clean`, `reduce` and `curation` phases are handled by genre-specific notebooks. The expected curated inputs for the master pipeline are:
+The `clean` and `reduce` phases are handled by genre-specific notebooks. The book curation expected input for the master pipeline is, per category:
 
 ```text
 data/processed/<category>/books_curated.parquet
-data/processed/<category>/interactions_curated.parquet
 ```
 
 The categories used by the master flow are:
@@ -250,6 +249,16 @@ romance
 ```
 
 Some legacy processed paths are also supported by `src/merge_master.py`, such as `data/processed/fantasy` and `data/processed/history`.
+
+The **interaction** side is no longer per-genre. `src/curation/interactions.py` rebuilds a single global, deduplicated artifact from the five raw dumps and writes:
+
+```text
+data/processed/interactions_curated.parquet   # canonical, cross-category, deduplicated, no review text
+data/processed/review_texts.parquet           # review text, joinable by interaction_key
+data/processed/user_features_global.parquet   # global per-user stats + bias + K-core valid flag
+```
+
+Schema of the canonical `interactions_curated.parquet`: `interaction_key` (uint64, stable hash of `review_id` or `user_id|book_id`), `user_id`, `book_id`, `review_id`, `is_read`, `rating_clean` (1–5 or NA), `rating_missing`, `has_review_text`, `review_text_length`, `reading_duration_days`, `engagement_mode` (`want_to_read` / `read_no_rating` / `rating_only` / `review`), `is_want_to_read`, `interaction_weight`, `user_rating_bias` (global), the date columns, and `source_category_count` only when built with `--with-source-category-count`. K-core and `user_rating_bias` are **global** (cross-category); the implicit `want_to_read` / `read_no_rating` layer is recovered and kept. The legacy per-genre `data/processed/<category>/interactions_curated.parquet` files are deprecated (kept only as a historical backup); per-category `interactions_view.parquet` files are derived for EDA only.
 
 ## Running the Pipeline
 
@@ -265,6 +274,12 @@ Build the feature matrix, PCA model and metadata:
 
 ```bash
 env/bin/python -m src.reduction.build_master_feature_matrix
+```
+
+Build the global deduplicated interactions artifact (requires `books_master.parquet`; add `--max-rows-per-file 200000 --skip-views` for a fast dry-run):
+
+```bash
+env/bin/python -m src.curation.interactions
 ```
 
 Run tests:

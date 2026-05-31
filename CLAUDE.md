@@ -9,6 +9,8 @@ The project's virtualenv lives at `env/`. Always invoke Python through it and us
 ```bash
 env/bin/python -m src.merge_master                          # build data/processed/books_master.parquet
 env/bin/python -m src.reduction.build_master_feature_matrix # build PCA feature matrix + model + meta
+env/bin/python -m src.curation.interactions                 # build the global deduplicated interactions artifact (+ views)
+env/bin/python -m src.curation.interactions --max-rows-per-file 200000 --skip-views  # fast dry-run
 env/bin/python -m pytest                                    # run all tests
 env/bin/python -m pytest tests/test_master_feature_matrix.py::test_pca_smoke_preserves_row_count  # single test
 env/bin/python scripts/build_deliverable3_clustering_outputs.py  # KMeans + hierarchical clustering outputs
@@ -36,16 +38,33 @@ Avoid popularity bias. Popularity features such as `ratings_count`, `text_review
 
 The end-to-end flow is `clean -> reduce -> curation -> merge -> feature matrix -> PCA`. The first three phases live in genre-specific notebooks under `notebooks/{cleaning,processing,reduction}/`; the last three are Python modules under `src/`.
 
-### Stage boundary: curated parquets per genre
+### Stage boundary: curated parquets per genre (book side)
 
-The notebook stages must produce these files for every genre key in `src/config.py::CATEGORIES`:
+The notebook stages must produce a `books_curated.parquet` for every genre key in `src/config.py::CATEGORIES`:
 
 ```
 data/processed/<category>/books_curated.parquet
-data/processed/<category>/interactions_curated.parquet
 ```
 
 Category keys are `fantasy_paranormal`, `mystery_thriller_crime`, `history_biography`, `young_adult`, `romance`. `src/merge_master.py` and `src/reduction/feature_matrix.py` both consult `LEGACY_PROCESSED_DIRS` to also accept the older `data/processed/fantasy` and `data/processed/history` paths, so do not delete that fallback when refactoring.
+
+The legacy per-genre `data/processed/<category>/interactions_curated.parquet` files are **deprecated** (kept only as a historical backup, never overwritten). They were biased (0% `rating_missing`, 100% `is_read` — the whole implicit layer was dropped upstream), wrongly partitioned (~71% of users span >=2 genres, so per-category K-core and rating bias are wrong), and duplicated (~19% of `(user, book)` pairs repeated across dumps). The interaction side is now a single **global** artifact (see below), not per-genre.
+
+### `src/curation/interactions.py` — global deduplicated interactions
+
+The single source of truth for the user side. Streams the five raw `goodreads_interactions_*.json.gz` dumps and writes three artifacts to `data/processed/`:
+
+- `interactions_curated.parquet` — **canonical, cross-category, deduplicated, no review text**. One row per interaction (`interaction_key`), keyed by `review_id` when present else `user_id|book_id` (a deterministic `pandas.util.hash_pandas_object` uint64 — a stable join key). Dedup is **keep-best by priority** (`review > rating_only > read_no_rating > want_to_read`, then rating present, then `is_read`, then recency), NOT keep-first, so the strongest signal survives when duplicates differ. The implicit layer is **recovered**: `rating == 0` → `rating_clean` NA + `rating_missing`, and rows with no read/rating/review are tagged `engagement_mode == "want_to_read"` (kept, with `interaction_weight` 0.3, but excluded from the positive taste vector).
+- `review_texts.parquet` — only rows with `has_review_text`, joinable to the canonical by `interaction_key` (keeps text out of the hot path).
+- `user_features_global.parquet` — **global** per-user stats with `user_rating_bias` (= user mean − global mean, neutral 0.0 when no ratings) and the global K-core flag `valid` (`read_or_rated_count >= K_USER_MIN`, currently 3).
+
+Implementation notes that are load-bearing:
+- **K-core and `user_rating_bias` are GLOBAL** (computed across all five categories), never per-category. The build is always global — there is no `--category` flag.
+- The valid **book universe** comes from `books_master.parquet` (aligned to PCA); the item side (`books_master`/PCA/clusters) is treated as stable and never recomputed here. Interactions whose `book_id` is not in that universe are dropped.
+- Streaming is **one JSON parse + two parquet passes**: scan 1 parses the gzip dumps once, writes a `*_staging.parquet`, and builds the in-memory `key -> max_priority` index (sorted uint64 arrays + `searchsorted`, never a flat 62M-row join); scan 2 reads the cheap staging parquet to emit keep-best winners + accumulate global user stats; a final parquet post-pass applies the global K-core, merges bias, and splits review text out. Re-parsing the JSON twice would roughly double runtime — keep the staging hop.
+- `source_category_count` (how many genre dumps an interaction appeared in) is an **optional diagnostic** behind `--with-source-category-count`; it must never block the main build.
+
+Per-category `data/processed/<category>/interactions_view.parquet` files are derived **only for EDA/notebooks** (`build_category_views`, genre-filtered by `genre_<cat>` from `books_master`); a multi-genre interaction appears in several views by design, and these views are not a valid modeling input.
 
 ### `src/merge_master.py` — master table
 

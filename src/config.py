@@ -64,6 +64,13 @@ CATEGORIES: dict[str, CategoryConfig] = {
 }
 
 
+# Global deduplicated interaction artifacts (built by src.curation.interactions).
+# Canonical, cross-category, single source of truth for user-side features.
+INTERACTIONS_CURATED_GLOBAL_PATH = PROCESSED_DIR / "interactions_curated.parquet"
+REVIEW_TEXTS_PATH = PROCESSED_DIR / "review_texts.parquet"
+USER_FEATURES_GLOBAL_PATH = PROCESSED_DIR / "user_features_global.parquet"
+
+
 BOOK_NUMERIC_COLUMNS = [
     "text_reviews_count",
     "average_rating",
