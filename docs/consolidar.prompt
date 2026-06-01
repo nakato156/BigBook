@@ -1,0 +1,94 @@
+# Prompt: consolidar los entregables de diseño en un solo informe
+
+Eres un editor técnico. Tu tarea es **leer todos los documentos de detalle de la carpeta
+`docs/` y consolidarlos en un único informe** (`docs/informe_diseno_recomendador.md`),
+manteniendo estructura, coherencia y narrativa. NO inventes contenido: el informe es un
+**resumen fiel** de los documentos fuente, no una reinterpretación.
+
+## Entrada (qué leer)
+
+Lee **todos los archivos `*.md` dentro de `docs/`** EXCEPTO:
+- `docs/informe_diseno_recomendador.md` (es la SALIDA — no lo uses como fuente)
+- este archivo (`docs/consolidar.prompt`)
+
+Archivos fuente y su mapeo a secciones del informe (en este orden):
+
+| # | Sección del informe | Documento de detalle |
+|---|---|---|
+| 1 | Definición del problema | `definicion_problema.md` |
+| 2 | Justificación del recomendador | `justificacion_recommender.md` |
+| 3 | Información disponible | `informacion_disponible.md` |
+| 4 | Perfil del usuario | `perfil_usuario.md` |
+| 5 | Representación de los ítems | `representacion_items.md` |
+| 6 | Criterio de similitud y scoring | `criterio_scoring.md` |
+| 7 | Métricas de evaluación: ¿cuándo es válido? | `metricas_evaluacion.md` |
+
+Si aparecen documentos nuevos en `docs/` que no estén en esta tabla, **inclúyelos** como una
+sección adicional al final (antes del cierre), ubicándolos donde mejor encaje la narrativa, y
+añade su fila al índice y a la tabla de mapeo.
+
+## Salida (qué escribir)
+
+Sobrescribe `docs/informe_diseno_recomendador.md` con esta estructura exacta:
+
+1. **Título + preámbulo**: `# Informe de diseño del recomendador — BigBook`, seguido de un
+   párrafo que explique que reúne los entregables de la fase de diseño y que el detalle vive en
+   cada documento de `docs/`.
+2. **Bloque de contexto** (negritas): objetivo de negocio, dataset, artefacto central
+   (`master_feature_matrix.parquet`, `pc_0..pc_172`).
+3. **Nota de estado**: el pipeline legacy de features de usuario (`feature_matrix.py`,
+   `user_features_global.parquet`) fue eliminado (commit `5191bcd`); la fuente
+   `interactions_curated.parquet` está intacta y el `user_matrix` se reconstruirá desde cero.
+4. **Índice** numerado (1–N) con enlace ancla a cada sección y enlace al documento de detalle:
+   `· *(detalle: [archivo.md](archivo.md))*`.
+5. **Una sección `## N. Título` por documento**, en el orden de la tabla. Cada sección:
+   - Es un **resumen condensado y autocontenido** del documento de detalle (no copiar entero).
+   - Empieza enlazando al detalle y conserva la idea central, las decisiones y los datos clave
+     (cifras, nombres de columnas, fórmulas) que aparezcan en la fuente.
+   - Usa tablas/bloques de código cuando la fuente los use y ayuden a la claridad.
+6. **Cierre `---` + resumen en una línea por sección** (formato `bloque de texto` tipo TL;DR:
+   `Problema → …`, `Justificación → …`, etc.) y un párrafo final de síntesis.
+
+## Reglas de coherencia y narrativa
+
+- **Español**, registro técnico, mismo tono que los documentos fuente. Markdown válido.
+- **Fidelidad ante todo**: no agregues hechos, cifras ni afirmaciones que no estén en las
+  fuentes. Si algo no está, no lo inventes.
+- **Resolución de contradicciones**: si dos fuentes se contradicen, prioriza el documento de
+  detalle más específico y la decisión más reciente. Si la contradicción es real y no
+  resoluble, **márcala explícitamente** en el informe (una línea: "⚠️ inconsistencia: …") en
+  vez de elegir en silencio.
+- **Decisiones fijadas que deben respetarse** (no revertir a versiones viejas):
+  - Unidad de clustering/recomendación: **1 fila = 1 `book_id` = 1 vector PCA**.
+  - Perfil de usuario: **vector de gusto en el mismo espacio PCA** que los libros.
+  - `user_matrix` (build): positivo = `is_read AND rating_clean ≥ 4`; agregación = **media
+    simple** (baseline; la ponderación por rating/recencia es refinamiento futuro).
+  - Género = señal/filtro/diversidad, **no** la unidad del modelo.
+  - Popularidad = señal **secundaria** de calidad/confianza, no el objetivo.
+
+## Disciplina de causalidad (CRÍTICO)
+
+El dataset es **observacional/histórico** (sin A/B, sin telemetría). **No afirmar causalidad
+sin justificación.** Concretamente:
+
+- La preferencia se **infiere del comportamiento**: leer/calificar alto **correlaciona** con
+  agrado; es **asociativo, no causal**. El vector de usuario es una **estimación**, no la
+  medición de una preferencia "verdadera".
+- El **split temporal** mide **capacidad predictiva** ("¿predice lo que el usuario leyó
+  después?"), **no** impacto causal del recomendador sobre la lectura ni el hábito.
+- Las comparaciones contra el baseline de popularidad son **correlacionales**.
+- El **impacto causal real sobre la retención/hábito** queda **fuera de alcance** y solo sería
+  verificable con un **experimento controlado (A/B) en producción**. Decláralo como límite.
+- "Sostener el hábito de lectura" puede figurar como **objetivo de negocio**, nunca como efecto
+  ya demostrado. Evita verbos causales sin matiz (causa, provoca, aumenta, hace que) salvo para
+  **negarlos** o acotarlos.
+
+## Antes de terminar (autochequeo)
+
+Verifica y corrige si hace falta:
+1. El índice lista todas las secciones y cada ancla resuelve.
+2. Cada sección enlaza a su documento de detalle.
+3. No quedó ninguna afirmación causal sin justificar (busca: causa/provoca/aumenta/hace que/
+   sostiene/revelada → deben estar acotadas o negadas).
+4. Las "decisiones fijadas" arriba aparecen reflejadas y no contradichas.
+5. No se referencia `feature_matrix.py` ni `user_features_global.parquet` como si existieran.
