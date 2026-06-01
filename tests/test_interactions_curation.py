@@ -227,6 +227,7 @@ def built(tmp_path: Path) -> dict:
         out_user_features=out_user_features,
         with_source_category_count=True,
         force=True,
+        progress=False,
     )
     return {
         "summary": summary,

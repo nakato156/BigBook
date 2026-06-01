@@ -52,6 +52,11 @@ from src.utils.cleaning import (
 )
 from src.utils.io import read_jsonl_chunks, read_parquet_chunks, remove_path, safe_write_parquet
 
+try:  # optional progress bars; the build runs fine without tqdm installed
+    from tqdm.auto import tqdm
+except ImportError:  # pragma: no cover
+    tqdm = None
+
 
 MASTER_PATH = PROCESSED_DIR / "books_master.parquet"
 
@@ -368,19 +373,57 @@ def _arrow_table(df: pd.DataFrame, dtypes: dict[str, str]) -> pa.Table:
     return pa.Table.from_pandas(out[list(dtypes) + DATE_COLUMNS], preserve_index=False)
 
 
+def _read_raw_chunks(path: Path, chunksize: int, progress: bool, desc: str) -> Iterator[pd.DataFrame]:
+    """Yield raw JSONL chunks, optionally driving a per-file byte-progress bar.
+
+    The bar is measured in **compressed bytes consumed** (``tqdm.wrapattr`` over the
+    gzip file), which gives a real ETA for the dominant cost of the build — the
+    one-time JSON parse — without knowing the row count up front.
+    """
+    if not (progress and tqdm is not None):
+        yield from read_jsonl_chunks(path, chunksize)
+        return
+    with open(path, "rb") as raw:
+        wrapped = tqdm.wrapattr(
+            raw, "read", total=path.stat().st_size, desc=desc,
+            unit="B", unit_scale=True, unit_divisor=1024, leave=False,
+        )
+        with wrapped as fobj:
+            yield from pd.read_json(fobj, lines=True, compression="gzip", chunksize=chunksize)
+
+
+def _read_parquet_chunks_progress(
+    path: Path, chunksize: int, progress: bool, desc: str
+) -> Iterator[pd.DataFrame]:
+    """Yield parquet chunks with a row-based progress bar (total = ``num_rows``)."""
+    bar = None
+    if progress and tqdm is not None:
+        total = pq.ParquetFile(path).metadata.num_rows
+        bar = tqdm(total=total, unit="row", unit_scale=True, desc=desc, leave=False)
+    for chunk in read_parquet_chunks(path, chunksize):
+        yield chunk
+        if bar is not None:
+            bar.update(len(chunk))
+    if bar is not None:
+        bar.close()
+
+
 def _iter_clean_chunks(
     category_files: dict[str, Path],
     valid_books: set[str],
     max_rows_per_file: int | None,
+    progress: bool = False,
 ) -> Iterator[tuple[str, pd.DataFrame, int]]:
     """Stream raw dumps -> clean -> key -> filter to the valid book universe.
 
     Yields ``(category_key, filtered_chunk, raw_chunk_rows)``. Re-iterating runs
     the same deterministic transform, so the two scans see identical data.
     """
-    for category, path in category_files.items():
+    n_files = len(category_files)
+    for file_idx, (category, path) in enumerate(category_files.items(), start=1):
         seen = 0
-        for chunk in read_jsonl_chunks(path, INTERACTION_CHUNKSIZE):
+        desc = f"scan1 parse [{file_idx}/{n_files}] {path.name}"
+        for chunk in _read_raw_chunks(path, INTERACTION_CHUNKSIZE, progress, desc):
             if max_rows_per_file is not None:
                 if seen >= max_rows_per_file:
                     break
@@ -403,6 +446,7 @@ def build_global_interactions(
     max_rows_per_file: int | None = None,
     with_source_category_count: bool = False,
     force: bool = False,
+    progress: bool = True,
 ) -> dict[str, Any]:
     """Build the canonical global interactions artifact (streaming, two raw scans).
 
@@ -440,7 +484,9 @@ def build_global_interactions(
     raw_rows = 0
     rows_after_book = 0
     staging_writer: pq.ParquetWriter | None = None
-    for category, df, raw_chunk in _iter_clean_chunks(category_files, valid_books, max_rows_per_file):
+    for category, df, raw_chunk in _iter_clean_chunks(
+        category_files, valid_books, max_rows_per_file, progress=progress
+    ):
         raw_rows += raw_chunk
         if df.empty:
             continue
@@ -487,7 +533,9 @@ def build_global_interactions(
     engagement_counts: Counter[str] = Counter()
     writer: pq.ParquetWriter | None = None
     winners_total = 0
-    for df in read_parquet_chunks(staging_path, INTERACTION_CHUNKSIZE):
+    for df in _read_parquet_chunks_progress(
+        staging_path, INTERACTION_CHUNKSIZE, progress, "scan2 keep-best winners"
+    ):
         keys = df["interaction_key"].to_numpy(dtype="uint64")
         priorities = df["priority"].to_numpy(dtype="uint64")
         positions = np.searchsorted(unique_keys, keys)
@@ -531,7 +579,9 @@ def build_global_interactions(
     canonical_rows = 0
     review_text_rows = 0
     if temp_path.exists():
-        for chunk in read_parquet_chunks(temp_path, INTERACTION_CHUNKSIZE):
+        for chunk in _read_parquet_chunks_progress(
+            temp_path, INTERACTION_CHUNKSIZE, progress, "post-pass K-core + text split"
+        ):
             chunk = chunk[chunk["user_id"].astype(str).isin(valid_users)]
             if chunk.empty:
                 continue
@@ -595,6 +645,7 @@ def build_category_views(
     out_interactions: Path = INTERACTIONS_CURATED_GLOBAL_PATH,
     master_path: Path = MASTER_PATH,
     force: bool = False,
+    progress: bool = True,
 ) -> dict[str, Any]:
     """Derive per-category ``interactions_view.parquet`` (EDA/debug only).
 
@@ -623,7 +674,9 @@ def build_category_views(
         path.parent.mkdir(parents=True, exist_ok=True)
 
     try:
-        for chunk in read_parquet_chunks(out_interactions, INTERACTION_CHUNKSIZE):
+        for chunk in _read_parquet_chunks_progress(
+            out_interactions, INTERACTION_CHUNKSIZE, progress, "derive category views"
+        ):
             book_ids = chunk["book_id"].astype(str)
             for category, books in category_books.items():
                 view = chunk[book_ids.isin(books)]
@@ -677,10 +730,12 @@ def main() -> None:
         help="compute the optional source_category_count diagnostic column",
     )
     parser.add_argument("--force", action="store_true", help="rebuild even if outputs exist")
+    parser.add_argument("--no-progress", action="store_true", help="disable tqdm progress bars")
     args = parser.parse_args()
+    progress = not args.no_progress
 
     if args.views_only:
-        view_summary = build_category_views(force=args.force)
+        view_summary = build_category_views(force=args.force, progress=progress)
         print(f"Category views rebuilt: {view_summary['view_rows']}")
         return
 
@@ -688,6 +743,7 @@ def main() -> None:
         max_rows_per_file=args.max_rows_per_file,
         with_source_category_count=args.with_source_category_count,
         force=args.force,
+        progress=progress,
     )
     _print_summary(summary)
     print(f"Canonical:      {summary['interactions_path']}")
@@ -695,7 +751,7 @@ def main() -> None:
     print(f"User features:  {summary['user_features_path']}")
 
     if not args.skip_views and summary.get("status") != "cached":
-        view_summary = build_category_views(force=args.force)
+        view_summary = build_category_views(force=args.force, progress=progress)
         print(f"Category views: {view_summary['view_rows']}")
 
 
