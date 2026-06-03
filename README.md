@@ -23,7 +23,7 @@ to optimize   Z = relevant readings started and finished (proxy: is_read + posit
 
 ### What is a user
 
-A reader identified by `user_id`, represented by their **interaction history** over books — what they read (`is_read`), rated (`rating`) and reviewed (`has_review_text`), as captured in the curated `interactions_curated.parquet` and aggregated per user (`interaction_count`, `review_count`, `read_count`, `mean_rating`, `rating_std`, `user_rating_bias`).
+A reader identified by `user_id`, represented by their **interaction history** over books — what they read (`is_read`), rated (`rating_clean`) and reviewed (`has_review_text`) — as captured in the canonical `interactions_curated.parquet`. The implemented user-side artifacts are `user_matrix.parquet` (one PCA-space taste vector per user with positives), `user_meta.parquet` (behavior/confidence metadata) and `user_centroids.parquet` (multi-centroid taste modes for users with enough positive history).
 
 A user is **not** modeled as a single genre label. The user profile is a multidimensional taste vector built by aggregating the PCA vectors of the books they engaged with positively. A new user with no history (cold start) is represented by a few seed books/genres chosen at sign-up, or by an initial popularity-plus-diversity mix.
 
@@ -65,7 +65,7 @@ The problem statement optimizes for `Z = sustaining the reading habit`. That tar
 
 ### Features available for habit measurement
 
-These columns already exist in the interaction pipeline (`interactions_curated.parquet`), defined in `src/reduction/feature_matrix.py` and `src/config.py`. They are the raw material for any habit metric.
+These columns already exist in the canonical interaction pipeline (`src/curation/interactions.py`) and are exposed through `interactions_curated.parquet`, `user_features_global.parquet`, `user_meta.parquet` and `user_centroids.parquet`. They are the raw material for any habit metric.
 
 Per-interaction signals:
 
@@ -74,23 +74,29 @@ Per-interaction signals:
 | `date_added`, `date_updated` | When each interaction happened | Cadence / frequency and temporal span — the basis of everything |
 | `started_at`, `read_at` | Reading start and end (raw `GOODREADS_DATE_COLUMNS`) | Completion of a reading, not just saving it |
 | `reading_duration_days`, `has_reading_duration` | Actual reading duration | Effective reading vs. mere intention |
-| `engagement_mode` | `shelf_only` vs. read | Separates "want to read" from "read" |
+| `engagement_mode` | `want_to_read`, `read_no_rating`, `rating_only`, `review` | Separates intention from completed/stronger engagement |
 | `is_read` | Reading completed | Target action (direct proxy) |
 | `rating`, `rating_clean`, `has_review_text` | Rated / reviewed | Depth of engagement (writing a review = high commitment) |
 
-Per-user aggregates (`build_global_user_features`):
+Per-user aggregates and user artifacts:
 
 ```text
-interaction_count        total interactions
-read_count               completed readings
-rated_count              ratings given
-review_count             written reviews
-shelf_only_count         saved-but-not-read interactions
-mean_rating, rating_std  rating level and dispersion
-user_rating_bias         user mean rating minus global mean
-avg_reading_duration_days     average reading duration
-has_reading_duration_rate     share of interactions with a known duration
-category_count, categories    breadth of reading across genres (anti-bubble signal)
+user_features_global.parquet
+  user_mean_rating, user_rating_std, user_rating_count, user_rating_bias
+  read_or_rated_count, valid
+
+user_matrix.parquet
+  user_id + pc_0..pc_172
+  baseline taste vector = mean PCA vector of positives:
+  is_read == True AND rating_clean >= 4
+
+user_meta.parquet
+  positive_count, interaction_count, review_count, want_to_read_count
+  user_rating_bias, category_count, last_date_added, is_cold_start
+
+user_centroids.parquet
+  user_id, centroid_id, n_books, weight, centroid_weight, pc_0..pc_172
+  multi-centroid taste modes; centroid_weight uses rating + review + reading duration
 ```
 
 ### Derived habit metrics
@@ -99,9 +105,9 @@ These are **not yet stored as columns**; they are computed from the `date_*` fie
 
 ```text
 active_span_days   = last_interaction_date − first_interaction_date
-reading_frequency  = read_count / active_span (e.g. readings per month)
+reading_frequency  = completed reads / active_span (e.g. readings per month)
 activity_recency   = days since last interaction        (churn proxy: higher = more at risk)
-completion_rate    = read_count / interaction_count
+completion_rate    = completed reads / interaction_count
 reading_breadth    = category_count                     (diversity across genres)
 ```
 
@@ -127,7 +133,7 @@ Measuring true causal impact on retention requires instrumenting the live platfo
 
 - The dataset is observational; offline metrics approximate, but do not prove, causal impact on the reading habit.
 - `started_at` / `read_at` and `reading_duration_days` can be sparse depending on what each user filled in, so duration-based metrics rely on `has_reading_duration` / `has_reading_duration_rate` to stay honest about coverage.
-- The per-user interaction pipeline (`src/reduction/feature_matrix.py`) is separate from, and older than, the PCA book-representation pipeline; wiring the two together for user→book recommendation is still pending work.
+- The user profile artifacts are now wired into the same PCA space as books. The remaining pending work is the final recommender layer: retrieval, scoring, diversification and temporal evaluation over those artifacts.
 
 ## Business Logic
 
@@ -167,10 +173,11 @@ This means clusters represent interest neighborhoods in the book catalog. A clus
 Recommended recommendation flow:
 
 1. Cluster all books using the PCA vectors.
-2. Build a user interest vector from books the user likes, rates, saves or finishes.
-3. Find the closest clusters or nearest books to that user vector.
-4. Recommend books from those neighborhoods.
-5. Use genre as a filter, explanation or diversity control, not as the only recommendation rule.
+2. Build a user interest vector from books the user actually read and rated positively (`is_read == True AND rating_clean >= 4`).
+3. Optionally split broad user histories into `user_centroids` so different taste modes are preserved instead of averaged away.
+4. Find the closest clusters, nearest books or nearest user centroids to that user representation.
+5. Recommend books from those neighborhoods.
+6. Use genre as a filter, explanation or diversity control, not as the only recommendation rule.
 
 ### Avoiding Popularity Bias
 
@@ -280,6 +287,18 @@ Build the global deduplicated interactions artifact (requires `books_master.parq
 
 ```bash
 env/bin/python -m src.curation.interactions
+```
+
+Build the baseline user taste matrix and user metadata:
+
+```bash
+env/bin/python -m src.reduction.build_user_matrix
+```
+
+Build multi-centroid user taste modes:
+
+```bash
+env/bin/python -m src.reduction.build_user_centroids
 ```
 
 Run tests:

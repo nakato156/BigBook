@@ -79,7 +79,7 @@ mida sobre el gusto, subordine la popularidad y se complemente con diversidad.
 | Bloque | Tenemos | No tenemos / débil |
 |---|---|---|
 | **Ítems (libros)** | Metadata (título, descripción, género multi-etiqueta, idioma, páginas, año, autores, serie), popularidad (`ratings_count`, `average_rating`), **embeddings** de la descripción | `format`, `publisher`, `theme_*`, tags libres (fuera del master) |
-| **Usuarios** | Agregados de comportamiento derivados de interacciones (`read_count`, `mean_rating`, `rating_bias`, amplitud de géneros) | Sin demografía, sin perfil social, sin datos declarados |
+| **Usuarios** | `user_matrix` (vector PCA), `user_meta` (comportamiento) y `user_centroids` (modos de lectura); todo derivado de interacciones | Sin demografía, sin perfil social, sin datos declarados |
 | **Interacciones** | `is_read`, `rating`/`rating_clean`, `has_review_text`, `engagement_mode`, `reading_duration_days`, timestamps | **Sin clicks/views/sesiones, sin compras/precio, sin likes/follows** |
 
 Señales más fuertes: **contenido del ítem** (metadata + semántica) y **feedback de lectura**
@@ -87,10 +87,11 @@ Señales más fuertes: **contenido del ítem** (metadata + semántica) y **feedb
 social, transacciones**. Metadata con nulos relevantes: `num_pages` (17.5%), `publication_year`
 (20.1%) — imputados con flag de missingness.
 
-> **Nota de estado:** el pipeline legacy de features de usuario (`feature_matrix.py`,
-> `user_features_global.parquet`) fue **eliminado** (commit `5191bcd`). La fuente
-> `data/processed/*/interactions_curated.parquet` está **intacta** y la matriz usuario/interacción
-> se **reconstruirá desde cero** sobre ella.
+> **Nota de estado:** la representación de usuario ya está implementada en el mismo espacio PCA que
+> los libros. Los artefactos actuales son `user_matrix.parquet`, `user_meta.parquet` y
+> `user_centroids.parquet`, construidos desde el canonical global
+> `data/processed/interactions_curated.parquet`. El ranking final y la evaluación temporal aún son
+> la siguiente capa de trabajo.
 
 ---
 
@@ -106,22 +107,27 @@ causal**: leer y calificar alto *correlaciona* con agrado, no lo prueba).
   valoró positivamente**. Es una **estimación** inferida del comportamiento, no la medición de una
   preferencia "verdadera".
 - **Decisiones fijadas (build):** positivo = `is_read AND rating_clean ≥ 4`; agregación = **media
-  simple** (baseline reproducible; la ponderación por rating/recencia queda como refinamiento):
+  simple** en `user_matrix` (baseline reproducible; la ponderación por rating/recencia no mueve la
+  geometría baseline):
 
   ```text
   positivos(u) = { b : is_read ∧ rating_clean ≥ 4 }
   vector_gusto(u) = (1/|positivos(u)|) · Σ_b pca(b)      # media simple
   ```
-- **Dos capas:** gusto (qué recomendar) + comportamiento (cuánta confianza y diversidad inyectar).
+- **Dos capas:** gusto (`user_matrix`/`user_centroids`) + comportamiento (`user_meta`: cuánta
+  confianza y diversidad inyectar).
+- **Multi-centroides:** `user_centroids` conserva varios modos de lectura por usuario cuando hay
+  suficiente historial. `weight` indica proporción de libros del modo y `centroid_weight` resume
+  compromiso/hábito con rating, review y duración de lectura.
 - **No usa** compras/clicks (no existen); **explícito solo en cold-start**.
 - **Reales vs. simulados:** validación con **usuarios reales** del dataset (split temporal: mide
   *predicción*, no causalidad); perfiles **semilla/simulados** para cold-start y demo.
 - **Cold-start (escalonado):** semillas explícitas → *shrinkage* hacia el centroide del cluster →
   perfil individual completo, evitando popularidad.
-- **Estado:** el pipeline legacy de usuario se eliminó (commit `5191bcd`); la fuente
-  `interactions_curated.parquet` está intacta y el `user_matrix` se reconstruirá desde cero
-  (módulo `src/reduction/build_user_matrix.py`, pendiente). Salidas previstas:
-  `user_matrix.parquet` (`user_id` + `pc_0..pc_172`) y `user_meta.parquet` (comportamiento).
+- **Estado:** implementado en `src/reduction/build_user_matrix.py` y
+  `src/reduction/build_user_centroids.py`. Salidas:
+  `user_matrix.parquet` (`user_id` + `pc_0..pc_172`), `user_meta.parquet` (comportamiento) y
+  `user_centroids.parquet` (`user_id`, `centroid_id`, `weight`, `centroid_weight`, `pc_0..pc_172`).
 
 ---
 
@@ -156,7 +162,7 @@ del libro. "Más cercano" = afinidad de tono/temática/accesibilidad, no de gén
 ```text
 score(u,b) = similitud_interés(u,b)         ← PRIMARIO (coseno PCA)
            · calidad/popularidad atenuada    ← SECUNDARIO (confianza)
-           · accesibilidad                    ← sesgo pro-hábito
+           · hábito/accesibilidad             ← centroid_weight + sesgo pro-hábito
            − redundancia (MMR)                ← diversidad
            + descubrimiento (novelty)         ← anti-burbuja controlado
 ```
@@ -166,8 +172,8 @@ afín.
 
 **Arquitectura del ranking:** `retrieve` (candidatos por cluster/macro-cluster cercano) → `score`
 → `diversify` (MMR + género/macro-cluster) → `explain` (por vecindad/género). Escalable,
-explicable y **evaluable** con `Recall@k`/`NDCG@k`/`MAP` (relevancia) y `Coverage`/`Novelty`/
-`Diversity` (anti-popularidad), con **split temporal** sobre `is_read`.
+explicable y **evaluable** con `Recall@k`/`NDCG@k`/`MAP` (relevancia), `Coverage`/`Novelty`/
+`Diversity` (anti-popularidad) y proxies de hábito, con **split temporal** sobre `is_read`.
 
 ---
 
@@ -197,8 +203,8 @@ asocia a más lectura completada, **no** se considera válido para el objetivo d
 
 **Límite explícito:** el impacto causal real sobre la retención requiere **telemetría de producto
 en vivo** (sesiones, retornos, libros terminados tras una recomendación), fuera del alcance del
-dataset estático. Esta evaluación es el **plan de validación**, no un resultado ya medido (la capa
-usuario↔libro aún está pendiente de cablear).
+dataset estático. Esta evaluación es el **plan de validación**, no un resultado ya medido; los
+artefactos de perfil existen, pero falta ejecutar la capa final de ranking y evaluación.
 
 ---
 
@@ -212,9 +218,9 @@ sostener el hábito de lectura.**
 Problema       →  recomendar libros (X) a lectores según su gusto (Y) para sostener el hábito (Z)
 Justificación  →  la similitud sirve, si se mide sobre el gusto y se diversifica
 Información     →  tenemos contenido + feedback de lectura; no telemetría ni social
-Perfil usuario  →  vector de gusto agregado desde el historial de lectura
+Perfil usuario  →  user_matrix + user_centroids: gusto PCA inferido de consumo positivo
 Representación   →  vector PCA híbrido por libro (texto + metadata + popularidad atenuada)
-Scoring          →  coseno (interés) primero; calidad/accesibilidad/diversidad subordinadas
+Scoring          →  coseno (interés) primero; calidad/hábito/accesibilidad/diversidad subordinadas
 Evaluación       →  válido si predice lo que se lee DESPUÉS (split temporal) y se asocia a
                     mejores proxies de hábito (correlacional, no causal — A/B queda fuera de alcance)
 ```

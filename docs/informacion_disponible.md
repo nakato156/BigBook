@@ -4,7 +4,9 @@ Fase de definición de datos. El objetivo es mostrar **qué datos tenemos realme
 construir recomendaciones, distinguir lo fuerte de lo débil, y declarar **qué usaremos** en
 el recomendador y qué dejaremos fuera (y por qué). Fuente: Goodreads Dataset Collection
 (UCSD), 5 géneros, ~108k libros. Las variables se toman tal cual existen en el código
-(`src/config.py`, `src/reduction/feature_matrix.py`, `src/merge_master.py`) y el README.
+(`src/config.py`, `src/curation/interactions.py`, `src/reduction/build_user_matrix.py`,
+`src/reduction/build_user_centroids.py`, `src/reduction/build_master_feature_matrix.py`,
+`src/merge_master.py`) y el README.
 
 ## Mapa rápido del catálogo
 
@@ -12,8 +14,11 @@ el recomendador y qué dejaremos fuera (y por qué). Fuente: Goodreads Dataset C
 |---|---|---|---:|
 | Ítems (libros) | 1 fila = 1 `book_id` | `data/processed/books_master.parquet` | 108,227 |
 | Ítems (vector) | 1 fila = 1 `book_id` | `data/features/master_feature_matrix.parquet` (`pc_0..pc_172`) | 108,227 |
-| Interacciones | 1 fila = 1 (`user_id`,`book_id`) | `interactions_curated.parquet` por género | — |
-| Usuarios | 1 fila = 1 `user_id` | `data/features/user_features_global.parquet` | — |
+| Interacciones | 1 fila = 1 (`user_id`,`book_id`) | `data/processed/interactions_curated.parquet` global | — |
+| Usuarios (stats) | 1 fila = 1 `user_id` | `data/processed/user_features_global.parquet` | — |
+| Usuarios (vector) | 1 fila = 1 `user_id` con positivos | `data/features/user_matrix.parquet` | — |
+| Usuarios (metadatos) | 1 fila = 1 `user_id` presente | `data/features/user_meta.parquet` | — |
+| Usuarios (modos) | 1..m filas por `user_id` | `data/features/user_centroids.parquet` | — |
 
 ---
 
@@ -53,27 +58,21 @@ señales que el master *descarta*: `is_ebook`, `format`, `publisher`, `primary_a
 
 ## 2. Datos de usuarios
 
-Existen como agregados por `user_id` (`build_global_user_features` →
-`user_features_global.parquet`), derivados **enteramente del historial de interacciones**
-(no hay perfil demográfico):
+Existen en tres capas, derivadas **enteramente del historial de interacciones** (no hay perfil
+demográfico):
 
 | Variable | Qué captura |
 |---|---|
-| `interaction_count` | Total de interacciones del usuario |
-| `read_count` | Lecturas completadas |
-| `rated_count` | Cuántos libros calificó |
-| `review_count` | Cuántas reviews escribió |
-| `shelf_only_count` | Guardados-pero-no-leídos ("want to read") |
-| `mean_rating`, `rating_std` | Nivel y dispersión de sus ratings |
-| `user_rating_bias` | Su media menos la media global (¿es generoso/duro?) |
-| `avg_reading_duration_days` | Duración media de lectura |
-| `has_reading_duration_rate` | % de interacciones con duración conocida |
-| `category_count`, `categories` | Amplitud de lectura entre géneros (señal anti-burbuja) |
+| `user_features_global`: `user_mean_rating`, `user_rating_std`, `user_rating_count`, `user_rating_bias`, `read_or_rated_count`, `valid` | Sesgo y confiabilidad mínima del usuario en el canonical global |
+| `user_matrix`: `user_id + pc_0..pc_172` | Vector baseline de gusto en el mismo espacio PCA que los libros |
+| `user_meta`: `positive_count`, `interaction_count`, `review_count`, `want_to_read_count`, `user_rating_bias`, `category_count`, `last_date_added`, `is_cold_start` | Evidencia, compromiso, diversidad y confianza del perfil |
+| `user_centroids`: `centroid_id`, `n_books`, `weight`, `centroid_weight`, `pc_0..pc_172` | Modos de lectura intra-usuario; `centroid_weight` resume compromiso/hábito del modo |
 
 **Importante:** un usuario **no** se modela como una etiqueta de género, sino como un
-**vector de gusto multidimensional** que se construirá agregando los vectores PCA de los
-libros con los que interactuó positivamente. Lo anterior son agregados de comportamiento,
-no el perfil de gusto en sí.
+**vector de gusto multidimensional** ya implementado en `user_matrix`: media simple de los
+vectores PCA de libros con interacción positiva (`is_read=True` y `rating_clean >= 4`). Para
+usuarios con historial suficiente, `user_centroids` conserva varios modos de lectura en vez de
+forzar un único promedio.
 
 ---
 
@@ -88,7 +87,7 @@ La señal que conecta usuarios e ítems (`interactions_curated.parquet`, 1 fila 
 | `is_read` | Lectura completada | **Acción objetivo** (proxy principal) |
 | `rating`, `rating_clean`, `rating_missing` | Calificación (1–5) | Feedback explícito |
 | `has_review_text` | Escribió review | Compromiso alto |
-| `engagement_mode` | `shelf_only` vs. leído | Separa "quiero leer" de "leí" |
+| `engagement_mode` | `want_to_read`, `read_no_rating`, `rating_only`, `review` | Separa intención de señales leídas/calificadas/revisadas |
 | `reading_duration_days`, `has_reading_duration` | Duración real de lectura | Lectura efectiva vs. intención |
 | `user_rating_bias` | Sesgo del usuario al calificar | Normalización |
 | `date_added`, `date_updated` | Cuándo ocurrió | Base para split temporal y cadencia |
@@ -105,7 +104,7 @@ Métricas de hábito **derivables** de estos campos (aún no almacenadas como co
 | Ratings (explícito) | ✅ Sí | `rating` 1–5 + `average_rating` agregado |
 | Reviews de texto | ✅ Sí | `has_review_text` (+ descripciones para embeddings) |
 | Lecturas / "consumo" | ✅ Sí (proxy) | `is_read`, `reading_duration_days` |
-| Saves / wishlists | ✅ Sí | `shelf_only` / `to_read_count` |
+| Saves / wishlists | ✅ Sí | `engagement_mode = want_to_read`, `is_want_to_read`, `want_to_read_count` |
 | Categorías / tags | ✅ Parcial | 5 flags de género; `theme_*`, `top_shelf` solo en pipeline viejo |
 | **Clicks / views / sesiones** | ❌ **No** | Dataset es histórico, no de telemetría |
 | **Compras / precio** | ❌ **No** | No es un dataset transaccional |
@@ -136,9 +135,9 @@ Métricas de hábito **derivables** de estos campos (aún no almacenadas como co
   `has_reading_duration_rate` para ser honestos con la cobertura.
 - **Spot checks semánticos débiles:** las pruebas de coseno del README son diagnósticos
   pequeños, no validación de calidad.
-- **Capa usuario↔libro aún sin cablear:** el pipeline de features de usuario
-  (`feature_matrix.py`) es **separado y más antiguo** que la representación PCA de libros;
-  unir ambos para recomendación user→book es trabajo pendiente.
+- **Ranking/evaluación final aún sin cablear:** los artefactos de perfil (`user_matrix`,
+  `user_meta`, `user_centroids`) ya viven en el mismo espacio PCA que los libros. Lo pendiente es
+  implementar la capa final de retrieval → scoring → diversificación → evaluación temporal.
 
 ---
 
@@ -156,8 +155,9 @@ Sobre ese vector se calcula la **similitud entre libros** y se hace el **cluster
 (KMeans k=100 + 10 macro-clusters), que es la base de la recomendación.
 
 **Representación del usuario:** vector de gusto = **agregación de los vectores PCA** de los
-libros con interacción positiva (`is_read=True` y/o `rating` alto), usando como peso/filtro
-las señales de interacción (`is_read`, `rating_clean`, `has_review_text`, `engagement_mode`).
+libros con interacción positiva (`is_read=True` y `rating_clean >= 4`). El baseline
+`user_matrix` usa media simple. `user_centroids` divide historiales amplios en varios modos de
+lectura y usa `centroid_weight` como señal de compromiso: rating, review y duración coherente.
 
 **Para evaluación y ranking (no para definir el gusto):**
 
@@ -165,7 +165,8 @@ las señales de interacción (`is_read`, `rating_clean`, `has_review_text`, `eng
 - `is_read` (+ `rating` alto, `has_review_text`) → **etiqueta objetivo** (Recall@k, NDCG…).
 - `ratings_count`/`average_rating` → **señal secundaria** de calidad/confianza, nunca el
   objetivo (regla anti-popularidad).
-- `genre_*`, `category_count` → **filtro, explicación y control de diversidad** (anti-burbuja).
+- `genre_*`, `category_count`, `weight`, `centroid_weight` → **filtro, explicación, confianza y
+  control de diversidad/hábito** (anti-burbuja).
 
 **Qué dejamos fuera (por ahora):** `clicks/views/compras` (no existen), demografía y social
 (no existen), y las señales del pipeline viejo (`format`, `publisher`, `to_read_count`,

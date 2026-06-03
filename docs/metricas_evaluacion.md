@@ -24,9 +24,9 @@ El objetivo `Z = sostener el hábito` solo es accionable si se mide. Lo operacio
 | Métrica de hábito (por usuario) | Definición | Qué indica |
 |---|---|---|
 | `active_span_days` | última − primera interacción | Cuánto tiempo el lector sigue activo |
-| `reading_frequency` | `read_count` / `active_span` | Regularidad (p. ej. lecturas/mes) |
+| `reading_frequency` | lecturas completadas / `active_span` | Regularidad (p. ej. lecturas/mes) |
 | `activity_recency` | días desde la última interacción | **Proxy de churn**: más alto = más en riesgo |
-| `completion_rate` | `read_count` / `interaction_count` | Cuánto de lo que guarda termina leyendo |
+| `completion_rate` | lecturas completadas / `interaction_count` | Cuánto de lo que guarda termina leyendo |
 | `reading_breadth` | `category_count` | Diversidad de lectura (señal anti-burbuja) |
 
 Un lector "con hábito" muestra `active_span` amplio, `reading_frequency` regular,
@@ -107,9 +107,10 @@ hábito, aunque sus números recsys "se vean bien".
 - `started_at` / `read_at` y `reading_duration_days` son **dispersos** según lo que cada usuario
   rellenó → las métricas de duración se reportan junto a `has_reading_duration_rate` para ser
   honestos con la cobertura.
-- La capa usuario↔libro (perfil → ranking) **aún está pendiente de cablear** sobre la fuente
-  intacta `interactions_curated.parquet`, así que esta evaluación es el **plan de validación**, no
-  un resultado ya medido.
+- La capa de perfil usuario↔libro ya tiene artefactos en el mismo espacio PCA (`user_matrix`,
+  `user_meta`, `user_centroids`). Lo que sigue pendiente es implementar y ejecutar la capa final
+  de retrieval → scoring → diversificación → evaluación temporal; por eso esta evaluación sigue
+  siendo el **plan de validación**, no un resultado ya medido.
 
 ---
 

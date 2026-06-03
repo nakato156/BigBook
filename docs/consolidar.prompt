@@ -36,9 +36,10 @@ Sobrescribe `docs/informe_diseno_recomendador.md` con esta estructura exacta:
    cada documento de `docs/`.
 2. **Bloque de contexto** (negritas): objetivo de negocio, dataset, artefacto central
    (`master_feature_matrix.parquet`, `pc_0..pc_172`).
-3. **Nota de estado**: el pipeline legacy de features de usuario (`feature_matrix.py`,
-   `user_features_global.parquet`) fue eliminado (commit `5191bcd`); la fuente
-   `interactions_curated.parquet` está intacta y el `user_matrix` se reconstruirá desde cero.
+3. **Nota de estado**: el perfil de usuario ya está implementado en el mismo espacio PCA que los
+   libros mediante `user_matrix.parquet`, `user_meta.parquet` y `user_centroids.parquet`,
+   construidos desde `data/processed/interactions_curated.parquet`. El ranking final y la
+   evaluación temporal siguen como siguiente capa.
 4. **Índice** numerado (1–N) con enlace ancla a cada sección y enlace al documento de detalle:
    `· *(detalle: [archivo.md](archivo.md))*`.
 5. **Una sección `## N. Título` por documento**, en el orden de la tabla. Cada sección:
@@ -63,6 +64,8 @@ Sobrescribe `docs/informe_diseno_recomendador.md` con esta estructura exacta:
   - Perfil de usuario: **vector de gusto en el mismo espacio PCA** que los libros.
   - `user_matrix` (build): positivo = `is_read AND rating_clean ≥ 4`; agregación = **media
     simple** (baseline; la ponderación por rating/recencia es refinamiento futuro).
+  - `user_centroids` (build): mismos positivos; varios sub-centroides por usuario cuando hay
+    historial suficiente; `centroid_weight` resume compromiso con rating, review y duración.
   - Género = señal/filtro/diversidad, **no** la unidad del modelo.
   - Popularidad = señal **secundaria** de calidad/confianza, no el objetivo.
 
@@ -91,4 +94,4 @@ Verifica y corrige si hace falta:
 3. No quedó ninguna afirmación causal sin justificar (busca: causa/provoca/aumenta/hace que/
    sostiene/revelada → deben estar acotadas o negadas).
 4. Las "decisiones fijadas" arriba aparecen reflejadas y no contradichas.
-5. No se referencia `feature_matrix.py` ni `user_features_global.parquet` como si existieran.
+5. No se referencia el pipeline legacy ni rutas per-categoría como fuente principal del perfil.

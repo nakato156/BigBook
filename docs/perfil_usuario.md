@@ -4,13 +4,11 @@ Fase de definición del usuario. El objetivo es explicar **de dónde sale la pre
 usuario**, decidir qué señales la componen, y definir conceptualmente el *user profile* que
 alimentará al recomendador.
 
-> **Nota de estado del proyecto.** El commit `5191bcd` *eliminó* el pipeline legacy de
-> features de usuario (`src/reduction/feature_matrix.py` y su salida
-> `user_features_global.parquet`). La fuente cruda **sigue intacta** en
-> `data/processed/<category>/interactions_curated.parquet` y la matriz usuario/interacción
-> **se reconstruirá desde cero** sobre ella. Por eso este documento es una **definición
-> conceptual** (qué *será* el perfil), no la descripción de un artefacto ya construido. La
-> representación de ítems (`master_feature_matrix.parquet`, `pc_0..pc_172`) sí está intacta.
+> **Nota de estado del proyecto.** El perfil de usuario ya tiene artefactos implementados en
+> el mismo espacio PCA que los libros: `data/features/user_matrix.parquet`,
+> `data/features/user_meta.parquet` y `data/features/user_centroids.parquet`. Se construyen
+> desde la fuente global canónica `data/processed/interactions_curated.parquet`; los archivos
+> per-categoría quedan como respaldo histórico/EDA, no como fuente principal del perfil.
 
 ---
 
@@ -23,9 +21,9 @@ fantasy_paranormal). Sus columnas reales son la materia prima del perfil:
 
 | Señal | Columnas | Qué aporta al perfil |
 |---|---|---|
-| **Consumo / lectura** | `is_read`, `engagement_mode` (`shelf_only` vs. leído), `read_at`, `started_at`, `reading_duration_days`, `has_reading_duration` | Qué leyó de verdad vs. qué solo guardó. Señal **principal** de preferencia, *inferida del comportamiento* (asociativa, no causal). |
-| **Ratings (explícito implícito)** | `rating`, `rating_clean`, `rating_missing`, `user_mean_rating`, `user_rating_std`, `user_rating_count`, `user_rating_bias` | Intensidad y dirección del gusto; el `user_rating_bias` permite normalizar usuarios duros/generosos. |
-| **Reviews (compromiso alto)** | `has_review_text`, `review_text_clean` | Escribir una review = máxima implicación; refuerza la señal positiva. |
+| **Consumo / lectura** | `is_read`, `engagement_mode`, `read_at`, `started_at`, `reading_duration_days` | Qué leyó de verdad vs. qué solo guardó. Señal **principal** de preferencia, *inferida del comportamiento* (asociativa, no causal). |
+| **Ratings (explícito implícito)** | `rating_clean`, `rating_missing`, `user_mean_rating`, `user_rating_std`, `user_rating_count`, `user_rating_bias` | Dirección del gusto y sesgo del usuario al calificar. En el baseline implementado se usa como filtro: `rating_clean >= 4`. |
+| **Reviews (compromiso alto)** | `has_review_text`, `review_text_length` | Escribir una review = implicación alta; en `user_centroids` refuerza `centroid_weight`. |
 | **Temporalidad** | `date_added`, `date_updated` | Cadencia, recencia y split temporal para evaluación. |
 
 ### Decisiones explícitas (lo que el enunciado pide resolver)
@@ -33,7 +31,7 @@ fantasy_paranormal). Sus columnas reales son la materia prima del perfil:
 | Pregunta | Decisión | Por qué |
 |---|---|---|
 | ¿Viene del **historial de consumo**? | **Sí, es la base.** `is_read` + `engagement_mode` definen el núcleo de la preferencia. | Es preferencia *inferida del comportamiento* (asociativa): leer y calificar alto **correlaciona** con agrado; es la señal más confiable disponible en datos observacionales, no una prueba de causalidad. |
-| ¿Viene de **ratings**? | **Sí, como peso y filtro.** Un libro con `is_read=True` y `rating_clean` alto pesa más en el perfil. | El rating da dirección (gustó/no gustó), no solo presencia. |
+| ¿Viene de **ratings**? | **Sí, como filtro en el baseline.** Positivo = `is_read=True` y `rating_clean >= 4`. | El rating da dirección (gustó/no gustó). La ponderación por rating/review/recencia queda fuera de la geometría baseline y se usa como señal de compromiso en `user_centroids`. |
 | ¿Viene de **compras/clicks**? | **No.** No existen en el dataset (no es transaccional ni hay telemetría). | Limitación honesta; se documenta como trabajo de producto futuro. |
 | ¿Viene de **preferencias explícitas**? | **Solo en cold-start.** Géneros/libros semilla elegidos al registrarse. | No hay perfil declarado en los datos; el explícito solo cubre el arranque. |
 
@@ -47,23 +45,21 @@ comparar usuario y libro con la misma métrica de similitud y descubrir patrones
 (p. ej. *tono juvenil + romance + aventura + fantasía ligera*).
 
 ```text
-perfil(u) = agregación ponderada de los vectores PCA de los libros
+perfil(u) = agregación de los vectores PCA de los libros
             con los que u interactuó positivamente
 
-vector_gusto(u) = Σ_b  w(u,b) · pca(b)   /   Σ_b w(u,b)
-                  para b en libros con interacción positiva de u
+positivos(u) = { b : is_read(u,b)=True ∧ rating_clean(u,b) ≥ 4 }
+vector_gusto(u) = (1/|positivos(u)|) · Σ_{b ∈ positivos(u)} pca(b)
 ```
 
-Donde el **peso de preferencia** `w(u,b)` se construye con las señales de interacción
-(no todas las interacciones valen igual):
+Esta es la decisión implementada para `user_matrix`: media simple (`w = 1`) de positivos
+limpios. Las señales de compromiso no mueven la geometría del centroide baseline; se reservan
+para metadatos, evaluación y `centroid_weight` en el artefacto multi-centroide:
 
 ```text
-w(u,b)  crece con:  is_read = True            (leyó, no solo guardó)
-                    rating_clean alto         (normalizado por user_rating_bias)
-                    has_review_text = True    (compromiso alto)
-                    reading_duration corta/coherente (lectura efectiva)
-        cae con:    engagement_mode = shelf_only (solo guardado)
-                    rating bajo / negativo
+engagement_weight = (rating_clean - 3)
+                    · (1.3 si has_review_text)
+                    · (1.2 si 1 <= reading_duration_days <= 180)
 ```
 
 El perfil se acompaña de **metadatos de comportamiento** (agregados por `user_id`, derivables
@@ -72,14 +68,16 @@ diversidad** a aplicar:
 
 | Agregado (derivable) | Rol |
 |---|---|
-| `interaction_count`, `read_count` | Cuánta evidencia hay → confianza del perfil |
-| `user_mean_rating`, `user_rating_std`, `user_rating_bias` | Normalización del rating del usuario |
+| `positive_count`, `interaction_count` | Cuánta evidencia hay → confianza del perfil |
+| `review_count`, `want_to_read_count` | Compromiso fuerte vs. intención pendiente |
+| `user_rating_bias` | Normalización del rating del usuario |
 | `category_count` / amplitud de géneros leídos | Señal anti-burbuja: ¿es lector mono-género o ecléctico? |
-| recencia (`days desde última interacción`) | Frescura del perfil / riesgo de churn |
+| `last_date_added` | Frescura del perfil / riesgo de churn |
+| `is_cold_start` | Perfil con menos de 3 positivos; baja confianza |
 
 > **Dos capas del perfil:**
-> 1. **Capa de gusto** = vector PCA agregado → *qué* recomendar (similitud).
-> 2. **Capa de comportamiento** = agregados → *cuánta confianza* tener y *cuánta diversidad*
+> 1. **Capa de gusto** = `user_matrix` o `user_centroids` → *qué* recomendar (similitud).
+> 2. **Capa de comportamiento** = `user_meta` → *cuánta confianza* tener y *cuánta diversidad*
 >    inyectar.
 
 ---
@@ -116,7 +114,7 @@ Estrategia escalonada según cuánta evidencia hay:
 
 Principios para cold-start (alineados con el negocio):
 
-- **Umbral de confianza:** definir un mínimo de `read_count`/`interaction_count` para "confiar"
+- **Umbral de confianza:** definir un mínimo de `positive_count`/`interaction_count` para "confiar"
   en el perfil individual; por debajo, apoyarse en clusters.
 - **Evitar sesgo de popularidad** incluso en el arranque: no llenar de bestsellers; usar la
   jerarquía de macro-clusters para ofrecer variedad accesible.
@@ -134,16 +132,20 @@ Principios para cold-start (alineados con el negocio):
 
 ---
 
-## 6. Plan de construcción del `user_matrix` (build recipe)
+## 6. Construcción implementada del perfil (`user_matrix` y `user_centroids`)
 
-Receta concreta para reconstruir la matriz de usuario desde cero sobre la fuente intacta.
-**Estado: diseño aprobado, sin implementar todavía.**
+Receta concreta implementada sobre la fuente global canónica.
+**Estado: implementado y cubierto por tests** (`tests/test_user_matrix.py`,
+`tests/test_user_centroids.py`).
 
 **Decisiones fijadas:**
 - **Interacción positiva** = `is_read == True` **AND** `rating_clean >= 4` (señal limpia).
 - **Ponderación** = **media simple** (`w_i = 1`) como baseline reproducible. La ponderación
   por rating/recencia de la sección 2 queda como refinamiento posterior, no para el primer corte.
-- **Implementación** = módulo `src/reduction/build_user_matrix.py` (invocable con `-m`), pendiente.
+- **Implementación baseline** = módulo `src/reduction/build_user_matrix.py` (invocable con `-m`).
+- **Implementación multi-centroide** = módulo `src/reduction/build_user_centroids.py` (invocable con `-m`).
+- **Modo de hábito/engagement** = `centroid_weight` usa rating, review y duración de lectura para
+  indicar qué sub-centroide representa un modo de lectura más comprometido.
 
 > **Nota sobre causalidad (importante).** La construcción es **asociativa, no causal**. Que un
 > usuario tenga `is_read=True` y `rating_clean ≥ 4` es un **proxy de comportamiento** que
@@ -156,22 +158,38 @@ Receta concreta para reconstruir la matriz de usuario desde cero sobre la fuente
 
 ### Inputs
 ```text
-data/processed/<genero>/interactions_curated.parquet   (×5)  — fuente de interacciones
-data/features/master_feature_matrix.parquet                  — book_id + pc_0..pc_172 (espacio de ítems)
+data/processed/interactions_curated.parquet     — fuente global canónica de interacciones
+data/processed/user_features_global.parquet     — censo de usuarios + user_rating_bias
+data/processed/books_master.parquet             — genre_* para category_count
+data/features/master_feature_matrix.parquet     — book_id + pc_0..pc_172 (espacio de ítems)
 ```
 
 ### Pasos
 
 | # | Paso | Detalle |
 |---|---|---|
-| 1 | **Filtrar positivos** | `is_read == True AND rating_clean >= 4` por fila de interacción. `shelf_only` y ratings bajos quedan fuera. |
+| 1 | **Filtrar positivos** | `is_read == True AND rating_clean >= 4` por fila de interacción. `want_to_read` y ratings bajos quedan fuera del vector. |
 | 2 | **Mapear libro → vector** | Cargar los 108k vectores PCA en memoria (~75 MB) como `book_id → pc_vec`; mapear, **no** hacer join pesado de millones de filas. |
-| 3 | **Acumular por usuario** | Leer los 5 archivos en chunks; acumular `Σ pc_vec` y `count` por `user_id` **a través de los 5 géneros** (un usuario lee en varios). |
+| 3 | **Acumular por usuario** | Leer el canonical global en chunks; acumular `Σ pc_vec` y `count` por `user_id`. |
 | 4 | **Centroide (media simple)** | `user_vec(u) = Σ pc_vec / count` — **estimación** del vector de gusto en el espacio PCA (inferida del comportamiento, no medición directa). |
-| 5 | **Tabla lateral de comportamiento** | Aparte: `read_count`, `completion_rate`, `user_rating_bias`, `category_count`, recencia, `is_cold_start`. No entran al vector de gusto. |
+| 5 | **Tabla lateral de comportamiento** | Aparte: `positive_count`, `interaction_count`, `review_count`, `want_to_read_count`, `user_rating_bias`, `category_count`, `last_date_added`, `is_cold_start`. No entran al vector de gusto. |
 | 6 | **Cold-start** | `count < 3` positivos → `is_cold_start=True`; no confiar en el centroide (ver sección 4). |
 | 7 | **(Eval) split temporal** | Para evaluar: agregar solo el **pasado** del usuario (orden por `date_added`), dejar el futuro como holdout. Mide **capacidad predictiva** (¿el modelo ordena lo que el usuario efectivamente leyó después?), **no** impacto causal del recomendador sobre la lectura. |
 | 8 | **Persistir** | `safe_write_parquet`, `float32`, paths desde `src/config.py`. |
+
+### Multi-centroides (`user_centroids`)
+
+`user_matrix` promedia todo el gusto del usuario en un solo vector. Para usuarios con varios modos
+de lectura, `user_centroids` conserva sub-centroides:
+
+```text
+positive_count < 6  →  m = 1
+positive_count ≥ 6  →  m = min(4, positive_count // 3)
+```
+
+Cada sub-centroide es la media de un cluster KMeans sobre los libros positivos del usuario. El
+campo `weight` indica proporción de libros del modo; `centroid_weight` indica compromiso relativo
+del modo usando `rating_clean`, `has_review_text` y `reading_duration_days`.
 
 ### Fórmula (baseline)
 ```text
@@ -183,6 +201,7 @@ user_vec(u)  = (1/|positivos(u)|) · Σ_{b ∈ positivos(u)} pca(b)      # media
 ```text
 data/features/user_matrix.parquet   # user_id + pc_0..pc_172   (vector de gusto, mismo espacio que libros)
 data/features/user_meta.parquet     # user_id + agregados de comportamiento (confianza/diversidad)
+data/features/user_centroids.parquet # user_id + centroid_id + weight/centroid_weight + pc_0..pc_172
 ```
 
 ### Validación
@@ -200,13 +219,11 @@ data/features/user_meta.parquet     # user_id + agregados de comportamiento (con
 ### Conclusión (para el entregable)
 
 El perfil de usuario es un **vector de gusto multidimensional en el espacio PCA de los libros**,
-**inferido del historial de consumo** (`is_read`, `engagement_mode`) y **ponderado por ratings
-y reviews** (`rating_clean` normalizado por `user_rating_bias`, `has_review_text`), construido
-como **agregación de los vectores PCA de los libros que el usuario leyó y valoró
-positivamente**. No usa compras ni clicks (no existen) y solo usa preferencias explícitas en el
-**arranque**. La validación se hace con **usuarios reales** del dataset vía split temporal; los
-**perfiles semilla/simulados** cubren cold-start y demo. Para usuarios sin historial suficiente
-se aplica una estrategia escalonada: semillas explícitas → shrinkage hacia el centroide de
-cluster → perfil individual completo, evitando siempre el sesgo de popularidad. La fuente es
-`interactions_curated.parquet` (intacta); la matriz usuario/interacción se reconstruirá desde
-cero sobre ella.
+**inferido del historial de consumo**. El baseline implementado (`user_matrix`) se construye como
+media simple de los libros que el usuario **leyó y valoró positivamente** (`is_read=True` y
+`rating_clean >= 4`). `user_meta` conserva agregados de comportamiento para confianza,
+cold-start y diversidad. `user_centroids` añade una representación multi-modo: varios
+sub-centroides por usuario cuando hay historial suficiente, con `centroid_weight` como señal de
+compromiso/hábito basada en rating, review y duración de lectura. No usa compras ni clicks (no
+existen) y solo usa preferencias explícitas en el arranque. La validación se hace con usuarios
+reales del dataset vía split temporal; mide capacidad predictiva, no impacto causal sobre hábito.
