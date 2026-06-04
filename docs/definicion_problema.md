@@ -89,6 +89,14 @@ observable es `is_read = True`, reforzado por un `rating` alto y/o una review es
 > telemetría); optimizamos **lectura completada** como proxy del hábito. *(Cómo se mide eso, en
 > [metricas_evaluacion.md](metricas_evaluacion.md).)*
 
+> **El hábito (`Z`) se conserva como norte, pero etiquetado por su evidencia.** No es una promesa
+> vaga: es un conjunto de proxies por usuario (`reading_frequency`, `completion_rate`,
+> `activity_recency`, `reading_breadth`, `active_span_days`) medibles en una **escalera de tres
+> niveles** — **N0** relevancia hoy (`Recall@k`, una *puerta*, no el hábito), **N1** proxy de hábito
+> correlacional hoy, **N2** hábito causal con telemetría futura. Mantenemos el objetivo; lo que
+> madura con los datos es la *fuerza de la evidencia*. *(Detalle en
+> [metricas_evaluacion.md §1bis](metricas_evaluacion.md).)*
+
 ---
 
 ### Conclusión (para el entregable)

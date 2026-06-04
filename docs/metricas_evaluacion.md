@@ -36,6 +36,30 @@ desde `interactions_curated.parquet`.)
 
 ---
 
+## 1bis. La escalera de evidencia del hábito (N0 → N1 → N2)
+
+El hábito **no es una hipótesis vaga**: es este conjunto de proxies. Lo que cambia con el tiempo no
+es la *métrica*, sino la **fuerza de la evidencia** con que podemos afirmar que el recomendador
+influye en ella. Por eso la promesa se estructura en tres niveles, y **cada afirmación se etiqueta
+con su nivel** para no inflar lo que aún no se puede probar:
+
+| Nivel | Qué afirmamos | Métrica | Tipo de evidencia | Disponible |
+|---|---|---|---|---|
+| **N0 — Acción** | "Predecimos la próxima lectura relevante" | `Recall@k`/`NDCG@k` sobre `is_read` futuro (split temporal) | **Predictiva** (relevancia) | **Hoy** |
+| **N1 — Hábito correlacional** | "El modelo *se asocia* a lectores que leen más, terminan más y leen más amplio" | los 5 proxies como *outcome label* por usuario | **Correlacional** | **Hoy** |
+| **N2 — Hábito causal** | "Recomendar así *aumenta* la frecuencia/retención de lectura" | los **mismos** 5 proxies como *lift* tratamiento-vs-control + señales en vivo (retornos, libros terminados tras una recomendación) | **Causal (A/B)** | **Con telemetría** |
+
+> **Separación que evita el overclaim:** N0 (`Recall@k`) es una **puerta de relevancia** —condición
+> necesaria, *no* es el hábito—. El hábito vive en N1/N2 (los proxies). Un `Recall@k` con split
+> temporal sigue siendo una métrica de **relevancia** ("¿acerté el próximo libro?"), no de **hábito**
+> ("¿lee más a lo largo del tiempo?"). No se deben conflacionar.
+
+El norte del proyecto (mantener el hábito) **se conserva**: hoy lo medimos de forma correlacional
+(N1) con proxies derivables del dataset; con telemetría mediremos los mismos proxies de forma causal
+(N2). Lo único que maduramos es la evidencia, no el objetivo.
+
+---
+
 ## 2. La acción objetivo y su jerarquía de señales
 
 El sistema intenta provocar **empezar y completar una lectura**. En los datos el proxy observable
@@ -50,9 +74,11 @@ es `is_read = True`, reforzado por rating alto y/o review escrita:
 
 ---
 
-## 3. Las tres capas de evaluación
+## 3. Las tres capas de evaluación (= los tres niveles de evidencia)
 
-### Capa 1 — Evaluación offline con split temporal *(hacible hoy)*
+Las tres capas implementan la escalera de §1bis: **Capa 1 → N0**, **Capa 2 → N1**, **Capa 3 → N2**.
+
+### Capa 1 (N0) — Evaluación offline con split temporal *(hacible hoy)*
 
 Para cada usuario, ordenar sus interacciones por `date_added`, **entrenar con el pasado y
 retener el futuro**. Medir si el recomendador habría mostrado los libros que el lector
@@ -63,18 +89,20 @@ retener el futuro**. Medir si el recomendador habría mostrado los libros que el
   confirmar que el modelo **no** se limita a amplificar bestsellers (hace cumplir la regla de
   sesgo de popularidad).
 
-> El **split temporal** es lo que convierte una métrica recsys estándar en una métrica orientada
-> al hábito: la pregunta no es *"¿acertó lo que ya leyó?"* sino *"¿lo que recomienda coincide con
-> lo que el lector **sigue** leyendo?"*.
+> El **split temporal** mejora la *honestidad predictiva* de la métrica de relevancia: la pregunta
+> deja de ser *"¿acertó lo que ya leyó?"* y pasa a ser *"¿lo que recomienda coincide con lo que el
+> lector **sigue** leyendo?"*. Pero ojo: esto **sigue siendo relevancia (N0)**, no hábito. Acertar
+> el próximo libro es condición necesaria; medir si el lector *lee más a lo largo del tiempo* es la
+> Capa 2 (N1). No confundir un `Recall@k` temporal con una métrica de hábito.
 
-### Capa 2 — Evaluación por proxy de hábito
+### Capa 2 (N1) — Evaluación por proxy de hábito *(correlacional, hoy)*
 
 Comparar el recomendador por **similitud de interés** contra una **línea base de popularidad** y
 verificar si los lectores expuestos a recomendaciones por vecindad muestran mayor
 `completion_rate`, `reading_frequency` y `reading_breadth` (`category_count`). En entorno offline
 esto es **correlacional, no causal**.
 
-### Capa 3 — Telemetría de producto *(fuera del alcance del dataset)*
+### Capa 3 (N2) — Telemetría de producto *(causal, futuro)*
 
 Medir el impacto causal real en retención exige instrumentar la plataforma viva: sesiones,
 retornos, libros terminados **después** de una recomendación, conversión click → lectura. Es
@@ -104,6 +132,16 @@ hábito, aunque sus números recsys "se vean bien".
 
 - El dataset es **observacional**: las métricas offline **aproximan**, no **prueban**, impacto
   causal en el hábito.
+- **Brecha de atribución (la grande).** Offline, los proxies describen el hábito *del usuario*, no
+  el *efecto del recomendador* sobre él: esos libros se leyeron sin que el sistema existiera. Por eso
+  N1 es correlacional **por construcción**, y solo N2 (telemetría, A/B) cierra la brecha. Esta es la
+  *razón de ser* de la escalera de §1bis.
+- **`reading_frequency` divide por `active_span`**, así que usuarios de una sola interacción dan
+  `active_span = 0` (división por cero). Requiere un piso (p. ej. *clamp* a 1 día, o excluir `n = 1`)
+  al computar la métrica.
+- **`completion_rate` offline está sesgado por lo que cada usuario *registró* en Goodreads**, no por
+  lo que leyó de verdad; en producto vivo (N2) la señal es limpia. El proxy offline es más ruidoso
+  que su versión telemétrica — mismo nombre, distinta calidad.
 - `started_at` / `read_at` y `reading_duration_days` son **dispersos** según lo que cada usuario
   rellenó → las métricas de duración se reportan junto a `has_reading_duration_rate` para ser
   honestos con la cobertura.
@@ -116,10 +154,12 @@ hábito, aunque sus números recsys "se vean bien".
 
 ### Conclusión (para el entregable)
 
-El recomendador se declara **válido** no por ordenar bien en abstracto, sino por **predecir lo
-que el lector sigue leyendo** y **asociarse a más lectura completada y diversa**. Se mide en tres
-capas: **relevancia** (`Recall@k`, `NDCG@k`, `MAP` con **split temporal** sobre `is_read`),
-**anti-popularidad** (`Coverage`, `Novelty`, `Diversity`) y **proxy de hábito** (`completion_rate`,
-`reading_frequency`, `reading_breadth`, `activity_recency`) frente a una línea base de popularidad.
-El impacto causal real sobre la retención requiere telemetría de producto en vivo, que se reconoce
-como límite explícito del dataset estático.
+El norte —**mantener el hábito de lectura**— se conserva, estructurado en una **escalera de
+evidencia de tres niveles** (§1bis): **N0** relevancia (`Recall@k`/`NDCG@k` con split temporal sobre
+`is_read` — una *puerta*, no el hábito), **N1** proxy de hábito correlacional (`completion_rate`,
+`reading_frequency`, `reading_breadth`, `activity_recency`) y **N2** hábito causal con telemetría
+(A/B + señales en vivo). El recomendador se declara **válido** no por ordenar bien en abstracto,
+sino por **superar a la popularidad en relevancia (N0) sin colapsar la diversidad** y **asociarse a
+mejores proxies de hábito (N1)**. La afirmación causal ("recomendar así *aumenta* la retención")
+queda etiquetada como **N2** y requiere telemetría de producto en vivo, límite explícito del dataset
+estático: lo que madura con los datos es la **fuerza de la evidencia**, no el objetivo.

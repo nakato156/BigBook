@@ -113,25 +113,42 @@ reading_breadth    = category_count                     (diversity across genres
 
 A reader "with a habit" shows a wide `active_span`, regular `reading_frequency`, low `activity_recency`, and high `completion_rate`. These per-user values are what we use as the **outcome label** when evaluating the recommender.
 
-### Evaluation layers
+### The habit evidence ladder (N0 → N1 → N2)
 
-**Layer 1 — Offline evaluation with a temporal split (doable today).**
+Reading habit is **not a vague hypothesis** — it *is* the proxy set above. What matures over time is not the *metric* but the **strength of evidence** with which we can claim the recommender influences it. The promise is therefore staged in three levels, and **every claim is tagged with its level** so we never overclaim what we cannot yet prove:
+
+| Level | What we claim | Metric | Evidence type | Available |
+|---|---|---|---|---|
+| **N0 — Action** | "We predict the next relevant read" | `Recall@k`/`NDCG@k` over future `is_read` (temporal split) | **Predictive** (relevance) | **Today** |
+| **N1 — Habit, correlational** | "The model *is associated with* readers who read more, finish more, and read more broadly" | the 5 proxies as a per-user outcome label | **Correlational** | **Today** |
+| **N2 — Habit, causal** | "Recommending this way *increases* reading frequency / retention" | the **same** 5 proxies as treatment-vs-control *lift* + live signals (return visits, books finished after a recommendation) | **Causal (A/B)** | **With telemetry** |
+
+> **Separation that avoids the overclaim:** N0 (`Recall@k`) is a **relevance gate** — a necessary condition, *not* the habit itself. A temporal-split `Recall@k` is still a **relevance** metric ("did I hit the next book?"), not a **habit** metric ("does the reader read more over time?"). The habit lives in N1/N2 (the proxies). The north star (sustaining the habit) is **kept**: today we measure it correlationally (N1); with telemetry we measure the same proxies causally (N2). Only the evidence matures, not the goal.
+
+### Evaluation layers (= the three evidence levels)
+
+The three layers below implement the ladder: **Layer 1 → N0**, **Layer 2 → N1**, **Layer 3 → N2**.
+
+**Layer 1 (N0) — Offline evaluation with a temporal split (doable today).**
 For each user, sort interactions by `date_added`, train on the past and hold out the future. Measure whether the recommender would have surfaced the books the reader **actually read later** (`is_read = True`, ideally with a high rating):
 
 - `Recall@k`, `Precision@k`, `NDCG@k`, `MAP` — relevance of the ranked list.
 - `Coverage`, `Novelty`, intra-list `Diversity` — to confirm the model is not just amplifying popular books (enforces the popularity-bias rule from the Business Logic section).
 
-The temporal split is what turns a standard recsys metric into a habit-oriented one: the question is not "did it match past reads?" but "does what it recommends match what the reader keeps reading?".
+The temporal split improves the *predictive honesty* of the relevance metric: the question shifts from "did it match past reads?" to "does what it recommends match what the reader keeps reading?". But this is **still relevance (N0), not habit** — hitting the next book is a necessary condition; whether the reader *reads more over time* is Layer 2 (N1). Do not mistake a temporal `Recall@k` for a habit metric.
 
-**Layer 2 — Habit-proxy evaluation.**
-Compare the interest-similarity recommender against a popularity baseline and check whether readers exposed to neighborhood-based recommendations show higher `completion_rate`, `reading_frequency` and `reading_breadth` (`category_count`). In an offline setting this is correlational, not causal.
+**Layer 2 (N1) — Habit-proxy evaluation (correlational, today).**
+Compare the interest-similarity recommender against a popularity baseline and check whether readers exposed to neighborhood-based recommendations show higher `completion_rate`, `reading_frequency` and `reading_breadth` (`category_count`). In an offline setting this is correlational, not causal — the proxies describe the *user's* habit, not the recommender's *effect* on it (see Honest limitations).
 
-**Layer 3 — Product telemetry (out of scope for the dataset).**
+**Layer 3 (N2) — Product telemetry (causal, future / out of scope for the dataset).**
 Measuring true causal impact on retention requires instrumenting the live platform: sessions, return visits, books finished *after* a recommendation, click → reading conversion. This is future product work, not available in the static Goodreads dump, and is listed here as an explicit limitation.
 
 ### Honest limitations
 
 - The dataset is observational; offline metrics approximate, but do not prove, causal impact on the reading habit.
+- **Attribution gap (the big one).** Offline, the habit proxies describe the *user's* habit, not the recommender's *effect* on it — those books were read without the system existing. That is why N1 is correlational **by construction**, and only N2 (telemetry / A/B) closes the gap. This is the reason the evidence ladder exists.
+- **`reading_frequency` divides by `active_span`**, so single-interaction users yield `active_span = 0` (division by zero). It needs a floor (e.g. clamp to 1 day, or drop `n = 1`) when computed.
+- **`completion_rate` offline is biased by what each user *logged* on Goodreads**, not by what they actually read; in a live product (N2) the signal is clean. The offline proxy is noisier than its telemetry version — same name, different quality.
 - `started_at` / `read_at` and `reading_duration_days` can be sparse depending on what each user filled in, so duration-based metrics rely on `has_reading_duration` / `has_reading_duration_rate` to stay honest about coverage.
 - The user profile artifacts are now wired into the same PCA space as books. The remaining pending work is the final recommender layer: retrieval, scoring, diversification and temporal evaluation over those artifacts.
 

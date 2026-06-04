@@ -188,13 +188,18 @@ directa: usamos **proxies de hábito** y **split temporal**.
 `reading_breadth` (`category_count`). La **acción objetivo** es `is_read` (empezar/completar una
 lectura), reforzada por rating alto y review.
 
-**Tres capas de evaluación:**
+**El hábito se conserva como norte, en una escalera de evidencia de 3 niveles** (la métrica no
+cambia; cambia la *fuerza de la evidencia*):
 
-| Capa | Qué mide | Métricas |
-|---|---|---|
-| 1. Relevancia (offline, **split temporal**) | ¿Predice lo que el lector leyó **después**? | `Recall@k`, `Precision@k`, `NDCG@k`, `MAP` |
-| 2. Anti-popularidad / descubrimiento | ¿No es una burbuja de bestsellers? | `Coverage`, `Novelty`, `Diversity` |
-| 3. Proxy de hábito (correlacional) | ¿Se asocia a más lectura completada y diversa? | `completion_rate`, `reading_frequency`, `reading_breadth` |
+| Nivel | Qué afirma | Métrica | Evidencia | Disponible |
+|---|---|---|---|---|
+| **N0** Relevancia (split temporal) | ¿Predice lo que el lector leyó **después**? (una *puerta*, no el hábito) | `Recall@k`, `NDCG@k`, `MAP` + `Coverage`/`Novelty`/`Diversity` | Predictiva | Hoy |
+| **N1** Proxy de hábito | ¿Se *asocia* a más lectura completada y diversa? | `completion_rate`, `reading_frequency`, `reading_breadth`, `activity_recency` | Correlacional | Hoy |
+| **N2** Hábito causal | ¿Recomendar así *aumenta* la retención? | mismos proxies como *lift* A/B + señales en vivo | Causal | Con telemetría |
+
+> N0 (`Recall@k`) es **relevancia, no hábito**: acertar el próximo libro es condición necesaria, no
+> el objetivo. El hábito vive en N1/N2 (proxies). No conflacionar un `Recall@k` temporal con una
+> métrica de hábito.
 
 **Criterio de validez:** el sistema es válido si (1) **supera a la base de popularidad** en
 `Recall@k`/`NDCG@k`, (2) **sin colapsar la diversidad** (`Coverage`/`Novelty`/`Diversity`), y (3)
