@@ -49,38 +49,28 @@ Por qué coseno y no euclidiana cruda:
 
 ## 2. ¿Qué significa que un ítem tenga mayor score?
 
-La **similitud no es el score final**. Un ranking basado solo en similitud produce "más de lo
-mismo" (ver [justificacion_recommender](justificacion_recommender.md)). El **score** es una
-combinación que ordena las recomendaciones según el objetivo del producto, no solo según el
-parecido. Un score mayor significa: *este libro es afín al gusto **y** tiene buena calidad/
-confianza **y** aporta a una experiencia diversa, accesible y motivadora*.
-
-Forma conceptual del score (jerárquica, no una suma plana):
+La similitud produce el orden de interés, pero la lista final también incorpora diversidad y
+exploración. v1 separa elegibilidad, ranking y exposición:
 
 ```text
-score(u, b) =  similitud_de_interés(u, b)        ← criterio PRIMARIO (coseno en PCA)
-             · f_calidad(b)                        ← señal SECUNDARIA (rating, popularidad log)
-             · f_habito(u,b)                       ← accesibilidad + compromiso del modo lector
-             − penalización_redundancia(b | lista) ← diversidad (MMR sobre la lista)
-             + bonus_descubrimiento(b)             ← novelty / anti-burbuja (controlado)
+elegible(b)  = id/título/vector PCA/cluster válidos
+score(u, b)  = similitud_de_interés(u, b)          ← coseno en subespacio de gusto
+lista_base   = MMR(score, redundancia)              ← relevancia + diversidad
+exploración  = fuera de vecindad + piso de afinidad
+               + prioridad tail → mid → head
 ```
 
 Las reglas de prioridad (qué manda sobre qué) son las que importan:
 
-1. **Interés primero.** `similitud_de_interés` domina el orden. La popularidad **nunca** puede
-   superar a un libro más afín; solo desempata o ajusta dentro de niveles de afinidad similar.
-2. **Popularidad/calidad como factor secundario y atenuado.** `f_calidad` usa `average_rating` y
-   `log1p(ratings_count)` como **confianza** ("este libro afín además es de calidad y no es un
-   error de datos"), no como objetivo. Es un multiplicador suave, acotado, para no recrear el
-   ranking por bestseller.
-3. **Hábito lector como factor explícito.** Ante afinidad parecida, favorecer lo más accesible
-   (extensión razonable, etc.) y lo conectado con modos de lectura comprometidos del usuario. En
-   los artefactos actuales, esa segunda parte existe como `centroid_weight` en
-   `user_centroids`: rating alto, review y duración de lectura coherente no mueven la geometría
-   del gusto, pero sí indican qué modo lector tiene más compromiso.
-4. **Diversidad explícita.** Se penaliza la redundancia con lo ya incluido en la lista (estilo
-   **MMR**: maximal marginal relevance) y se usan los **macro-clusters** y el género para que la
-   lista cubra más de una vecindad. Esto evita el filtro burbuja.
+1. **Interés primero.** `similitud_de_interés` domina el orden.
+2. **Elegibilidad técnica.** Solo se excluyen artefactos inválidos. `ratings_count` no funciona
+   como gate ni como multiplicador.
+3. **Popularidad como diagnóstico.** El catálogo se divide dinámicamente en `tail` (≤ p25),
+   `mid` y `head` (≥ p90). El segmento prioriza exploración, pero no modifica el score.
+4. **Diversidad explícita.** MMR penaliza redundancia en la lista base.
+5. **Descubrimiento controlado.** Por defecto, 2 de 10 slots buscan libros fuera de los
+   macro-clusters recuperados, exigen al menos 75% de la mejor similitud y prefieren
+   `tail → mid → head`. Si no hay candidatos suficientemente afines, se completa con interés.
 
 ---
 
@@ -91,12 +81,12 @@ Las reglas de prioridad (qué manda sobre qué) son las que importan:
 | **Solo popularidad** (`ratings_count`, `average_rating`) | Lo más conocido primero | Ignora el gusto; amplifica bestsellers; mata el descubrimiento. **Rechazado** como criterio principal. |
 | **Solo similitud** (coseno puro) | Lo más parecido primero | "Más de lo mismo"; burbuja; no distingue calidad ni accesibilidad. Necesario pero **insuficiente**. |
 | **Similitud + diversidad (MMR)** | Parecido pero variado | Mejor; evita redundancia. Base de nuestra lista. |
-| **Score híbrido jerárquico** (el nuestro) | Interés → calidad → hábito/accesibilidad → diversidad/novelty | Equilibra relevancia, confianza y hábito. **Adoptado.** |
+| **Interés + MMR + exploración controlada** (el nuestro) | Afinidad primero; tail/mid dentro de slots con piso de relevancia | Equilibra relevancia, diversidad y exposición. **Adoptado.** |
 | **Cluster-first** (vecindad → ranking interno) | Primero el barrio, luego dentro | Eficiente y explicable; lo usamos como **arquitectura** del retrieval (ver §4). |
 
 La diferencia conceptual central: un score por **popularidad** responde "¿qué leen todos?"; uno
 por **similitud** responde "¿a qué se parece lo que te gustó?"; el nuestro responde "¿qué te va a
-gustar, que además valga la pena, sea accesible y no sea siempre lo mismo?".
+gustar y cómo damos una exposición controlada a libros menos vistos sin romper la afinidad?".
 
 ---
 
@@ -107,10 +97,9 @@ Coherente con el clustering ya construido (KMeans k=100 + 10 macro-clusters):
 ```text
 1. RETRIEVE   Encontrar los clusters/macro-clusters más cercanos al vec_gusto(u)
               y traer los libros candidatos de esas vecindades (+ algo de exploración).
-2. SCORE      Ordenar candidatos por score(u,b): interés (coseno) como criterio primario,
-              calidad y hábito/accesibilidad como factores secundarios.
-3. DIVERSIFY  Reordenar con MMR + control de género/macro-cluster para que la lista final
-              sea diversa y cubra más de una vecindad.
+2. SCORE      Ordenar candidatos por coseno de interés; popularidad no entra al score.
+3. DIVERSIFY  Reordenar con MMR y reservar slots relevantes para tail/mid fuera de
+              la vecindad recuperada.
 4. EXPLAIN    Justificar cada ítem por su cluster/género ("porque te gustó X, del mismo
               vecindario de lectura").
 ```
@@ -124,11 +113,9 @@ usuario) y **explicable** (la vecindad da la razón de la recomendación).
 
 - **Relevante:** ordena por afinidad de gusto real (coseno en un espacio que captura contenido),
   no por popularidad. Responde a *"esto te va a gustar"*.
-- **Confiable:** la calidad/popularidad atenuada filtra ruido de datos sin secuestrar el orden.
-- **Pro-hábito:** el score no se queda en similitud. Usa accesibilidad y, cuando se consume
-  `user_centroids`, `centroid_weight` como señal de modos de lectura más comprometidos. Además,
-  el objetivo offline `is_read` (lo que el usuario realmente leyó después, medible con split
-  temporal) alinea la validación con *empezar y terminar lecturas*.
+- **Técnicamente válida:** la elegibilidad exige artefactos completos, no popularidad mínima.
+- **Pro-hábito como objetivo, no como factor demostrado:** `is_read` futuro alinea la validación
+  predictiva con lecturas posteriores; el efecto sobre hábito se evalúa aparte.
 - **Anti-burbuja:** la diversificación (MMR + macro-clusters + género) garantiza que el top-k no
   sea "cinco veces el mismo libro".
 - **Evaluable:** el orden se valida con `Recall@k`, `Precision@k`, `NDCG@k`, `MAP` (relevancia) y
@@ -138,14 +125,12 @@ usuario) y **explicable** (la vecindad da la razón de la recomendación).
 
 ### Conclusión (para el entregable)
 
-El criterio de ranking es un **score híbrido y jerárquico**. El criterio **primario** es la
+El criterio de ranking v1 es **interés + diversidad + exploración controlada**. El criterio
+**primario** es la
 **similitud de interés** —coseno entre el perfil de usuario (`user_matrix` o `user_centroids`) y
 el vector PCA del libro—, que define qué significa "más cercano": afinidad de
-tono/temática/accesibilidad, no de género. Sobre esa base se aplican, **subordinados**, factores
-de **calidad/popularidad atenuada** (confianza, vía `average_rating` y `log1p` de conteos), de
-**hábito/accesibilidad** (`centroid_weight`, extensión razonable, compromiso lector) y de
-**diversidad/novelty** (MMR + macro-clusters + género para evitar "más de lo mismo"). Un score
-mayor significa "afín **y** valioso **y** que aporta a una lista diversa y motivadora", no
-simplemente "más parecido" ni "más popular". El ranking se produce con una arquitectura
+tono/temática/accesibilidad, no de género. Sobre esa base se aplica MMR y se reservan slots
+exploratorios con piso de afinidad, priorizando segmentos menos expuestos. La popularidad no
+filtra ni ordena; sirve para segmentar y medir exposición. El ranking se produce con una arquitectura
 **retrieve (por cluster) → score → diversify → explain**, que lo hace escalable, explicable y
 evaluable con métricas de relevancia, anti-popularidad y proxy de hábito.

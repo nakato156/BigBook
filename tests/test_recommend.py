@@ -1,7 +1,7 @@
 """Tests for the ranking layer: each test pins one of the four contradiction fixes.
 
-C1→A1 (taste subspace drops pc_0..pc_5), C2→A2 (popularity is a gate, not a score),
-C3→A3 (exploration slot from a non-occupied macro), C4→A4 (cold-start has no popularity).
+C1→A1 (taste subspace drops pc_0..pc_5), C2→A2 (technical eligibility, no popularity
+gate/score), C3→A3 (relevant tail/mid exploration), C4→A4 (cold-start has no popularity).
 """
 
 from __future__ import annotations
@@ -12,10 +12,11 @@ import pandas as pd
 from src.reduction.recommend import (
     RankingConfig,
     Recommender,
+    eligibility_mask,
     l2_normalize_rows,
     mmr_select,
-    pick_exploration_macro,
-    quality_gate_mask,
+    popularity_segments,
+    select_exploration_rows,
     taste_pc_indices,
 )
 
@@ -32,22 +33,34 @@ def test_a1_taste_subspace_drops_tabular_pcs() -> None:
     assert idx.tolist() == [6, 7, 8, 9]
 
 
-def test_a2_quality_gate_filters_low_evidence_only() -> None:
-    counts = np.array([0, 4, 5, 100])
-    mask = quality_gate_mask(counts, min_ratings=5)
-    # Gate drops the under-evidenced books and keeps the rest — independent of magnitude.
-    assert mask.tolist() == [False, False, True, True]
+def test_a2_eligibility_uses_artifact_integrity_not_popularity() -> None:
+    mask = eligibility_mask(
+        book_ids=np.array(["low", "high", "", "bad-vector", "bad-cluster"]),
+        titles=np.array(["Low evidence", "Bestseller", "Missing id", "Bad", "Bad"]),
+        book_pc=np.array([[1, 0], [1, 0], [1, 0], [np.nan, 0], [1, 0]]),
+        book_cluster=np.array([0, 0, 0, 0, -1]),
+        n_clusters=1,
+    )
+    assert mask.tolist() == [True, True, False, False, False]
 
 
-def test_a3_exploration_picks_nearest_non_occupied_macro() -> None:
-    # 3 macro centroids; user closest to macro 0, then 2, then 1.
-    user = np.array([1.0, 0.0])
-    macros = l2_normalize_rows(np.array([[1.0, 0.05], [0.0, 1.0], [0.9, 0.2]]))
-    user_n = user / np.linalg.norm(user)
-    # macro 0 occupied → must skip to the next nearest non-occupied (macro 2).
-    assert pick_exploration_macro({0}, macros, user_n) == 2
-    # all occupied → None.
-    assert pick_exploration_macro({0, 1, 2}, macros, user_n) is None
+def test_a3_popularity_segments_use_catalog_quantiles() -> None:
+    labels, tail_cut, head_cut = popularity_segments(
+        np.array([10, 20, 30, 40, 50]), tail_quantile=0.25, head_quantile=0.80
+    )
+    assert tail_cut == 20
+    assert head_cut == 42
+    assert labels.tolist() == ["tail", "tail", "mid", "mid", "head"]
+
+
+def test_a3_exploration_prefers_tail_after_relevance_floor() -> None:
+    rows = np.array([1, 2, 3])
+    relevance = np.array([0.80, 0.78, 0.95])
+    segments = np.array(["unknown", "tail", "mid", "head"])
+    picked = select_exploration_rows(
+        rows, relevance, segments, k=2, best_relevance=1.0, min_relevance_ratio=0.75
+    )
+    assert picked.tolist() == [1, 2]
 
 
 def test_mmr_prefers_relevance_then_diversifies() -> None:
@@ -78,11 +91,11 @@ def _toy_recommender(config: RankingConfig) -> Recommender:
             [0.1, 0.0, 1.0, 0.0],   # b4 niche,  taste B
             [0.1, 0.0, 0.0, 1.0],   # b5 niche,  taste C (far macro)
             [0.1, 0.0, 0.0, 0.9],   # b6 niche,  taste C
-            [0.1, 0.0, 0.0, 1.0],   # b7 LOW ratings, taste C (gate should drop)
+            [0.1, 0.0, 0.0, 0.8],   # b7 very low exposure, taste C
         ],
         dtype=np.float32,
     )
-    ratings_count = np.array([1000, 50, 50, 1000, 50, 50, 50, 2])  # b7 below gate
+    ratings_count = np.array([1000, 50, 60, 1000, 70, 80, 90, 2])
     num_pages = np.array([400, 120, 600, 300, 90, 500, 80, 70], dtype=np.float64)
 
     # Two fine clusters per taste region; 3 macro-clusters: {A}, {B}, {C}.
@@ -127,7 +140,7 @@ def _toy_recommender(config: RankingConfig) -> Recommender:
 def test_a2_popularity_never_orders_the_interest_slots() -> None:
     # k=3, no exploration, so we see only interest-scored books.
     rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2,
-                                         min_ratings_gate=5, mmr_lambda=0.8))
+                                         mmr_lambda=0.8))
     out = rec.recommend("u_taste_A")
     # The user "inherited" a huge pc_0, yet the popular b0 must NOT outrank the niche b1/b2
     # purely by popularity: b0 and b1 share taste, so popularity cannot be the tiebreaker.
@@ -137,33 +150,30 @@ def test_a2_popularity_never_orders_the_interest_slots() -> None:
     assert top["book_id"] in {"b0", "b1", "b2"}
     # And critically: the order is not the popularity order. Collect interest rows.
     interest_ids = out[out["slot"] == "interest"]["book_id"].tolist()
-    # b7 (2 ratings) is gated out everywhere.
-    assert "b7" not in out["book_id"].tolist()
     # A diverse, taste-A set — popularity (b0=1000) does not dominate the top slot order.
     assert set(interest_ids).issubset({"b0", "b1", "b2"})
 
 
 def test_a3_recommendation_includes_exploration_from_unoccupied_macro() -> None:
     rec = _toy_recommender(RankingConfig(k=4, explore_slots=2, n_clusters_retrieve=2,
-                                         min_ratings_gate=5))
+                                         explore_min_relevance_ratio=0.0))
     out = rec.recommend("u_taste_A")
     explore = out[out["slot"] == "exploration"]
     assert len(explore) >= 1
     # User occupies macro 0 (taste A). Exploration must come from a macro he does not occupy.
     assert (explore["macro_cluster"] != 0).all()
+    assert set(explore["popularity_segment"]).issubset({"tail", "mid"})
 
 
 def test_a4_cold_start_has_no_popularity_and_spans_macros() -> None:
-    rec = _toy_recommender(RankingConfig(min_ratings_gate=5, min_pages_accessible=50))
+    rec = _toy_recommender(RankingConfig(min_pages_accessible=50))
     out = rec.recommend_cold_start("new_user")
     assert (out["slot"] == "cold_start").all()
     # One book per macro-cluster present in the catalog (diversity, not a bestseller list).
     assert set(out["macro_cluster"]) == {0, 1, 2}
     # The most popular books (b0=1000, b3=1000 ratings) must NOT be auto-picked;
-    # accessibility (shortest gated book) drives the pick, not ratings_count.
+    # accessibility (shortest eligible book) drives the pick, not ratings_count.
     assert "b0" not in out["book_id"].tolist()  # 400p vs b1/b2 shorter in macro 0
-    # Gated book b7 (2 ratings) is excluded from the accessible pool.
-    assert "b7" not in out["book_id"].tolist()
 
 
 def test_cold_start_user_routed_to_cold_path() -> None:

@@ -135,9 +135,9 @@ Métricas de hábito **derivables** de estos campos (aún no almacenadas como co
   `has_reading_duration_rate` para ser honestos con la cobertura.
 - **Spot checks semánticos débiles:** las pruebas de coseno del README son diagnósticos
   pequeños, no validación de calidad.
-- **Ranking/evaluación final aún sin cablear:** los artefactos de perfil (`user_matrix`,
-  `user_meta`, `user_centroids`) ya viven en el mismo espacio PCA que los libros. Lo pendiente es
-  implementar la capa final de retrieval → scoring → diversificación → evaluación temporal.
+- **Ranking implementado; evaluación pendiente:** retrieval, scoring por interés, MMR,
+  exploración controlada y cold-start viven en `src/reduction/recommend.py`. Falta ejecutar la
+  evaluación temporal y las métricas de exposición sobre cohortes.
 
 ---
 
@@ -163,8 +163,8 @@ lectura y usa `centroid_weight` como señal de compromiso: rating, review y dura
 
 - `date_added`/`date_updated` → **split temporal** (entrenar en pasado, evaluar en futuro).
 - `is_read` (+ `rating` alto, `has_review_text`) → **etiqueta objetivo** (Recall@k, NDCG…).
-- `ratings_count`/`average_rating` → **señal secundaria** de calidad/confianza, nunca el
-  objetivo (regla anti-popularidad).
+- `ratings_count` → segmentación dinámica `tail/mid/head` y métricas de exposición; no filtra ni
+  ordena. `average_rating` permanece en la representación PCA, no como factor explícito del ranker.
 - `genre_*`, `category_count`, `weight`, `centroid_weight` → **filtro, explicación, confianza y
   control de diversidad/hábito** (anti-burbuja).
 
@@ -181,5 +181,5 @@ interacción** (ratings, lecturas, reviews, saves con timestamp), pero **pobre e
 telemetría, demografía y señal social**. Por eso el recomendador se ancla en la
 **similitud de contenido/gusto sobre el vector PCA del libro**, usa el historial de
 interacciones para construir el vector de usuario y para evaluar con split temporal, y
-trata la popularidad y el género como señales secundarias de calidad y diversidad — no como
-el objetivo.
+trata la popularidad como diagnóstico de exposición y el género como señal de diversidad — no
+como objetivos ni factores explícitos de orden.

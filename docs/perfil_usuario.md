@@ -211,8 +211,8 @@ data/features/user_centroids.parquet # user_id + centroid_id + weight/centroid_w
   eso indica mejor *predicción*, no que *cause* más lectura ni más hábito.
 
 > Con `user_matrix` en el mismo espacio que `master_feature_matrix`, recomendar = buscar los
-> libros vecinos del `user_vec`, re-rankeados con popularidad (secundaria) y diversidad
-> (cross-cluster/género).
+> libros vecinos del `user_vec`, diversificar con MMR y reservar exploración relevante hacia
+> segmentos menos expuestos. La popularidad se mide, pero no ordena el ranking.
 
 ---
 

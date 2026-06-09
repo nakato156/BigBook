@@ -72,7 +72,7 @@ exactamente lo que permite descubrir patrones cross-género (*"tono juvenil + ro
 | **Texto** (descripción) | ✅ Sí, vía 256 embeddings | Núcleo semántico: *de qué trata y cómo se siente* el libro |
 | **Categorías** (género) | ✅ Sí, 5 flags multi-etiqueta | Estructura temática gruesa; señal, no unidad |
 | **Metadata** (páginas, año, idioma, serie, autores) | ✅ Sí | Accesibilidad, época, progresión, formato |
-| **Ratings/popularidad** | ✅ Sí, pero **atenuados** | `log1p` + block-weighting → señal secundaria de calidad |
+| **Ratings/popularidad** | ✅ Sí, pero **atenuados** | `log1p` + block-weighting en la representación; no son gate ni score explícito del ranking |
 | **Tags libres / shelves** | ❌ No | No están en el master de 17 columnas (eran del pipeline removido) |
 | **Reviews individuales** | ❌ No (como atributo del ítem) | Se usan en el perfil de usuario, no en el vector del libro |
 
@@ -144,4 +144,5 @@ accesible es, qué tan conocido es, y de qué género/época**. La comparabilida
 distancia en ese espacio común, balanceado por block-weighting para que ninguna familia domine.
 Sus límites principales —linealidad del PCA, ejes no interpretables, peso residual de la
 popularidad y dependencia de la descripción— se conocen y se compensan en el ranking
-(interés/semántica primero, popularidad y género como señales secundarias de calidad y diversidad).
+(interés/semántica primero; en ranking, popularidad como diagnóstico de exposición y género como
+señal de diversidad).

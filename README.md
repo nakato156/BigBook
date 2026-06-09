@@ -15,7 +15,7 @@ The same idea in `X / Y / Z` form:
 ```text
 We recommend  X = books from the catalog, as PCA vectors, grouped into taste clusters
 based on      Y = the user's interaction history + similarity in PCA space + book clusters
-                  (genre as a filter/explanation/diversity signal; popularity as a secondary signal)
+                  (genre as a filter/explanation/diversity signal; popularity as exposure diagnostic)
 to optimize   Z = relevant readings started and finished (proxy: is_read + positive rating)
                   that sustain the reading habit (retention), avoiding popularity bias
                   and single-genre filter bubbles.
@@ -25,7 +25,7 @@ to optimize   Z = relevant readings started and finished (proxy: is_read + posit
 
 A reader identified by `user_id`, represented by their **interaction history** over books — what they read (`is_read`), rated (`rating_clean`) and reviewed (`has_review_text`) — as captured in the canonical `interactions_curated.parquet`. The implemented user-side artifacts are `user_matrix.parquet` (one PCA-space taste vector per user with positives), `user_meta.parquet` (behavior/confidence metadata) and `user_centroids.parquet` (multi-centroid taste modes for users with enough positive history).
 
-A user is **not** modeled as a single genre label. The user profile is a multidimensional taste vector built by aggregating the PCA vectors of the books they engaged with positively. A new user with no history (cold start) is represented by a few seed books/genres chosen at sign-up, or by an initial popularity-plus-diversity mix.
+A user is **not** modeled as a single genre label. The user profile is a multidimensional taste vector built by aggregating the PCA vectors of the books they engaged with positively. A new user with no history (cold start) is represented by a few seed books/genres chosen at sign-up, or by a diverse accessible sample across macro-clusters.
 
 ### What is an item
 
@@ -150,7 +150,7 @@ Measuring true causal impact on retention requires instrumenting the live platfo
 - **`reading_frequency` divides by `active_span`**, so single-interaction users yield `active_span = 0` (division by zero). It needs a floor (e.g. clamp to 1 day, or drop `n = 1`) when computed.
 - **`completion_rate` offline is biased by what each user *logged* on Goodreads**, not by what they actually read; in a live product (N2) the signal is clean. The offline proxy is noisier than its telemetry version — same name, different quality.
 - `started_at` / `read_at` and `reading_duration_days` can be sparse depending on what each user filled in, so duration-based metrics rely on `has_reading_duration` / `has_reading_duration_rate` to stay honest about coverage.
-- The user profile artifacts are now wired into the same PCA space as books. The remaining pending work is the final recommender layer: retrieval, scoring, diversification and temporal evaluation over those artifacts.
+- The ranking layer now implements retrieval, interest scoring, MMR, controlled exploration and cold-start fallback. Temporal evaluation and business-metric validation remain pending.
 
 ## Business Logic
 
@@ -204,8 +204,17 @@ Popularity signals are still useful, but they should be controlled:
 
 - `ratings_count` and `text_reviews_count` are transformed with `log1p` to reduce extreme outlier influence.
 - Numeric, binary and embedding blocks are standardized and weighted before PCA so one feature family does not dominate only because it has more columns.
-- Ranking should prioritize interest similarity first, then use popularity as a secondary quality or confidence signal.
-- Final recommendations should include diversity and discovery, especially for readers trying to build a sustainable reading habit.
+- Ranking eligibility is technical (`book_id`, title, PCA vector and cluster must be valid);
+  `ratings_count` does not filter or order books.
+- Popularity measures exposure through dynamic catalog segments: `tail` (≤ p25), `mid` and
+  `head` (≥ p90).
+- Final recommendations reserve controlled exploration for relevant tail/mid books outside the
+  retrieved neighborhood, with fallback to normal interest ranking if the relevance floor is not met.
+
+With the current catalog, `ratings_count` has minimum 49, p25 436 and p90 6,017. The previous
+`ratings_count >= 5` rule retained all 108,227 books and therefore was not a meaningful gate.
+Discovery in v1 means improving measurable exposure within this curated catalog, not solving
+coverage of books outside the dataset or item cold start.
 
 ## Dataset
 

@@ -1,5 +1,5 @@
-"""Ranking layer (``retrieve -> score -> diversify -> explain``) with the four
-design contradictions C1–C4 resolved *by construction* (fixes A1–A4).
+"""Ranking layer (``retrieve -> score -> diversify -> explain``) with mitigations
+for the four design contradictions C1–C4 (A1–A4).
 
 This is the layer the docs declared pending. Its **only** job here is to resolve the
 four contradictions from ``docs/alcance_y_limitaciones.md`` §2; split/cohorts/offline
@@ -7,20 +7,22 @@ evaluation live elsewhere and are deliberately out of scope.
 
 How each fix lands in the code:
 
-- **A1 (C1) — popularity out of the geometry.** Interest similarity is the cosine over a
+- **A1 (C1) — reduce early tabular influence.** Interest similarity is the cosine over a
   **taste subspace** that drops the tabular early axes ``pc_0..pc_5`` (popularity, language,
   metadata missingness and coarse genre separation — see README *Interpreting Early
   Components* and ``master_pca_meta.json`` block shares). Because the user vector is a mean
-  of book vectors, it inherited ``pc_0`` too; slicing the columns removes the bias from
-  *both* sides at once. See :data:`RankingConfig.tabular_pcs` and :func:`taste_pc_indices`.
-- **A2 (C2) — popularity is a gate, not a multiplier.** ``ratings_count`` is used only to
-  **drop** low-evidence books (a data-quality floor); it never enters the score. The order
-  is pure interest cosine + diversity, so the model no longer embeds the B1 popularity
-  baseline as a factor. See :func:`quality_gate_mask`.
-- **A3 (C3) — exploration is generated, not just measured.** The top-k reserves
-  ``explore_slots`` for books pulled from a macro-cluster the user's neighbourhood does
-  **not** occupy, so the catalog's unexplored regions can surface. See
-  :func:`pick_exploration_macro`.
+  of book vectors, it inherited ``pc_0`` too; slicing reduces those early axes on both
+  sides. PCA and the fitted clusters can retain residual popularity signal, so this remains
+  an empirical mitigation. See :data:`RankingConfig.tabular_pcs` and
+  :func:`taste_pc_indices`.
+- **A2 (C2) — technical eligibility, not a popularity gate.** A book is eligible when its
+  id, title, PCA vector and cluster assignment are valid. ``ratings_count`` never excludes
+  or orders books; it is retained only to measure exposure. See :func:`eligibility_mask`.
+- **A3 (C3) — controlled long-tail exploration.** The top-k reserves ``explore_slots`` for
+  relevant books outside the user's retrieved macro-neighbourhood, preferring catalog
+  tail/mid segments computed from the current ``ratings_count`` distribution. Exploration
+  must pass a relevance floor; otherwise normal interest results fill the list. See
+  :func:`popularity_segments` and :func:`select_exploration_rows`.
 - **A4 (C4) — cold-start without popularity.** Users with no/too-little history get one
   *accessible* book per macro-cluster (diversity sampler), never a bestseller list. See
   :meth:`Recommender.recommend_cold_start`.
@@ -33,7 +35,6 @@ Invoke as a module (writes a small sample, does not batch the whole user base)::
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Iterable, Sequence
 
 import numpy as np
@@ -41,13 +42,11 @@ import pandas as pd
 
 from src.config import (
     BOOKS_MASTER_PATH,
-    FEATURES_DIR,
     MASTER_FEATURE_MATRIX_PATH,
     PROJECT_ROOT,
     USER_MATRIX_PATH,
     USER_META_PATH,
 )
-from src.utils.io import safe_write_parquet  # noqa: F401  (kept for parity / future batch)
 
 CLUSTERING_DIR = PROJECT_ROOT / "data" / "outputs" / "clustering"
 BOOK_CLUSTERS_PATH = CLUSTERING_DIR / "book_clusters_k100.parquet"
@@ -64,11 +63,13 @@ class RankingConfig:
 
     # A1: tabular early axes excluded from the interest cosine (popularity/lang/missingness).
     tabular_pcs: tuple[int, ...] = (0, 1, 2, 3, 4, 5)
-    # A2: data-quality floor. Books below this many ratings are dropped (gate, never scored).
-    min_ratings_gate: int = 5
     k: int = 10
-    # A3: of the k slots, how many are reserved for exploration outside the user's macros.
+    # A3: slots reserved for relevant tail/mid books outside the retrieved macros.
     explore_slots: int = 2
+    popularity_tail_quantile: float = 0.25
+    popularity_head_quantile: float = 0.90
+    # Exploration candidates must retain this fraction of the best interest similarity.
+    explore_min_relevance_ratio: float = 0.75
     # Diversity/relevance trade-off for MMR (1.0 = pure relevance, 0.0 = pure diversity).
     mmr_lambda: float = 0.7
     # How many nearest fine clusters to pull candidates from (retrieve breadth).
@@ -106,9 +107,43 @@ def l2_normalize_rows(matrix: np.ndarray) -> np.ndarray:
     return matrix / norms
 
 
-def quality_gate_mask(ratings_count: np.ndarray, min_ratings: int) -> np.ndarray:
-    """A2: boolean keep-mask. Popularity is used **only** to drop low-evidence books."""
-    return np.asarray(ratings_count) >= min_ratings
+def eligibility_mask(
+    book_ids: np.ndarray,
+    titles: np.ndarray,
+    book_pc: np.ndarray,
+    book_cluster: np.ndarray,
+    n_clusters: int,
+) -> np.ndarray:
+    """A2: technical catalog eligibility without using popularity.
+
+    Eligible books have a non-empty id/title, finite PCA coordinates and a valid cluster.
+    """
+    ids = np.char.strip(np.asarray(book_ids, dtype=str))
+    names = np.asarray(titles, dtype=object)
+    clean_names = np.char.strip(np.asarray(names, dtype=str))
+    title_ok = pd.notna(names) & (np.char.str_len(clean_names) > 0)
+    vector_ok = np.isfinite(np.asarray(book_pc)).all(axis=1)
+    clusters = np.asarray(book_cluster)
+    cluster_ok = np.isfinite(clusters) & (clusters >= 0) & (clusters < n_clusters)
+    return (np.char.str_len(ids) > 0) & title_ok & vector_ok & cluster_ok
+
+
+def popularity_segments(
+    ratings_count: np.ndarray,
+    tail_quantile: float = 0.25,
+    head_quantile: float = 0.90,
+) -> tuple[np.ndarray, float, float]:
+    """Label books ``tail``/``mid``/``head`` using current-catalog quantiles."""
+    counts = np.asarray(ratings_count, dtype=np.float64)
+    finite = counts[np.isfinite(counts)]
+    if not len(finite):
+        return np.full(len(counts), "unknown", dtype=object), np.nan, np.nan
+    tail_cut, head_cut = np.quantile(finite, [tail_quantile, head_quantile])
+    labels = np.full(len(counts), "mid", dtype=object)
+    labels[counts <= tail_cut] = "tail"
+    labels[counts >= head_cut] = "head"
+    labels[~np.isfinite(counts)] = "unknown"
+    return labels, float(tail_cut), float(head_cut)
 
 
 def mmr_select(
@@ -145,23 +180,33 @@ def nearest_clusters(user_taste_norm: np.ndarray, centroids_taste_norm: np.ndarr
     return np.argsort(-sims)
 
 
-def pick_exploration_macro(
-    occupied_macros: set[int],
-    macro_centroids_taste_norm: np.ndarray,
-    user_taste_norm: np.ndarray,
-) -> int | None:
-    """A3: choose the **nearest macro-cluster the user does not occupy**.
+def select_exploration_rows(
+    rows: np.ndarray,
+    relevance: np.ndarray,
+    popularity_segment: np.ndarray,
+    k: int,
+    best_relevance: float,
+    min_relevance_ratio: float,
+) -> np.ndarray:
+    """A3: select relevant exploration books, preferring tail then mid then head.
 
-    "Nearest non-occupied" is the gentlest possible exploration: it surfaces a region the
-    user's neighbourhood never reaches (raising catalog coverage) while staying the least
-    jarring jump available. Returns ``None`` if the user already spans every macro-cluster.
+    Popularity segment is a priority among candidates that pass the relevance floor, never
+    a multiplicative score. Returned values are catalog row ids.
     """
-    sims = macro_centroids_taste_norm @ user_taste_norm
-    order = np.argsort(-sims)
-    for macro in order:
-        if int(macro) not in occupied_macros:
-            return int(macro)
-    return None
+    if not len(rows) or k <= 0:
+        return np.array([], dtype=np.int64)
+    floor = best_relevance * min_relevance_ratio if best_relevance > 0 else best_relevance
+    keep = relevance >= floor
+    if not keep.any():
+        return np.array([], dtype=np.int64)
+    eligible_rows = rows[keep]
+    eligible_rel = relevance[keep]
+    priority = {"tail": 0, "mid": 1, "head": 2, "unknown": 3}
+    segment_priority = np.array(
+        [priority.get(str(popularity_segment[row]), 3) for row in eligible_rows]
+    )
+    order = np.lexsort((-eligible_rel, segment_priority))
+    return eligible_rows[order[:k]].astype(np.int64)
 
 
 # --------------------------------------------------------------------------- #
@@ -194,27 +239,32 @@ class Recommender:
         self.centroids_taste_norm = l2_normalize_rows(
             self.centroids[:, self.taste_idx].astype(np.float64)
         )
-        # Macro centroid = mean of its fine centroids, in the taste subspace (A3 exploration).
-        n_macro = int(self.macro_of_cluster.max()) + 1
-        macro_taste = np.zeros((n_macro, len(self.taste_idx)), dtype=np.float64)
-        counts = np.zeros(n_macro, dtype=np.int64)
-        cen_taste = self.centroids[:, self.taste_idx].astype(np.float64)
-        for c in range(self.centroids.shape[0]):
-            m = int(self.macro_of_cluster[c])
-            macro_taste[m] += cen_taste[c]
-            counts[m] += 1
-        macro_taste /= np.maximum(counts, 1)[:, None]
-        self.macro_centroids_taste_norm = l2_normalize_rows(macro_taste)
+        self.n_macro = int(self.macro_of_cluster.max()) + 1
         self._book_row = {bid: i for i, bid in enumerate(self.book_ids)}
         self._user_row = {uid: i for i, uid in enumerate(self.user_ids)}
-        # Gate mask (A2): precompute once, reused for every user.
-        self.gate_mask = quality_gate_mask(self.ratings_count, self.config.min_ratings_gate)
+        titles = self.genres.reindex(self.book_ids)["title"].to_numpy()
+        self.eligible_mask = eligibility_mask(
+            self.book_ids,
+            titles,
+            self.book_pc,
+            self.book_cluster,
+            self.centroids.shape[0],
+        )
+        (
+            self.popularity_segment,
+            self.popularity_tail_cut,
+            self.popularity_head_cut,
+        ) = popularity_segments(
+            self.ratings_count,
+            self.config.popularity_tail_quantile,
+            self.config.popularity_head_quantile,
+        )
 
     # -- assembly ---------------------------------------------------------- #
     def _candidate_rows(self, cluster_ids: Sequence[int], exclude: set[str]) -> np.ndarray:
-        """Gated, not-yet-read book rows belonging to the given fine clusters."""
+        """Technically eligible, not-yet-read rows in the given fine clusters."""
         in_clusters = np.isin(self.book_cluster, np.asarray(cluster_ids))
-        keep = in_clusters & self.gate_mask
+        keep = in_clusters & self.eligible_mask
         rows = np.nonzero(keep)[0]
         if exclude:
             rows = np.array([r for r in rows if self.book_ids[r] not in exclude], dtype=np.int64)
@@ -236,6 +286,7 @@ class Recommender:
             "macro_cluster": int(self.macro_of_cluster[self.book_cluster[row]]),
             "genres": "|".join(active),
             "ratings_count": int(self.ratings_count[row]),
+            "popularity_segment": str(self.popularity_segment[row]),
             "num_pages": float(self.num_pages[row]) if np.isfinite(self.num_pages[row]) else np.nan,
         }
 
@@ -256,27 +307,48 @@ class Recommender:
         rows = self._candidate_rows(near, exclude)
 
         records: list[dict] = []
+        interest_order: list[int] = []
+        best_relevance = 0.0
         if len(rows):
-            # SCORE: pure interest cosine in taste subspace (A1); no popularity (A2).
+            # SCORE: interest cosine in taste subspace; popularity does not order or filter.
             relevance = self.book_taste_norm[rows] @ user_taste_norm
-            # DIVERSIFY: MMR to fill the interest slots.
+            best_relevance = float(relevance.max())
+            # Select a full interest list first; exploration replaces only available slots.
+            interest_order = mmr_select(
+                self.book_taste_norm[rows], relevance, cfg.k, cfg.mmr_lambda
+            )
             n_interest = max(cfg.k - cfg.explore_slots, 0)
-            order = mmr_select(self.book_taste_norm[rows], relevance, n_interest, cfg.mmr_lambda)
-            records = [self._explain(int(rows[i]), "interest") for i in order]
+            records = [self._explain(int(rows[i]), "interest") for i in interest_order[:n_interest]]
 
         # EXPLORE (A3): fill remaining slots from a macro the user does not occupy.
         occupied = {int(self.macro_of_cluster[c]) for c in near}
-        explore_macro = pick_exploration_macro(
-            occupied, self.macro_centroids_taste_norm, user_taste_norm
-        )
         already = {r["book_id"] for r in records} | exclude
-        if explore_macro is not None and len(records) < cfg.k:
-            clusters_in_macro = np.nonzero(self.macro_of_cluster == explore_macro)[0]
-            erows = self._candidate_rows(clusters_in_macro, already)
+        if len(occupied) < self.n_macro and len(records) < cfg.k:
+            exploration_clusters = np.nonzero(
+                ~np.isin(self.macro_of_cluster, np.asarray(sorted(occupied)))
+            )[0]
+            erows = self._candidate_rows(exploration_clusters, already)
             if len(erows):
                 erel = self.book_taste_norm[erows] @ user_taste_norm
-                etop = erows[np.argsort(-erel)[: cfg.k - len(records)]]
+                etop = select_exploration_rows(
+                    erows,
+                    erel,
+                    self.popularity_segment,
+                    cfg.k - len(records),
+                    best_relevance,
+                    cfg.explore_min_relevance_ratio,
+                )
                 records += [self._explain(int(r), "exploration") for r in etop]
+
+        # If exploration cannot meet the relevance floor, preserve a complete top-k.
+        already = {r["book_id"] for r in records} | exclude
+        for i in interest_order:
+            row = int(rows[i])
+            if len(records) >= cfg.k:
+                break
+            if self.book_ids[row] not in already:
+                records.append(self._explain(row, "interest"))
+                already.add(self.book_ids[row])
 
         out = pd.DataFrame(records)
         out.insert(0, "user_id", user_id)
@@ -286,12 +358,12 @@ class Recommender:
     def recommend_cold_start(self, user_id: str) -> pd.DataFrame:
         """A4: one **accessible** book per macro-cluster — diversity sampler, no popularity.
 
-        Accessibility is the shortest gated book above ``min_pages_accessible`` in each macro
+        Accessibility is the shortest eligible book above ``min_pages_accessible`` in each macro
         (a deliberately thin proxy; see Cubo B). Popularity never orders the list.
         """
         cfg = self.config
         records: list[dict] = []
-        for macro in range(self.macro_centroids_taste_norm.shape[0]):
+        for macro in range(self.n_macro):
             clusters_in_macro = np.nonzero(self.macro_of_cluster == macro)[0]
             rows = self._candidate_rows(clusters_in_macro, set())
             if not len(rows):
@@ -356,8 +428,10 @@ def main() -> None:
     print(f"Loaded {len(rec.book_ids):,} books, {len(rec.user_ids):,} users.")
     print(f"A1 taste subspace: {len(rec.taste_idx)}/{len(rec.pc_cols)} pcs "
           f"(dropped pc_{list(rec.config.tabular_pcs)}).")
-    print(f"A2 quality gate keeps {int(rec.gate_mask.sum()):,}/{len(rec.book_ids):,} books "
-          f"(ratings_count >= {rec.config.min_ratings_gate}).")
+    print(f"A2 technical eligibility keeps {int(rec.eligible_mask.sum()):,}/"
+          f"{len(rec.book_ids):,} books (ratings_count is not a filter).")
+    print(f"Popularity segments: tail <= {rec.popularity_tail_cut:.0f}, "
+          f"head >= {rec.popularity_head_cut:.0f} ratings.")
 
     # A small, honest sample: a few real users + one synthetic cold-start.
     sample_users = list(rec.user_ids[:4])

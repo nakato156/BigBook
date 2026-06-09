@@ -13,7 +13,7 @@ ni amplificar los libros ya populares.
 > multidimensional** (`pc_0..pc_172`), no sobre el género ni sobre la popularidad;
 > (2) la recomendación por similitud debe **complementarse con diversidad y progresión**
 > (macro-clusters, novelty, control cross-género) para no producir burbujas; y (3) la
-> popularidad entra solo como **señal secundaria** de calidad/confianza. Sin estas tres
+> popularidad se usa como **diagnóstico de exposición**, no como filtro ni score. Sin estas tres
 > condiciones, la similitud "pura" degenera en *más de lo mismo* y trabaja en contra del
 > objetivo de hábito.
 
@@ -65,7 +65,7 @@ argumento:
   popularidad como primer eje.
 
 **Conclusión del punto 2:** la similitud aporta valor **solo si el ranking prioriza la
-similitud de interés/semántica y trata la popularidad como secundaria** (regla de negocio
+similitud de interés/semántica y saca la popularidad del orden explícito** (regla de negocio
 *Avoiding Popularity Bias*). La similitud "tal cual sale de PCA" debe ponderarse o
 filtrarse, no usarse cruda.
 
@@ -113,13 +113,13 @@ control de género, novelty) sobre la base de similitud.
 
 - La geometría PCA tiene la **popularidad como primer eje** y lo semántico en la cola; una
   similitud cruda recomendaría "igual de popular / mismo idioma", no "del mismo gusto".
-  → Por eso el ranking prioriza interés/semántica y usa popularidad solo como señal
-  secundaria.
+  → Por eso el ranking prioriza interés/semántica y usa popularidad para segmentar y medir
+  exposición, no para ordenar.
 - La similitud pura produce **burbujas de filtro**, que en un producto de *hábito de
   lectura* son más dañinas que en uno de consumo puntual.
   → Por eso se complementa con diversidad (macro-clusters, control de género, novelty) y con
   progresión (sagas vía `series`, rampa de accesibilidad).
 
 En una frase: **la similitud es necesaria pero no suficiente**. Es el motor correcto para
-este dominio, siempre que se mida sobre el gusto multidimensional, se subordine la
-popularidad y se complemente con diversidad y progresión orientadas al hábito de lectura.
+este dominio, siempre que se mida sobre el gusto multidimensional, se saque la popularidad del
+orden explícito y se complemente con diversidad y progresión orientadas al hábito de lectura.

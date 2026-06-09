@@ -44,7 +44,7 @@ dimensiones (`pc_0..pc_172`) por `book_id`.
 ```text
 Recomendamos   X = libros del catálogo (vectores PCA) agrupados en clusters de gusto
 con base en    Y = historial de interacción + similitud en espacio PCA + clusters de libros
-                   (género = filtro/explicación/diversidad; popularidad = señal secundaria)
+                   (género = filtro/explicación/diversidad; popularidad = diagnóstico de exposición)
 para optimizar Z = lecturas empezadas y terminadas (proxy: is_read + rating positivo) que
                    sostienen el hábito (retención), evitando sesgo de popularidad y burbujas
 ```
@@ -73,7 +73,7 @@ para optimizar Z = lecturas empezadas y terminadas (proxy: is_read + rating posi
   lector mata el hábito. Se neutraliza con diversidad y progresión.
 
 **Conclusión:** la similitud es **necesaria pero no suficiente** — motor correcto siempre que se
-mida sobre el gusto, subordine la popularidad y se complemente con diversidad.
+mida sobre el gusto, saque la popularidad del orden explícito y se complemente con diversidad.
 
 ---
 
@@ -93,8 +93,8 @@ social, transacciones**. Metadata con nulos relevantes: `num_pages` (17.5%), `pu
 > **Nota de estado:** la representación de usuario ya está implementada en el mismo espacio PCA que
 > los libros. Los artefactos actuales son `user_matrix.parquet`, `user_meta.parquet` y
 > `user_centroids.parquet`, construidos desde el canonical global
-> `data/processed/interactions_curated.parquet`. El ranking final y la evaluación temporal aún son
-> la siguiente capa de trabajo.
+> `data/processed/interactions_curated.parquet`. El ranking v1 ya implementa retrieval, score de
+> interés, MMR, exploración controlada y cold-start; la evaluación temporal sigue pendiente.
 
 ---
 
@@ -160,21 +160,21 @@ de la descripción, idioma casi constante, atributos fuera del master.
 del libro. "Más cercano" = afinidad de tono/temática/accesibilidad, no de género. Se usa coseno
 (dirección del gusto) y no euclidiana cruda (que reintroduce sesgo de popularidad por magnitud).
 
-**Score (jerárquico, no suma plana):**
+**Ranking operativo v1:**
 
 ```text
-score(u,b) = similitud_interés(u,b)         ← PRIMARIO (coseno PCA)
-           · calidad/popularidad atenuada    ← SECUNDARIO (confianza)
-           · hábito/accesibilidad             ← centroid_weight + sesgo pro-hábito
-           − redundancia (MMR)                ← diversidad
-           + descubrimiento (novelty)         ← anti-burbuja controlado
+elegible(b) = id/título/vector PCA/cluster válidos
+score(u,b)  = similitud_interés(u,b)         ← coseno en subespacio de gusto
+lista_base  = MMR(score, redundancia)
+exploración = fuera de vecindad + ≥75% de la mejor similitud
+              + prioridad tail → mid → head
 ```
 
-Regla de oro: **interés primero**; popularidad solo desempata, **nunca** supera a un libro más
-afín.
+Regla de oro: **interés primero**. Popularidad no filtra ni ordena: segmenta el catálogo para
+medir y controlar exposición. Con los datos actuales, `tail <= 436` y `head >= 6,017` ratings.
 
 **Arquitectura del ranking:** `retrieve` (candidatos por cluster/macro-cluster cercano) → `score`
-→ `diversify` (MMR + género/macro-cluster) → `explain` (por vecindad/género). Escalable,
+→ `diversify` (MMR + slots relevantes de cola/media) → `explain` (por vecindad/género). Escalable,
 explicable y **evaluable** con `Recall@k`/`NDCG@k`/`MAP` (relevancia), `Coverage`/`Novelty`/
 `Diversity` (anti-popularidad) y proxies de hábito, con **split temporal** sobre `is_read`.
 
@@ -205,14 +205,15 @@ cambia; cambia la *fuerza de la evidencia*):
 > métrica de hábito.
 
 **Criterio de validez:** el sistema es válido si (1) **supera a la base de popularidad** en
-`Recall@k`/`NDCG@k`, (2) **sin colapsar la diversidad** (`Coverage`/`Novelty`/`Diversity`), y (3)
+`Recall@k`/`NDCG@k`, (2) mejora o conserva `Coverage`, `Long-tail Coverage`, `Novelty` y
+`Diversity`, y (3)
 **correlaciona con mejores proxies de hábito**. Si gana ranking pero mata la diversidad o no se
 asocia a más lectura completada, **no** se considera válido para el objetivo de hábito.
 
 **Límite explícito:** el impacto causal real sobre la retención requiere **telemetría de producto
 en vivo** (sesiones, retornos, libros terminados tras una recomendación), fuera del alcance del
 dataset estático. Esta evaluación es el **plan de validación**, no un resultado ya medido; los
-artefactos de perfil existen, pero falta ejecutar la capa final de ranking y evaluación.
+ranking y artefactos de perfil existen, pero falta ejecutar la evaluación temporal.
 
 ---
 
@@ -228,10 +229,10 @@ Justificación  →  la similitud sirve, si se mide sobre el gusto y se diversif
 Información     →  tenemos contenido + feedback de lectura; no telemetría ni social
 Perfil usuario  →  user_matrix + user_centroids: gusto PCA inferido de consumo positivo
 Representación   →  vector PCA híbrido por libro (texto + metadata + popularidad atenuada)
-Scoring          →  coseno (interés) primero; calidad/hábito/accesibilidad/diversidad subordinadas
+Scoring          →  coseno + MMR; exploración relevante prioriza tail/mid, sin gate de popularidad
 Evaluación       →  válido si predice lo que se lee DESPUÉS (split temporal) y se asocia a
                     mejores proxies de hábito (correlacional, no causal — A/B queda fuera de alcance)
 ```
 
 Todo en un **espacio común PCA** donde usuario y libros son comparables, el género es señal y no
-unidad, y la popularidad es confianza y no objetivo.
+unidad, y la popularidad es una medida de exposición, no un factor explícito de orden.

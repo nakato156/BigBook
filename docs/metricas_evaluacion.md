@@ -85,9 +85,10 @@ retener el futuro**. Medir si el recomendador habría mostrado los libros que el
 **realmente leyó después** (`is_read = True`, idealmente con rating alto):
 
 - **Relevancia del ranking:** `Recall@k`, `Precision@k`, `NDCG@k`, `MAP`.
-- **Anti-popularidad / descubrimiento:** `Coverage`, `Novelty`, **Diversity** intra-lista — para
-  confirmar que el modelo **no** se limita a amplificar bestsellers (hace cumplir la regla de
-  sesgo de popularidad).
+- **Anti-popularidad / descubrimiento:** `Coverage`, `Long-tail Coverage`, `Novelty`,
+  **Diversity**, mix `tail/mid/head` y `Average Recommendation Popularity`.
+- **Slots exploratorios:** relevancia y tasa de acierto de `slot=exploration` separadas de
+  `slot=interest`, para verificar que la exposición adicional no sea irrelevante.
 
 > El **split temporal** mejora la *honestidad predictiva* de la métrica de relevancia: la pregunta
 > deja de ser *"¿acertó lo que ya leyó?"* y pasa a ser *"¿lo que recomienda coincide con lo que el
@@ -97,10 +98,10 @@ retener el futuro**. Medir si el recomendador habría mostrado los libros que el
 
 ### Capa 2 (N1) — Evaluación por proxy de hábito *(correlacional, hoy)*
 
-Comparar el recomendador por **similitud de interés** contra una **línea base de popularidad** y
-verificar si los lectores expuestos a recomendaciones por vecindad muestran mayor
-`completion_rate`, `reading_frequency` y `reading_breadth` (`category_count`). En entorno offline
-esto es **correlacional, no causal**.
+Comparar, sobre los mismos usuarios históricos, la calidad predictiva del recomendador y sus
+proxies de hábito con una **línea base de popularidad**. Offline no hay usuarios realmente
+expuestos al sistema: solo puede estudiarse asociación entre perfiles, predicciones y
+`completion_rate`, `reading_frequency` o `reading_breadth`. Esto es correlacional, no causal.
 
 ### Capa 3 (N2) — Telemetría de producto *(causal, futuro)*
 
@@ -117,8 +118,8 @@ El recomendador se considera **válido** si, en evaluación offline con split te
 
 1. **Supera a la línea base de popularidad** en `Recall@k` / `NDCG@k` (predice mejor lo que el
    lector leyó después que recomendar solo bestsellers).
-2. **No lo logra a costa de la diversidad**: mantiene `Coverage`/`Novelty`/`Diversity` por encima
-   de la base de popularidad (no es una burbuja ni un amplificador de bestsellers).
+2. **No lo logra a costa del descubrimiento**: mejora o conserva `Coverage`, `Long-tail Coverage`,
+   `Novelty`, `Diversity` y el mix de exposición frente a la base de popularidad.
 3. **Correlaciona con mejores proxies de hábito** (Capa 2): los grupos servidos por vecindad
    tienden a mayor `completion_rate` / `reading_frequency` / `reading_breadth`.
 
@@ -145,10 +146,9 @@ hábito, aunque sus números recsys "se vean bien".
 - `started_at` / `read_at` y `reading_duration_days` son **dispersos** según lo que cada usuario
   rellenó → las métricas de duración se reportan junto a `has_reading_duration_rate` para ser
   honestos con la cobertura.
-- La capa de perfil usuario↔libro ya tiene artefactos en el mismo espacio PCA (`user_matrix`,
-  `user_meta`, `user_centroids`). Lo que sigue pendiente es implementar y ejecutar la capa final
-  de retrieval → scoring → diversificación → evaluación temporal; por eso esta evaluación sigue
-  siendo el **plan de validación**, no un resultado ya medido.
+- La capa de perfil y el ranking ya están implementados. Lo pendiente es ejecutar el split
+  temporal, los baselines y las métricas de exposición; esto sigue siendo un **plan de
+  validación**, no un resultado ya medido.
 
 ---
 

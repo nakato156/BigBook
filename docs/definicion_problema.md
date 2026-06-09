@@ -21,7 +21,7 @@ La misma idea en forma `X / Y / Z`:
 Recomendamos  X = libros del catálogo, como vectores PCA, agrupados en clusters de gusto
 con base en   Y = el historial de interacción del usuario + similitud en el espacio PCA +
                   clusters de libros (género como filtro/explicación/diversidad; popularidad
-                  como señal secundaria)
+                  como diagnóstico de exposición)
 para optimizar Z = lecturas relevantes empezadas y terminadas (proxy: is_read + rating positivo)
                   que sostienen el hábito de lectura (retención), evitando el sesgo de
                   popularidad y las burbujas de un solo género.

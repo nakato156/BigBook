@@ -67,7 +67,7 @@ Sobrescribe `docs/informe_diseno_recomendador.md` con esta estructura exacta:
   - `user_centroids` (build): mismos positivos; varios sub-centroides por usuario cuando hay
     historial suficiente; `centroid_weight` resume compromiso con rating, review y duración.
   - Género = señal/filtro/diversidad, **no** la unidad del modelo.
-  - Popularidad = señal **secundaria** de calidad/confianza, no el objetivo.
+  - Popularidad = diagnóstico de exposición (`tail/mid/head`), no gate ni factor de ranking.
 
 ## Disciplina de causalidad (CRÍTICO)
 

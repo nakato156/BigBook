@@ -105,7 +105,7 @@ B2 Popularidad/género→ rival realista       (ganar aquí justifica el gusto c
 recomendador es válido si
 
 1. `Recall@k` / `NDCG@k` (modelo) **>** los de **B1** (y de B2), y
-2. `Coverage` / `Novelty` / `Diversity` (modelo) **≥** los de **B1**
+2. `Coverage` / `Long-tail Coverage` / `Novelty` / `Diversity` (modelo) **≥** los de **B1**
    (B1 fija el piso de diversidad que **no** se debe empeorar — y dado lo malo que es B1 ahí, el
    modelo debería superarlo con claridad), y
 3. el modelo se asocia a mejores **proxies de hábito** (Capa 2: `completion_rate`,
@@ -130,14 +130,15 @@ Para que la comparación sea justa, baselines y recomendador corren bajo el **mi
   leyendo?").
 - **Tarea:** cada sistema produce un top-`k` por usuario (`k ∈ {5, 10, 20}`), **excluyendo** lo ya
   leído en entrenamiento.
-- **Métricas:** relevancia (`Recall@k`, `Precision@k`, `NDCG@k`, `MAP`) + anti-popularidad
-  (`Coverage`, `Novelty`, intra-list `Diversity`), reportadas **lado a lado** modelo vs. B0/B1/B2.
+- **Métricas:** relevancia (`Recall@k`, `Precision@k`, `NDCG@k`, `MAP`) + exposición
+  (`Coverage`, `Long-tail Coverage`, `Novelty`, `Diversity`, mix `tail/mid/head` y
+  `Average Recommendation Popularity`), reportadas lado a lado.
 
 > Nota de implementación: los tres baselines son baratos y deterministas (B0 con semilla fija
 > `RANDOM_STATE = 42` por consistencia con el clustering). Conviene implementarlos en el **mismo
 > script de evaluación** que el modelo, para garantizar split, `k` y conjunto de usuarios idénticos.
-> A día de hoy es **plan de validación**, no resultado medido (la capa de ranking/evaluación
-> temporal es el trabajo pendiente declarado en los docs).
+> A día de hoy es **plan de validación**, no resultado medido: el ranking existe, pero el runner
+> temporal común para modelo y baselines sigue pendiente.
 
 ---
 
