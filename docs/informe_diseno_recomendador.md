@@ -93,8 +93,9 @@ social, transacciones**. Metadata con nulos relevantes: `num_pages` (17.5%), `pu
 > **Nota de estado:** la representación de usuario ya está implementada en el mismo espacio PCA que
 > los libros. Los artefactos actuales son `user_matrix.parquet`, `user_meta.parquet` y
 > `user_centroids.parquet`, construidos desde el canonical global
-> `data/processed/interactions_curated.parquet`. El ranking v1 ya implementa retrieval, score de
-> interés, MMR, exploración controlada y cold-start; la evaluación temporal sigue pendiente.
+> `data/processed/interactions_curated.parquet`. El ranking v1 implementa multi-centroides,
+> exclusión de consumidos, MMR, exploración y cold-start escalonado. El runner temporal B0/B1/B2
+> está implementado; falta ejecutar y reportar resultados.
 
 ---
 
@@ -212,8 +213,8 @@ asocia a más lectura completada, **no** se considera válido para el objetivo d
 
 **Límite explícito:** el impacto causal real sobre la retención requiere **telemetría de producto
 en vivo** (sesiones, retornos, libros terminados tras una recomendación), fuera del alcance del
-dataset estático. Esta evaluación es el **plan de validación**, no un resultado ya medido; los
-ranking y artefactos de perfil existen, pero falta ejecutar la evaluación temporal.
+dataset estático. El runner offline existe, pero sus resultados aún no se han ejecutado ni
+reportado como evidencia del proyecto.
 
 ---
 

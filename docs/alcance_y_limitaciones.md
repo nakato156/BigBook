@@ -97,7 +97,7 @@ exposición de cola/media sin una caída inaceptable de relevancia.
 | A3 exploración con piso de relevancia | Implementado en `select_exploration_rows` |
 | Fallback a interés si explorar degrada demasiado | Implementado |
 | A4 cold start diverso y sin orden de popularidad | Implementado |
-| Evaluación temporal N0 y métricas P2/P3 | Pendiente |
+| Evaluación temporal N0 y baselines B0/B1/B2 | Implementada; resultados pendientes de ejecutar/reportar |
 | Item cold start y exploración adaptativa | Fuera de v1 |
 
 La siguiente deuda no es volver a diseñar el gate, sino ejecutar la evaluación temporal y comprobar

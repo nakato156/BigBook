@@ -38,8 +38,8 @@ libros: qué leyó (`is_read`), calificó (`rating`) y reseñó (`has_review_tex
 - **No** se modela como una etiqueta de género. El usuario es un **vector de gusto
   multidimensional** construido agregando los vectores PCA de los libros con los que interactuó
   positivamente.
-- Un usuario nuevo sin historial (cold-start) se representa con libros/géneros semilla elegidos al
-  registrarse, o con una mezcla inicial de popularidad moderada + diversidad.
+- Un usuario nuevo sin historial (cold-start) se representa con libros semilla elegidos al
+  registrarse; sin semillas, recibe una muestra accesible y diversa por macro-cluster.
 
 *(Detalle en [perfil_usuario.md](perfil_usuario.md).)*
 

@@ -44,6 +44,7 @@ from src.config import (
     BOOKS_MASTER_PATH,
     MASTER_FEATURE_MATRIX_PATH,
     PROJECT_ROOT,
+    USER_CENTROIDS_PATH,
     USER_MATRIX_PATH,
     USER_META_PATH,
 )
@@ -76,6 +77,8 @@ class RankingConfig:
     n_clusters_retrieve: int = 5
     # A4: accessibility floor so the cold-start sampler does not surface pamphlets.
     min_pages_accessible: int = 50
+    # Users with 1-2 positives keep their profile, shrunk toward the nearest catalog cluster.
+    sparse_profile_weight: float = 0.5
 
 
 # --------------------------------------------------------------------------- #
@@ -229,7 +232,10 @@ class Recommender:
     macro_of_cluster: np.ndarray    # (n_clusters,) int macro id
     user_ids: np.ndarray            # (n_users,) str (user_matrix order)
     user_pc: np.ndarray             # (n_users, n_pc) float
-    cold_start_users: set[str]      # is_cold_start == True (from user_meta)
+    positive_count_by_user: dict[str, int]
+    centroid_user_ids: np.ndarray
+    user_centroid_pc: np.ndarray
+    user_centroid_weight: np.ndarray
     pc_cols: list[str]
     config: RankingConfig = field(default_factory=RankingConfig)
 
@@ -242,6 +248,15 @@ class Recommender:
         self.n_macro = int(self.macro_of_cluster.max()) + 1
         self._book_row = {bid: i for i, bid in enumerate(self.book_ids)}
         self._user_row = {uid: i for i, uid in enumerate(self.user_ids)}
+        self._centroid_rows: dict[str, np.ndarray] = {}
+        if len(self.centroid_user_ids):
+            centroid_frame = pd.DataFrame(
+                {"user_id": self.centroid_user_ids.astype(str), "row": np.arange(len(self.centroid_user_ids))}
+            )
+            self._centroid_rows = {
+                str(uid): group["row"].to_numpy(dtype=np.int64)
+                for uid, group in centroid_frame.groupby("user_id", sort=False)
+            }
         titles = self.genres.reindex(self.book_ids)["title"].to_numpy()
         self.eligible_mask = eligibility_mask(
             self.book_ids,
@@ -290,19 +305,121 @@ class Recommender:
             "num_pages": float(self.num_pages[row]) if np.isfinite(self.num_pages[row]) else np.nan,
         }
 
-    def recommend(self, user_id: str, exclude_book_ids: set[str] | None = None) -> pd.DataFrame:
-        """Top-k for one user. ``exclude_book_ids`` is the already-read set (eval-time;
-        building it via temporal split is out of scope here)."""
-        exclude = exclude_book_ids or set()
-        if user_id not in self._user_row or user_id in self.cold_start_users:
-            return self.recommend_cold_start(user_id)
+    def _profile_modes(self, user_id: str) -> tuple[np.ndarray, np.ndarray] | None:
+        """Return one or more taste modes for a known user."""
+        row = self._user_row.get(user_id)
+        if row is None:
+            return None
+        positive_count = self.positive_count_by_user.get(user_id, 0)
+        if positive_count < 3:
+            user_vec = self.user_pc[row].astype(np.float64)
+            taste = user_vec[self.taste_idx]
+            taste_norm = taste / (np.linalg.norm(taste) or 1.0)
+            nearest = nearest_clusters(taste_norm, self.centroids_taste_norm)[0]
+            shrunk = (
+                self.config.sparse_profile_weight * user_vec
+                + (1.0 - self.config.sparse_profile_weight) * self.centroids[nearest]
+            )
+            return shrunk[None, :], np.array([1.0], dtype=np.float64)
+
+        centroid_rows = self._centroid_rows.get(user_id)
+        if centroid_rows is not None and len(centroid_rows):
+            return (
+                self.user_centroid_pc[centroid_rows].astype(np.float64),
+                self.user_centroid_weight[centroid_rows].astype(np.float64),
+            )
+        return self.user_pc[row][None, :].astype(np.float64), np.array([1.0], dtype=np.float64)
+
+    def _seed_modes(self, seed_book_ids: Sequence[str]) -> tuple[np.ndarray, np.ndarray] | None:
+        rows = [self._book_row.get(str(book_id), -1) for book_id in seed_book_ids]
+        rows = [row for row in rows if row >= 0 and self.eligible_mask[row]]
+        if not rows:
+            return None
+        seed_vector = self.book_pc[np.asarray(rows)].mean(axis=0, keepdims=True)
+        return seed_vector.astype(np.float64), np.array([1.0], dtype=np.float64)
+
+    def modes_from_history(
+        self,
+        positive_book_ids: Sequence[str],
+        engagement_weights: np.ndarray | None = None,
+    ) -> tuple[np.ndarray, np.ndarray] | None:
+        """Build leakage-free user modes from positive books in a training window."""
+        mapped = np.asarray(
+            [self._book_row.get(str(book_id), -1) for book_id in positive_book_ids], dtype=np.int64
+        )
+        present = mapped >= 0
+        present[present] &= self.eligible_mask[mapped[present]]
+        rows = mapped[present]
+        if not len(rows):
+            return None
+        vecs = self.book_pc[rows].astype(np.float32)
+        if len(rows) < 3:
+            mean = vecs.mean(axis=0).astype(np.float64)
+            taste = mean[self.taste_idx]
+            taste_norm = taste / (np.linalg.norm(taste) or 1.0)
+            nearest = nearest_clusters(taste_norm, self.centroids_taste_norm)[0]
+            shrunk = (
+                self.config.sparse_profile_weight * mean
+                + (1.0 - self.config.sparse_profile_weight) * self.centroids[nearest]
+            )
+            return shrunk[None, :], np.array([1.0], dtype=np.float64)
+
+        from src.reduction.build_user_centroids import _user_centroids
+
+        weights = (
+            np.ones(len(rows), dtype=np.float32)
+            if engagement_weights is None
+            else np.asarray(engagement_weights, dtype=np.float32)[present]
+        )
+        modes, _, _, centroid_weight = _user_centroids(vecs, weights)
+        return modes.astype(np.float64), centroid_weight.astype(np.float64)
+
+    def recommend(
+        self,
+        user_id: str,
+        exclude_book_ids: set[str],
+        seed_book_ids: Sequence[str] = (),
+    ) -> pd.DataFrame:
+        """Top-k for one user; consumed books must be supplied and are always excluded."""
+        exclude = {str(book_id) for book_id in exclude_book_ids}
+        modes = self._profile_modes(user_id)
+        if modes is None:
+            modes = self._seed_modes(seed_book_ids)
+            if modes is not None:
+                exclude.update(str(book_id) for book_id in seed_book_ids)
+        if modes is None:
+            return self.recommend_cold_start(user_id, exclude)
+        return self.recommend_from_modes(user_id, modes[0], modes[1], exclude)
+
+    def recommend_from_profile(
+        self, user_id: str, user_pc: np.ndarray, exclude_book_ids: set[str]
+    ) -> pd.DataFrame:
+        """Recommend from an externally built profile, used by temporal evaluation."""
+        return self.recommend_from_modes(
+            user_id,
+            np.asarray(user_pc, dtype=np.float64).reshape(1, -1),
+            np.array([1.0], dtype=np.float64),
+            {str(book_id) for book_id in exclude_book_ids},
+        )
+
+    def recommend_from_modes(
+        self,
+        user_id: str,
+        modes_pc: np.ndarray,
+        mode_weights: np.ndarray,
+        exclude: set[str],
+    ) -> pd.DataFrame:
+        """Rank with one or more user taste modes in the shared PCA space."""
 
         cfg = self.config
-        user_taste = self.user_pc[self._user_row[user_id], self.taste_idx].astype(np.float64)
-        user_taste_norm = user_taste / (np.linalg.norm(user_taste) or 1.0)
+        modes_taste_norm = l2_normalize_rows(modes_pc[:, self.taste_idx].astype(np.float64))
+        weights = np.asarray(mode_weights, dtype=np.float64)
+        weights = weights / (weights.sum() or 1.0)
 
-        # RETRIEVE: nearest fine clusters (in taste subspace).
-        ranked_clusters = nearest_clusters(user_taste_norm, self.centroids_taste_norm)
+        # RETRIEVE: use the strongest weighted taste mode for each cluster.
+        cluster_mode_sim = modes_taste_norm @ self.centroids_taste_norm.T
+        cluster_relevance = (weights[:, None] * cluster_mode_sim).max(axis=0)
+        ranked_clusters = np.argsort(-cluster_relevance)
         near = ranked_clusters[: cfg.n_clusters_retrieve]
         rows = self._candidate_rows(near, exclude)
 
@@ -311,7 +428,8 @@ class Recommender:
         best_relevance = 0.0
         if len(rows):
             # SCORE: interest cosine in taste subspace; popularity does not order or filter.
-            relevance = self.book_taste_norm[rows] @ user_taste_norm
+            mode_sim = modes_taste_norm @ self.book_taste_norm[rows].T
+            relevance = (weights[:, None] * mode_sim).max(axis=0)
             best_relevance = float(relevance.max())
             # Select a full interest list first; exploration replaces only available slots.
             interest_order = mmr_select(
@@ -323,13 +441,14 @@ class Recommender:
         # EXPLORE (A3): fill remaining slots from a macro the user does not occupy.
         occupied = {int(self.macro_of_cluster[c]) for c in near}
         already = {r["book_id"] for r in records} | exclude
-        if len(occupied) < self.n_macro and len(records) < cfg.k:
+        if cfg.explore_slots > 0 and len(occupied) < self.n_macro and len(records) < cfg.k:
             exploration_clusters = np.nonzero(
                 ~np.isin(self.macro_of_cluster, np.asarray(sorted(occupied)))
             )[0]
             erows = self._candidate_rows(exploration_clusters, already)
             if len(erows):
-                erel = self.book_taste_norm[erows] @ user_taste_norm
+                mode_sim = modes_taste_norm @ self.book_taste_norm[erows].T
+                erel = (weights[:, None] * mode_sim).max(axis=0)
                 etop = select_exploration_rows(
                     erows,
                     erel,
@@ -355,17 +474,18 @@ class Recommender:
         out.insert(1, "rank", range(1, len(out) + 1))
         return out
 
-    def recommend_cold_start(self, user_id: str) -> pd.DataFrame:
+    def recommend_cold_start(self, user_id: str, exclude_book_ids: set[str]) -> pd.DataFrame:
         """A4: one **accessible** book per macro-cluster — diversity sampler, no popularity.
 
         Accessibility is the shortest eligible book above ``min_pages_accessible`` in each macro
         (a deliberately thin proxy; see Cubo B). Popularity never orders the list.
         """
         cfg = self.config
+        exclude = {str(book_id) for book_id in exclude_book_ids}
         records: list[dict] = []
         for macro in range(self.n_macro):
             clusters_in_macro = np.nonzero(self.macro_of_cluster == macro)[0]
-            rows = self._candidate_rows(clusters_in_macro, set())
+            rows = self._candidate_rows(clusters_in_macro, exclude)
             if not len(rows):
                 continue
             pages = self.num_pages[rows]
@@ -402,8 +522,12 @@ class Recommender:
 
         um = pd.read_parquet(USER_MATRIX_PATH)
         um["user_id"] = um["user_id"].astype(str)
-        meta = pd.read_parquet(USER_META_PATH, columns=["user_id", "is_cold_start"])
-        cold = set(meta.loc[meta["is_cold_start"], "user_id"].astype(str))
+        meta = pd.read_parquet(USER_META_PATH, columns=["user_id", "positive_count"])
+        positive_count_by_user = dict(
+            zip(meta["user_id"].astype(str), meta["positive_count"].astype(int), strict=False)
+        )
+        uc = pd.read_parquet(USER_CENTROIDS_PATH)
+        uc["user_id"] = uc["user_id"].astype(str)
 
         genres = master.set_index("book_id")[["title", *GENRE_COLUMNS]]
         return cls(
@@ -417,7 +541,10 @@ class Recommender:
             macro_of_cluster=macro_of_cluster.astype(np.int64),
             user_ids=um["user_id"].to_numpy().astype(str),
             user_pc=um[pc_cols].to_numpy(dtype=np.float32),
-            cold_start_users=cold,
+            positive_count_by_user=positive_count_by_user,
+            centroid_user_ids=uc["user_id"].to_numpy().astype(str),
+            user_centroid_pc=uc[pc_cols].to_numpy(dtype=np.float32),
+            user_centroid_weight=uc["centroid_weight"].to_numpy(dtype=np.float32),
             pc_cols=pc_cols,
             config=config,
         )
@@ -435,8 +562,8 @@ def main() -> None:
 
     # A small, honest sample: a few real users + one synthetic cold-start.
     sample_users = list(rec.user_ids[:4])
-    frames = [rec.recommend(uid) for uid in sample_users]
-    frames.append(rec.recommend_cold_start("__cold_start_demo__"))
+    frames = [rec.recommend(uid, set()) for uid in sample_users]
+    frames.append(rec.recommend_cold_start("__cold_start_demo__", set()))
     out = pd.concat(frames, ignore_index=True)
 
     RECS_SAMPLE_PATH.parent.mkdir(parents=True, exist_ok=True)

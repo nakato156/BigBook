@@ -26,14 +26,14 @@ los libros que el usuario leyó y valoró positivamente* — no "es del mismo g�
 sim(u, b) = cos(θ) = (vec_gusto(u) · pca(b)) / (||vec_gusto(u)|| · ||pca(b)||)
 ```
 
-Con `user_centroids`, la similitud de interés puede evaluarse por modo de lectura y agregarse con
-el peso de compromiso del modo:
+Con `user_centroids`, la similitud de interés se evalúa por modo de lectura y se agrega con el
+peso de compromiso del modo:
 
 ```text
 sim_interés(u,b) = max_c [ centroid_weight(u,c) · cos(centroide(u,c), pca(b)) ]
 ```
 
-El baseline `user_matrix` es el caso simple con un solo vector y peso 1.
+El ranker usa esos multi-centroides cuando existen; `user_matrix` es el fallback de un solo vector.
 
 Por qué coseno y no euclidiana cruda:
 

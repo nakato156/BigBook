@@ -6,9 +6,16 @@ gate/score), C3→A3 (relevant tail/mid exploration), C4→A4 (cold-start has no
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 import pandas as pd
 
+from src.reduction.evaluate_recommender import (
+    baseline_recommendations,
+    evaluate_temporal,
+    temporal_split,
+)
 from src.reduction.recommend import (
     RankingConfig,
     Recommender,
@@ -78,6 +85,8 @@ def test_mmr_prefers_relevance_then_diversifies() -> None:
 # --------------------------------------------------------------------------- #
 def _toy_recommender(config: RankingConfig) -> Recommender:
     n_pc = 4  # pc_0 = popularity axis (tabular), pc_1..pc_3 = taste
+    if config.tabular_pcs == (0, 1, 2, 3, 4, 5):
+        config = replace(config, tabular_pcs=(0,))
     pc_cols = [f"pc_{i}" for i in range(n_pc)]
     book_ids = np.array([f"b{i}" for i in range(8)])
 
@@ -131,7 +140,10 @@ def _toy_recommender(config: RankingConfig) -> Recommender:
         macro_of_cluster=macro_of_cluster,
         user_ids=user_ids,
         user_pc=user_pc,
-        cold_start_users=set(),
+        positive_count_by_user={"u_taste_A": 3},
+        centroid_user_ids=np.array([], dtype=str),
+        user_centroid_pc=np.empty((0, n_pc), dtype=np.float32),
+        user_centroid_weight=np.array([], dtype=np.float32),
         pc_cols=pc_cols,
         config=config,
     )
@@ -141,7 +153,7 @@ def test_a2_popularity_never_orders_the_interest_slots() -> None:
     # k=3, no exploration, so we see only interest-scored books.
     rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2,
                                          mmr_lambda=0.8))
-    out = rec.recommend("u_taste_A")
+    out = rec.recommend("u_taste_A", set())
     # The user "inherited" a huge pc_0, yet the popular b0 must NOT outrank the niche b1/b2
     # purely by popularity: b0 and b1 share taste, so popularity cannot be the tiebreaker.
     top = out[out["slot"] == "interest"].iloc[0]
@@ -157,7 +169,7 @@ def test_a2_popularity_never_orders_the_interest_slots() -> None:
 def test_a3_recommendation_includes_exploration_from_unoccupied_macro() -> None:
     rec = _toy_recommender(RankingConfig(k=4, explore_slots=2, n_clusters_retrieve=2,
                                          explore_min_relevance_ratio=0.0))
-    out = rec.recommend("u_taste_A")
+    out = rec.recommend("u_taste_A", set())
     explore = out[out["slot"] == "exploration"]
     assert len(explore) >= 1
     # User occupies macro 0 (taste A). Exploration must come from a macro he does not occupy.
@@ -167,7 +179,7 @@ def test_a3_recommendation_includes_exploration_from_unoccupied_macro() -> None:
 
 def test_a4_cold_start_has_no_popularity_and_spans_macros() -> None:
     rec = _toy_recommender(RankingConfig(min_pages_accessible=50))
-    out = rec.recommend_cold_start("new_user")
+    out = rec.recommend_cold_start("new_user", set())
     assert (out["slot"] == "cold_start").all()
     # One book per macro-cluster present in the catalog (diversity, not a bestseller list).
     assert set(out["macro_cluster"]) == {0, 1, 2}
@@ -178,6 +190,114 @@ def test_a4_cold_start_has_no_popularity_and_spans_macros() -> None:
 
 def test_cold_start_user_routed_to_cold_path() -> None:
     rec = _toy_recommender(RankingConfig())
-    rec.cold_start_users = {"u_taste_A"}  # force the route
-    out = rec.recommend("u_taste_A")
+    rec.positive_count_by_user["u_taste_A"] = 0
+    del rec._user_row["u_taste_A"]
+    out = rec.recommend("u_taste_A", set())
     assert (out["slot"] == "cold_start").all()
+
+
+def test_consumed_books_are_excluded_from_profile_and_cold_start() -> None:
+    rec = _toy_recommender(RankingConfig(k=4, explore_slots=0, n_clusters_retrieve=5))
+    out = rec.recommend("u_taste_A", {"b0", "b1"})
+    assert not {"b0", "b1"}.intersection(out["book_id"])
+
+    cold = rec.recommend("new_user", {"b1", "b4", "b6"})
+    assert not {"b1", "b4", "b6"}.intersection(cold["book_id"])
+
+
+def test_seed_books_build_a_cold_start_profile() -> None:
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2))
+    out = rec.recommend("new_user", set(), seed_book_ids=["b5", "b6"])
+    assert (out["slot"] == "interest").all()
+    assert not {"b5", "b6"}.intersection(out["book_id"])
+    assert set(out["fine_cluster"]).issubset({3, 4})
+
+
+def test_sparse_profile_uses_shrinkage_instead_of_global_fallback() -> None:
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2))
+    rec.positive_count_by_user["u_taste_A"] = 1
+    out = rec.recommend("u_taste_A", {"b0"})
+    assert (out["slot"] == "interest").all()
+    assert "b0" not in out["book_id"].tolist()
+
+
+def test_multi_centroid_modes_drive_ranking() -> None:
+    rec = _toy_recommender(RankingConfig(k=2, explore_slots=0, n_clusters_retrieve=2))
+    rec.centroid_user_ids = np.array(["u_taste_A", "u_taste_A"])
+    rec.user_centroid_pc = np.array(
+        [[0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], dtype=np.float32
+    )
+    rec.user_centroid_weight = np.array([0.1, 0.9], dtype=np.float32)
+    rec._centroid_rows = {"u_taste_A": np.array([0, 1], dtype=np.int64)}
+
+    out = rec.recommend("u_taste_A", set())
+    assert out.iloc[0]["book_id"] in {"b3", "b4"}
+
+
+def test_temporal_split_is_chronological_per_user() -> None:
+    interactions = pd.DataFrame(
+        {
+            "user_id": ["u", "u", "u"],
+            "book_id": ["late", "early", "future"],
+            "date_added": pd.to_datetime(["2020-02-01", "2020-01-01", "2020-03-01"]),
+        }
+    )
+    train, future = temporal_split(interactions, train_fraction=0.67)
+    assert train["book_id"].tolist() == ["early", "late"]
+    assert future["book_id"].tolist() == ["future"]
+
+
+def test_baselines_always_exclude_consumed_books() -> None:
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2))
+    baselines = baseline_recommendations(
+        rec,
+        average_rating=np.ones(len(rec.book_ids)),
+        consumed={"b0", "b1"},
+        train_genres=np.zeros(len(GENRES), dtype=int),
+        user_id="u",
+        k=3,
+    )
+    for recommended in baselines.values():
+        assert not {"b0", "b1"}.intersection(recommended)
+
+
+def test_temporal_evaluation_runs_model_and_three_baselines() -> None:
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=3))
+    interactions = pd.DataFrame(
+        [
+            ("u1", "b0", True, 5.0, False, np.nan, "2020-01-01"),
+            ("u1", "b1", True, 4.0, False, np.nan, "2020-01-02"),
+            ("u1", "b2", True, 5.0, False, np.nan, "2020-02-01"),
+            ("u2", "b3", True, 5.0, False, np.nan, "2020-01-01"),
+            ("u2", "b4", True, 4.0, False, np.nan, "2020-01-02"),
+            ("u2", "b5", True, 5.0, False, np.nan, "2020-02-01"),
+        ],
+        columns=[
+            "user_id",
+            "book_id",
+            "is_read",
+            "rating_clean",
+            "has_review_text",
+            "reading_duration_days",
+            "date_added",
+        ],
+    )
+    interactions["date_added"] = pd.to_datetime(interactions["date_added"])
+    summary, per_user = evaluate_temporal(
+        interactions, rec, average_rating=np.ones(len(rec.book_ids)), train_fraction=0.67
+    )
+    assert set(summary["system"]) == {
+        "model",
+        "B0_random",
+        "B1_popularity",
+        "B2_genre_popularity",
+    }
+    assert len(per_user) == 8
+    assert {
+        "recall",
+        "precision",
+        "ndcg",
+        "catalog_coverage",
+        "long_tail_coverage",
+        "novelty",
+    }.issubset(summary.columns)

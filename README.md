@@ -25,7 +25,7 @@ to optimize   Z = relevant readings started and finished (proxy: is_read + posit
 
 A reader identified by `user_id`, represented by their **interaction history** over books — what they read (`is_read`), rated (`rating_clean`) and reviewed (`has_review_text`) — as captured in the canonical `interactions_curated.parquet`. The implemented user-side artifacts are `user_matrix.parquet` (one PCA-space taste vector per user with positives), `user_meta.parquet` (behavior/confidence metadata) and `user_centroids.parquet` (multi-centroid taste modes for users with enough positive history).
 
-A user is **not** modeled as a single genre label. The user profile is a multidimensional taste vector built by aggregating the PCA vectors of the books they engaged with positively. A new user with no history (cold start) is represented by a few seed books/genres chosen at sign-up, or by a diverse accessible sample across macro-clusters.
+A user is **not** modeled as a single genre label. The user profile is a multidimensional taste vector built by aggregating the PCA vectors of the books they engaged with positively. Users with 1–2 positives use shrinkage toward their nearest catalog cluster; users with no history use optional seed books or a diverse accessible sample across macro-clusters.
 
 ### What is an item
 
@@ -150,7 +150,7 @@ Measuring true causal impact on retention requires instrumenting the live platfo
 - **`reading_frequency` divides by `active_span`**, so single-interaction users yield `active_span = 0` (division by zero). It needs a floor (e.g. clamp to 1 day, or drop `n = 1`) when computed.
 - **`completion_rate` offline is biased by what each user *logged* on Goodreads**, not by what they actually read; in a live product (N2) the signal is clean. The offline proxy is noisier than its telemetry version — same name, different quality.
 - `started_at` / `read_at` and `reading_duration_days` can be sparse depending on what each user filled in, so duration-based metrics rely on `has_reading_duration` / `has_reading_duration_rate` to stay honest about coverage.
-- The ranking layer now implements retrieval, interest scoring, MMR, controlled exploration and cold-start fallback. Temporal evaluation and business-metric validation remain pending.
+- The ranking layer implements retrieval, multi-centroid interest scoring, MMR, controlled exploration, mandatory consumed-book exclusions and staged cold start. The temporal evaluation runner and B0/B1/B2 baselines are implemented; measured results remain pending.
 
 ## Business Logic
 
@@ -325,6 +325,12 @@ Build multi-centroid user taste modes:
 
 ```bash
 env/bin/python -m src.reduction.build_user_centroids
+```
+
+Run temporal evaluation over a bounded user cohort:
+
+```bash
+env/bin/python -m src.reduction.evaluate_recommender --max-users 1000
 ```
 
 Run tests:

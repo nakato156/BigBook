@@ -108,8 +108,8 @@ Estrategia escalonada según cuánta evidencia hay:
 
 | Nivel de historial | Estrategia de perfil |
 |---|---|
-| **Sin historial (cold-start puro)** | Preferencias **explícitas** al registrarse: elegir géneros/libros semilla. El perfil = agregación de los vectores PCA de esos libros semilla. Si no elige nada → mezcla **popularidad moderada + diversidad** (un libro accesible por macro-cluster). |
-| **Historial mínimo (1–N interacciones, perfil ruidoso)** | Perfil híbrido: mezclar el vector individual con el **centroide del cluster/macro-cluster** más cercano (shrinkage hacia el grupo). Da estabilidad cuando hay pocos datos. |
+| **Sin historial (cold-start puro)** | Libros semilla opcionales: el perfil es la media de sus vectores PCA. Sin semillas → un libro accesible por macro-cluster, respetando exclusiones. |
+| **Historial mínimo (1–2 positivos)** | Perfil híbrido: 50% vector individual + 50% centroide del cluster más cercano. |
 | **Historial suficiente** | Perfil = vector de gusto agregado completo (sección 2). |
 
 Principios para cold-start (alineados con el negocio):
@@ -120,6 +120,8 @@ Principios para cold-start (alineados con el negocio):
   jerarquía de macro-clusters para ofrecer variedad accesible.
 - **Aprendizaje incremental:** cada `is_read`/`rating` nuevo actualiza el vector de gusto, así
   el cold-start se disuelve rápido con el uso.
+- **Exclusión obligatoria:** los libros ya consumidos se excluyen en perfiles normales, semillas,
+  shrinkage y fallback sin historial.
 
 ---
 

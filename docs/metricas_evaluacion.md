@@ -146,9 +146,9 @@ hábito, aunque sus números recsys "se vean bien".
 - `started_at` / `read_at` y `reading_duration_days` son **dispersos** según lo que cada usuario
   rellenó → las métricas de duración se reportan junto a `has_reading_duration_rate` para ser
   honestos con la cobertura.
-- La capa de perfil y el ranking ya están implementados. Lo pendiente es ejecutar el split
-  temporal, los baselines y las métricas de exposición; esto sigue siendo un **plan de
-  validación**, no un resultado ya medido.
+- La capa de perfil, ranking, split temporal, baselines B0/B1/B2 y métricas están implementados
+  en `src/reduction/evaluate_recommender.py`. Sigue pendiente ejecutar y reportar resultados sobre
+  la cohorte acordada; no son resultados ya medidos.
 
 ---
 

@@ -134,11 +134,9 @@ Para que la comparación sea justa, baselines y recomendador corren bajo el **mi
   (`Coverage`, `Long-tail Coverage`, `Novelty`, `Diversity`, mix `tail/mid/head` y
   `Average Recommendation Popularity`), reportadas lado a lado.
 
-> Nota de implementación: los tres baselines son baratos y deterministas (B0 con semilla fija
-> `RANDOM_STATE = 42` por consistencia con el clustering). Conviene implementarlos en el **mismo
-> script de evaluación** que el modelo, para garantizar split, `k` y conjunto de usuarios idénticos.
-> A día de hoy es **plan de validación**, no resultado medido: el ranking existe, pero el runner
-> temporal común para modelo y baselines sigue pendiente.
+> Nota de implementación: los tres baselines viven en
+> `src/reduction/evaluate_recommender.py` y comparten split, `k`, exclusiones y usuarios con el
+> modelo. B0 usa semilla determinista. La ejecución y publicación de resultados sigue pendiente.
 
 ---
 
