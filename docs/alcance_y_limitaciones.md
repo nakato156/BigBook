@@ -91,6 +91,9 @@ exposición de cola/media sin una caída inaceptable de relevancia.
 - Los segmentos de popularidad miden evidencia histórica, no calidad literaria.
 - La afinidad sigue dependiendo de una representación PCA híbrida con señal residual de
   popularidad.
+- La evaluación usa un snapshot histórico global para popularidad, disponibilidad y holdout, pero
+  conserva PCA, embeddings y clusters ajustados con el catálogo completo. Esta fuga transductiva
+  residual impide llamarla backtest estricto; reconstruir la geometría por corte queda fuera de v1.
 - El efecto causal sobre hábito requiere producto vivo y experimento A/B.
 
 ## 5. Estado de implementación
@@ -103,8 +106,9 @@ exposición de cola/media sin una caída inaceptable de relevancia.
 | A3 exploración con piso de relevancia | Implementado en `select_exploration_rows` |
 | Fallback a interés si explorar degrada demasiado | Implementado |
 | A4 cold start diverso y sin orden de popularidad | Implementado |
-| Evaluación temporal N0 y baselines B0/B1/B2 | Implementada sobre usuarios `valid`, `k = 5/10/20`, MAP, diversidad, exposición y métricas por slot; resultados pendientes de ejecutar/reportar |
+| Evaluación temporal N0 y baselines B0/B1/B2 | Implementada como `global_historical_snapshot_frozen_representation`: corte global, popularidad y catálogo históricos, holdout disponible, `k = 5/10/20`, MAP, diversidad, exposición y métricas por slot |
 | Item cold start y exploración adaptativa | Fuera de v1 |
 
-La siguiente deuda no es volver a diseñar el gate, sino ejecutar la evaluación temporal y comprobar
-si el nuevo mix de exposición mejora `Long-tail Coverage` y `Novelty` manteniendo relevancia.
+La siguiente deuda metodológica es un backtest estricto que reconstruya PCA y clustering por
+snapshot. En producto, también queda comprobar si el mix de exposición mejora
+`Long-tail Coverage` y `Novelty` manteniendo relevancia.

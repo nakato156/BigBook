@@ -14,8 +14,12 @@ import pandas as pd
 from src.reduction.evaluate_recommender import (
     _binary_metrics,
     baseline_recommendations,
+    choose_global_cutoff,
     collect_valid_user_ids,
     evaluate_temporal,
+    global_temporal_split,
+    historical_catalog_mask,
+    historical_popularity_snapshot,
     temporal_split,
 )
 from src.reduction.recommend import (
@@ -333,6 +337,118 @@ def test_temporal_split_is_chronological_per_user() -> None:
     assert future["book_id"].tolist() == ["future"]
 
 
+def test_global_temporal_split_uses_one_shared_cutoff() -> None:
+    interactions = pd.DataFrame(
+        {
+            "user_id": ["u1", "u1", "u2", "u2"],
+            "book_id": ["a", "b", "c", "d"],
+            "date_added": pd.to_datetime(
+                ["2020-01-01", "2020-03-01", "2020-02-01", "2020-04-01"],
+                utc=True,
+            ),
+        }
+    )
+    cutoff = pd.Timestamp("2020-02-15", tz="UTC")
+
+    train, future = global_temporal_split(interactions, cutoff)
+
+    assert set(train["book_id"]) == {"a", "c"}
+    assert set(future["book_id"]) == {"b", "d"}
+
+
+def test_global_temporal_split_discards_pre_goodreads_dates() -> None:
+    interactions = pd.DataFrame(
+        {
+            "user_id": ["u", "u", "u"],
+            "book_id": ["corrupt", "past", "future"],
+            "date_added": ["1012-01-01", "2020-01-01", "2020-03-01"],
+        }
+    )
+
+    train, future = global_temporal_split(
+        interactions,
+        pd.Timestamp("2020-02-01", tz="UTC"),
+    )
+
+    assert train["book_id"].tolist() == ["past"]
+    assert future["book_id"].tolist() == ["future"]
+
+
+def test_choose_global_cutoff_rejects_missing_dates() -> None:
+    interactions = pd.DataFrame({"date_added": [None, None]})
+
+    with np.testing.assert_raises(ValueError):
+        choose_global_cutoff(interactions, 0.8)
+
+
+def test_choose_global_cutoff_ignores_pre_goodreads_dates() -> None:
+    interactions = pd.DataFrame(
+        {"date_added": ["1012-01-01", "2020-01-01", "2020-03-01"]}
+    )
+
+    cutoff = choose_global_cutoff(interactions, 0.5)
+
+    assert cutoff == pd.Timestamp("2020-01-31", tz="UTC")
+
+
+def test_historical_popularity_snapshot_ignores_future_ratings(tmp_path) -> None:
+    path = tmp_path / "interactions.parquet"
+    pd.DataFrame(
+        {
+            "book_id": ["past", "past", "future_hit", "future_hit", "corrupt"],
+            "rating_clean": [4.0, 5.0, 5.0, 5.0, 5.0],
+            "date_added": pd.to_datetime(
+                ["2020-01-01", "2020-01-02", "2020-03-01", "2020-03-02", "2001-01-01"],
+                utc=True,
+            ),
+        }
+    ).to_parquet(path, index=False)
+
+    snapshot = historical_popularity_snapshot(
+        path,
+        np.array(["past", "future_hit", "corrupt"]),
+        pd.Timestamp("2020-02-01", tz="UTC"),
+        batch_size=2,
+    )
+
+    assert snapshot.rating_count.tolist() == [2.0, 0.0, 0.0]
+    assert snapshot.average_rating.tolist() == [4.5, 0.0, 0.0]
+    np.testing.assert_array_equal(
+        snapshot.first_observed[:2],
+        np.array(["2020-01-01", "2020-03-01"], dtype="datetime64[ns]"),
+    )
+    assert np.isnat(snapshot.first_observed[2])
+    assert snapshot.invalid_date_count == 1
+
+
+def test_historical_catalog_mask_uses_year_or_first_observation(tmp_path) -> None:
+    path = tmp_path / "books.parquet"
+    pd.DataFrame(
+        {
+            "book_id": ["past", "future", "unknown_seen", "unknown_future", "unknown_never"],
+            "publication_year": [2019.0, 2021.0, np.nan, np.nan, np.nan],
+        }
+    ).to_parquet(path, index=False)
+
+    mask = historical_catalog_mask(
+        path,
+        np.array(["past", "future", "unknown_seen", "unknown_future", "unknown_never"]),
+        pd.Timestamp("2020-06-01", tz="UTC"),
+        np.array(
+            [
+                "2020-01-01",
+                "2020-01-01",
+                "2020-02-01",
+                "2020-07-01",
+                "NaT",
+            ],
+            dtype="datetime64[ns]",
+        ),
+    )
+
+    assert mask.tolist() == [True, False, True, False, False]
+
+
 def test_binary_metrics_include_average_precision() -> None:
     metrics = _binary_metrics(["miss", "a", "b"], {"a", "b"}, k=3)
 
@@ -355,6 +471,7 @@ def test_baselines_always_exclude_consumed_books() -> None:
     rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2))
     baselines = baseline_recommendations(
         rec,
+        popularity_count=rec.ratings_count,
         average_rating=np.ones(len(rec.book_ids)),
         consumed={"b0", "b1"},
         train_genres=np.zeros(len(GENRES), dtype=int),
@@ -363,6 +480,23 @@ def test_baselines_always_exclude_consumed_books() -> None:
     )
     for recommended in baselines.values():
         assert not {"b0", "b1"}.intersection(recommended)
+
+
+def test_popularity_baselines_break_score_ties_by_book_id() -> None:
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0))
+
+    baselines = baseline_recommendations(
+        rec,
+        popularity_count=np.ones(len(rec.book_ids)),
+        average_rating=np.ones(len(rec.book_ids)),
+        consumed=set(),
+        train_genres=np.zeros(len(GENRES), dtype=int),
+        user_id="u",
+        k=3,
+    )
+
+    assert baselines["B1_popularity"] == ["b0", "b1", "b2"]
+    assert baselines["B2_genre_popularity"] == ["b0", "b1", "b2"]
 
 
 def test_temporal_evaluation_runs_model_and_three_baselines() -> None:
@@ -388,7 +522,11 @@ def test_temporal_evaluation_runs_model_and_three_baselines() -> None:
     )
     interactions["date_added"] = pd.to_datetime(interactions["date_added"])
     summary, per_user = evaluate_temporal(
-        interactions, rec, average_rating=np.ones(len(rec.book_ids)), train_fraction=0.67
+        interactions,
+        rec,
+        popularity_count=rec.ratings_count,
+        average_rating=np.ones(len(rec.book_ids)),
+        train_fraction=0.67,
     )
     assert set(summary["system"]) == {
         "model",
@@ -397,6 +535,9 @@ def test_temporal_evaluation_runs_model_and_three_baselines() -> None:
         "B2_genre_popularity",
     }
     assert len(per_user) == 8
+    assert set(summary["evaluation_mode"]) == {
+        "per_user_temporal_split_training_snapshot"
+    }
     assert {
         "recall",
         "precision",
@@ -409,6 +550,88 @@ def test_temporal_evaluation_runs_model_and_three_baselines() -> None:
         "interest_precision",
         "exploration_precision",
     }.issubset(summary.columns)
+
+
+def test_temporal_evaluation_filters_unavailable_holdout_and_reports_metadata() -> None:
+    rec = _toy_recommender(RankingConfig(k=8, explore_slots=0, n_clusters_retrieve=5))
+    interactions = pd.DataFrame(
+        [
+            ("u1", "b0", True, 5.0, False, np.nan, "2020-01-01"),
+            ("u1", "b1", True, 4.0, False, np.nan, "2020-01-02"),
+            ("u1", "b2", True, 5.0, False, np.nan, "2020-03-01"),
+            ("u1", "b3", True, 5.0, False, np.nan, "2020-03-02"),
+        ],
+        columns=[
+            "user_id",
+            "book_id",
+            "is_read",
+            "rating_clean",
+            "has_review_text",
+            "reading_duration_days",
+            "date_added",
+        ],
+    )
+    available = np.ones(len(rec.book_ids), dtype=bool)
+    available[rec._book_row["b2"]] = False
+
+    summary, per_user = evaluate_temporal(
+        interactions,
+        rec,
+        popularity_count=rec.ratings_count,
+        average_rating=np.ones(len(rec.book_ids)),
+        ks=[8],
+        temporal_cutoff=pd.Timestamp("2020-02-01", tz="UTC"),
+        catalog_available=available,
+        invalid_date_count=7,
+    )
+
+    assert set(per_user["relevant_count"]) == {1}
+    assert set(summary["temporal_cutoff"]) == {"2020-02-01T00:00:00+00:00"}
+    assert set(summary["evaluation_mode"]) == {
+        "global_historical_snapshot_frozen_representation"
+    }
+    assert set(summary["books_available"]) == {7}
+    assert set(summary["users_evaluable"]) == {1}
+    assert set(summary["invalid_dates_discarded"]) == {7}
+
+
+def test_temporal_evaluation_restores_recommender_state_after_failure(monkeypatch) -> None:
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0))
+    interactions = pd.DataFrame(
+        [
+            ("u1", "b0", True, 5.0, False, np.nan, "2020-01-01"),
+            ("u1", "b1", True, 4.0, False, np.nan, "2020-03-01"),
+        ],
+        columns=[
+            "user_id",
+            "book_id",
+            "is_read",
+            "rating_clean",
+            "has_review_text",
+            "reading_duration_days",
+            "date_added",
+        ],
+    )
+    original_mask = rec.eligible_mask
+    original_segments = rec.popularity_segment
+    original_counts = rec.ratings_count
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("forced failure")
+
+    monkeypatch.setattr(rec, "recommend_from_modes", fail)
+    with np.testing.assert_raises(RuntimeError):
+        evaluate_temporal(
+            interactions,
+            rec,
+            popularity_count=np.zeros(len(rec.book_ids)),
+            average_rating=np.zeros(len(rec.book_ids)),
+            temporal_cutoff=pd.Timestamp("2020-02-01", tz="UTC"),
+        )
+
+    assert rec.eligible_mask is original_mask
+    assert rec.popularity_segment is original_segments
+    assert rec.ratings_count is original_counts
 
 
 def test_temporal_evaluation_reports_each_requested_k() -> None:
@@ -439,6 +662,7 @@ def test_temporal_evaluation_reports_each_requested_k() -> None:
     summary, per_user = evaluate_temporal(
         interactions,
         rec,
+        popularity_count=rec.ratings_count,
         average_rating=np.ones(len(rec.book_ids)),
         train_fraction=0.67,
         ks=[1, 2],

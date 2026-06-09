@@ -130,10 +130,19 @@ Reading habit is **not a vague hypothesis** — it *is* the proxy set above. Wha
 The three layers below implement the ladder: **Layer 1 → N0**, **Layer 2 → N1**, **Layer 3 → N2**.
 
 **Layer 1 (N0) — Offline evaluation with a temporal split (doable today).**
-For each user, sort interactions by `date_added`, train on the past and hold out the future. Measure whether the recommender would have surfaced the books the reader **actually read later** (`is_read = True`, ideally with a high rating):
+Use one reproducible global cutoff over valid `date_added` values (on or after `2006-01-01`),
+train on interactions at or before that cutoff, and hold out the future. Measure whether the
+recommender would have surfaced the available books the reader **actually read later**
+(`is_read = True`, ideally with a high rating):
 
 - `Recall@k`, `Precision@k`, `NDCG@k`, `MAP` — relevance of the ranked list.
 - `Coverage`, `Novelty`, intra-list `Diversity` — to confirm the model is not just amplifying popular books (enforces the popularity-bias rule from the Business Logic section).
+
+The evaluation mode is `global_historical_snapshot_frozen_representation`. B1/B2, popularity
+segments, novelty and average recommendation popularity use only rating evidence available by the
+cutoff. Books with a known publication year must already be published; books without a year must
+have been observed by the cutoff. Unavailable holdout books are excluded from relevance
+denominators.
 
 The temporal split improves the *predictive honesty* of the relevance metric: the question shifts from "did it match past reads?" to "does what it recommends match what the reader keeps reading?". But this is **still relevance (N0), not habit** — hitting the next book is a necessary condition; whether the reader *reads more over time* is Layer 2 (N1). Do not mistake a temporal `Recall@k` for a habit metric.
 
@@ -150,6 +159,10 @@ Measuring true causal impact on retention requires instrumenting the live platfo
 - **`reading_frequency` divides by `active_span`**, so single-interaction users yield `active_span = 0` (division by zero). It needs a floor (e.g. clamp to 1 day, or drop `n = 1`) when computed.
 - **`completion_rate` offline is biased by what each user *logged* on Goodreads**, not by what they actually read; in a live product (N2) the signal is clean. The offline proxy is noisier than its telemetry version — same name, different quality.
 - `started_at` / `read_at` and `reading_duration_days` can be sparse depending on what each user filled in, so duration-based metrics rely on `has_reading_duration` / `has_reading_duration_rate` to stay honest about coverage.
+- **Residual transductive leakage.** PCA, description embeddings and clusters remain frozen from
+  the full catalog artifacts. The historical snapshot removes the main operational leakage from
+  popularity and availability, but it is not a strict backtest. A strict protocol would rebuild
+  the representation and clustering for every cutoff and is outside the current scope.
 - The ranking layer implements retrieval, multi-centroid interest scoring, MMR, controlled exploration, mandatory consumed-book exclusions and staged cold start. The temporal evaluation runner and B0/B1/B2 baselines are implemented; measured results remain pending.
 
 ## Business Logic
@@ -336,7 +349,9 @@ env/bin/python -m src.reduction.evaluate_recommender --max-users 1000 --k 5 10 2
 ```
 
 The runner selects only globally `valid` users, keeps their complete histories, and reports
-relevance, MAP, diversity, exposure and model slot metrics for every requested `k`.
+relevance, MAP, diversity, exposure and model slot metrics for every requested `k`. Pass
+`--cutoff YYYY-MM-DD` for an explicit snapshot; otherwise `--train-fraction` selects the global
+date percentile from the bounded cohort.
 
 Run tests:
 

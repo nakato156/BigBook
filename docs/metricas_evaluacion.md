@@ -80,15 +80,23 @@ Las tres capas implementan la escalera de §1bis: **Capa 1 → N0**, **Capa 2 �
 
 ### Capa 1 (N0) — Evaluación offline con split temporal *(hacible hoy)*
 
-Para cada usuario, ordenar sus interacciones por `date_added`, **entrenar con el pasado y
-retener el futuro**. Medir si el recomendador habría mostrado los libros que el lector
-**realmente leyó después** (`is_read = True`, idealmente con rating alto):
+Se usa un único corte global reproducible sobre `date_added` válidos (desde `2006-01-01`):
+**entrenar con interacciones hasta el corte y retener el futuro**. El corte puede fijarse con
+`--cutoff` o derivarse como el percentil `--train-fraction` de la cohorte. Se mide si el
+recomendador habría mostrado libros disponibles que el lector **realmente leyó después**
+(`is_read = True`, idealmente con rating alto):
 
 - **Relevancia del ranking:** `Recall@k`, `Precision@k`, `NDCG@k`, `MAP`.
 - **Anti-popularidad / descubrimiento:** `Coverage`, `Long-tail Coverage`, `Novelty`,
   **Diversity**, mix `tail/mid/head` y `Average Recommendation Popularity`.
 - **Slots exploratorios:** relevancia y tasa de acierto de `slot=exploration` separadas de
   `slot=interest`, para verificar que la exposición adicional no sea irrelevante.
+
+El modo implementado es `global_historical_snapshot_frozen_representation`. B1/B2, los segmentos
+`tail/mid/head`, novedad y popularidad media se calculan con conteos y promedios observados solo
+hasta el corte. Un libro con año conocido requiere `publication_year <= año del corte`; sin año,
+requiere una primera interacción válida hasta el corte. Los objetivos del holdout que no estaban
+disponibles se excluyen del denominador.
 
 > El **split temporal** mejora la *honestidad predictiva* de la métrica de relevancia: la pregunta
 > deja de ser *"¿acertó lo que ya leyó?"* y pasa a ser *"¿lo que recomienda coincide con lo que el
@@ -146,6 +154,10 @@ hábito, aunque sus números recsys "se vean bien".
 - `started_at` / `read_at` y `reading_duration_days` son **dispersos** según lo que cada usuario
   rellenó → las métricas de duración se reportan junto a `has_reading_duration_rate` para ser
   honestos con la cobertura.
+- **Fuga transductiva residual:** PCA, embeddings y clusters permanecen congelados con artefactos
+  del catálogo completo. El snapshot corrige la fuga operativa principal de popularidad y
+  disponibilidad, pero no constituye un backtest estricto. Reconstruir representación y clustering
+  por snapshot queda fuera de este alcance.
 - La capa de perfil, ranking, split temporal, cohorte global `valid`, cortes `k = 5, 10, 20`,
   baselines B0/B1/B2, `MAP`, diversidad, exposición y métricas por slot están implementados en
   `src/reduction/evaluate_recommender.py`. Sigue pendiente ejecutar y reportar resultados sobre la

@@ -54,17 +54,17 @@ proyecto hay tres formas, de menos a más informada, y todas son baselines legí
 
 ### Definición operativa de "popularidad" (B1 / B2)
 
-Para no reintroducir solo bestsellers, la señal de popularidad se define de forma explícita y
-reproducible sobre columnas que **ya existen** en `books_master.parquet`:
+Para no reintroducir información futura, la señal de popularidad se reconstruye desde las cinco
+categorías del canonical usando únicamente ratings con `date_added` válido hasta el corte:
 
 ```text
 pop_score(b) = log1p(ratings_count(b)) · average_rating(b)
 ```
 
 `log1p` atenúa el outlier de popularidad (igual que en el pipeline PCA) y `average_rating` evita
-premiar libros muy contados pero mal valorados. Variante alternativa a reportar: ordenar por
-`ratings_count` puro (popularidad cruda) como caso aún más ingenuo. **Ambos** baselines de
-popularidad excluyen del top-`k` los libros que el usuario ya leyó en el tramo de entrenamiento.
+premiar libros muy contados pero mal valorados. Los empates se resuelven por `book_id` para que el
+resultado sea reproducible. **Ambos** baselines excluyen los libros consumidos en entrenamiento y
+los que todavía no estaban disponibles en el snapshot.
 
 ---
 
@@ -123,11 +123,12 @@ Para que la comparación sea justa, baselines y recomendador corren bajo el **mi
 - **Datos:** `interactions_curated.parquet` (canonical global), universo de ítems = `books_master`.
 - **Usuarios:** solo los `valid` (K-core global `read_or_rated_count ≥ 3`, de
   `user_features_global`), para no evaluar sobre historial ruidoso.
-- **Split temporal por usuario:** ordenar interacciones por `date_added`; **entrenar con el pasado,
-  retener el futuro**. El *holdout* son los libros con `is_read = True` (idealmente
-  `rating_clean ≥ 4`) que el usuario leyó **después** del corte. (Mismo split que define la
-  evaluación orientada a hábito; no es "¿acertó lo que ya leyó?" sino "¿predice lo que sigue
-  leyendo?").
+- **Snapshot temporal global:** un único corte compartido, explícito con `--cutoff` o derivado por
+  `--train-fraction`, separa pasado y futuro. Fechas anteriores a `2006-01-01` se descartan. El
+  *holdout* relevante contiene libros con `is_read = True` y `rating_clean ≥ 4` posteriores al
+  corte que además estaban disponibles en el catálogo histórico.
+- **Popularidad histórica:** B1/B2 y las métricas de exposición usan únicamente conteos y ratings
+  observados hasta el corte, nunca agregados posteriores.
 - **Tarea:** cada sistema produce un top-`k` por usuario (`k ∈ {5, 10, 20}`), **excluyendo** lo ya
   leído en entrenamiento.
 - **Métricas:** relevancia (`Recall@k`, `Precision@k`, `NDCG@k`, `MAP`) + exposición
@@ -138,8 +139,10 @@ Para que la comparación sea justa, baselines y recomendador corren bajo el **mi
 > `src/reduction/evaluate_recommender.py` y comparten split, `k`, exclusiones y usuarios con el
 > modelo. El runner selecciona la cohorte desde `user_features_global.valid`, ejecuta por defecto
 > `k = 5, 10, 20`, calcula `MAP` y diversidad, y separa precisión/hit-rate de los slots `interest`
-> y `exploration` del modelo. B0 usa semilla determinista. La ejecución y publicación de resultados
-> sobre la cohorte acordada sigue pendiente.
+> y `exploration` del modelo. B0 usa semilla determinista. El modo se reporta como
+> `global_historical_snapshot_frozen_representation`: PCA, embeddings y clusters siguen congelados,
+> por lo que persiste fuga transductiva residual. Un backtest estricto requeriría reconstruir esos
+> artefactos en cada snapshot.
 
 ---
 
