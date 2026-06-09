@@ -35,13 +35,16 @@ Invoke as a module (writes a small sample, does not batch the whole user base)::
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Iterable, Sequence
 
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 
 from src.config import (
     BOOKS_MASTER_PATH,
+    INTERACTIONS_CURATED_PATH,
     MASTER_FEATURE_MATRIX_PATH,
     PROJECT_ROOT,
     USER_CENTROIDS_PATH,
@@ -238,6 +241,32 @@ def select_exploration_rows(
     )
     order = np.lexsort((-eligible_rel, segment_priority))
     return eligible_rows[order[:k]].astype(np.int64)
+
+
+def consumed_books_for_users(
+    interactions_path: Path,
+    user_ids: Sequence[str],
+) -> dict[str, set[str]]:
+    """Load completed books for a small user set using parquet predicate pushdown."""
+    users = [str(user_id) for user_id in user_ids]
+    consumed = {user_id: set() for user_id in users}
+    if not users:
+        return consumed
+
+    table = pq.read_table(
+        interactions_path,
+        columns=["user_id", "book_id", "is_read"],
+        filters=[("user_id", "in", users), ("is_read", "=", True)],
+    )
+    frame = table.to_pandas()
+    if frame.empty:
+        return consumed
+
+    frame["user_id"] = frame["user_id"].astype(str)
+    frame["book_id"] = frame["book_id"].astype(str)
+    for user_id, group in frame.groupby("user_id", sort=False):
+        consumed[user_id] = set(group["book_id"])
+    return consumed
 
 
 # --------------------------------------------------------------------------- #
@@ -590,6 +619,23 @@ class Recommender:
         )
 
 
+def build_recommendation_sample(
+    recommender: Recommender,
+    sample_users: Sequence[str],
+    consumed_by_user: dict[str, set[str]],
+) -> pd.DataFrame:
+    """Build the demo sample while enforcing consumed-book exclusions."""
+    frames = [
+        recommender.recommend(
+            str(user_id),
+            consumed_by_user.get(str(user_id), set()),
+        )
+        for user_id in sample_users
+    ]
+    frames.append(recommender.recommend_cold_start("__cold_start_demo__", set()))
+    return pd.concat(frames, ignore_index=True)
+
+
 def main() -> None:
     rec = Recommender.from_artifacts()
     print(f"Loaded {len(rec.book_ids):,} books, {len(rec.user_ids):,} users.")
@@ -602,9 +648,8 @@ def main() -> None:
 
     # A small, honest sample: a few real users + one synthetic cold-start.
     sample_users = list(rec.user_ids[:4])
-    frames = [rec.recommend(uid, set()) for uid in sample_users]
-    frames.append(rec.recommend_cold_start("__cold_start_demo__", set()))
-    out = pd.concat(frames, ignore_index=True)
+    consumed_by_user = consumed_books_for_users(INTERACTIONS_CURATED_PATH, sample_users)
+    out = build_recommendation_sample(rec, sample_users, consumed_by_user)
 
     RECS_SAMPLE_PATH.parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(RECS_SAMPLE_PATH, index=False)

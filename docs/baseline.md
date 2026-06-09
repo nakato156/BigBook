@@ -136,7 +136,10 @@ Para que la comparación sea justa, baselines y recomendador corren bajo el **mi
 
 > Nota de implementación: los tres baselines viven en
 > `src/reduction/evaluate_recommender.py` y comparten split, `k`, exclusiones y usuarios con el
-> modelo. B0 usa semilla determinista. La ejecución y publicación de resultados sigue pendiente.
+> modelo. El runner selecciona la cohorte desde `user_features_global.valid`, ejecuta por defecto
+> `k = 5, 10, 20`, calcula `MAP` y diversidad, y separa precisión/hit-rate de los slots `interest`
+> y `exploration` del modelo. B0 usa semilla determinista. La ejecución y publicación de resultados
+> sobre la cohorte acordada sigue pendiente.
 
 ---
 

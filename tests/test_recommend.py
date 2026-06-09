@@ -12,7 +12,9 @@ import numpy as np
 import pandas as pd
 
 from src.reduction.evaluate_recommender import (
+    _binary_metrics,
     baseline_recommendations,
+    collect_valid_user_ids,
     evaluate_temporal,
     temporal_split,
 )
@@ -20,6 +22,8 @@ from src.reduction.recommend import (
     RankingConfig,
     Recommender,
     accessibility_scores,
+    build_recommendation_sample,
+    consumed_books_for_users,
     eligibility_mask,
     l2_normalize_rows,
     mmr_select,
@@ -259,6 +263,34 @@ def test_consumed_books_are_excluded_from_profile_and_cold_start() -> None:
     assert not {"b1", "b4", "b6"}.intersection(cold["book_id"])
 
 
+def test_consumed_books_for_users_reads_only_completed_books(tmp_path) -> None:
+    path = tmp_path / "interactions.parquet"
+    pd.DataFrame(
+        {
+            "user_id": ["u1", "u1", "u2", "u3"],
+            "book_id": ["b0", "b1", "b2", "b3"],
+            "is_read": [True, False, True, True],
+        }
+    ).to_parquet(path, index=False)
+
+    consumed = consumed_books_for_users(path, ["u1", "u2", "missing"])
+
+    assert consumed == {"u1": {"b0"}, "u2": {"b2"}, "missing": set()}
+
+
+def test_recommendation_sample_passes_consumed_exclusions() -> None:
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=5))
+
+    sample = build_recommendation_sample(
+        rec,
+        ["u_taste_A"],
+        {"u_taste_A": {"b0", "b1"}},
+    )
+
+    user_rows = sample[sample["user_id"] == "u_taste_A"]
+    assert not {"b0", "b1"}.intersection(user_rows["book_id"])
+
+
 def test_seed_books_build_a_cold_start_profile() -> None:
     rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2))
     out = rec.recommend("new_user", set(), seed_book_ids=["b5", "b6"])
@@ -299,6 +331,24 @@ def test_temporal_split_is_chronological_per_user() -> None:
     train, future = temporal_split(interactions, train_fraction=0.67)
     assert train["book_id"].tolist() == ["early", "late"]
     assert future["book_id"].tolist() == ["future"]
+
+
+def test_binary_metrics_include_average_precision() -> None:
+    metrics = _binary_metrics(["miss", "a", "b"], {"a", "b"}, k=3)
+
+    assert metrics["average_precision"] == np.mean([1 / 2, 2 / 3])
+
+
+def test_valid_user_cohort_excludes_invalid_users(tmp_path) -> None:
+    path = tmp_path / "user_features.parquet"
+    pd.DataFrame(
+        {
+            "user_id": ["u3", "u1", "u2"],
+            "valid": [True, True, False],
+        }
+    ).to_parquet(path, index=False)
+
+    assert collect_valid_user_ids(path, max_users=10) == ["u1", "u3"]
 
 
 def test_baselines_always_exclude_consumed_books() -> None:
@@ -351,7 +401,49 @@ def test_temporal_evaluation_runs_model_and_three_baselines() -> None:
         "recall",
         "precision",
         "ndcg",
+        "map",
+        "diversity",
         "catalog_coverage",
         "long_tail_coverage",
         "novelty",
+        "interest_precision",
+        "exploration_precision",
     }.issubset(summary.columns)
+
+
+def test_temporal_evaluation_reports_each_requested_k() -> None:
+    rec = _toy_recommender(
+        RankingConfig(
+            k=3,
+            explore_slots=1,
+            n_clusters_retrieve=2,
+            explore_min_relevance_ratio=0.0,
+        )
+    )
+    interactions = pd.DataFrame(
+        [
+            ("u1", "b0", True, 5.0, False, np.nan, "2020-01-01"),
+            ("u1", "b1", True, 4.0, False, np.nan, "2020-01-02"),
+            ("u1", "b2", True, 5.0, False, np.nan, "2020-02-01"),
+        ],
+        columns=[
+            "user_id",
+            "book_id",
+            "is_read",
+            "rating_clean",
+            "has_review_text",
+            "reading_duration_days",
+            "date_added",
+        ],
+    )
+    summary, per_user = evaluate_temporal(
+        interactions,
+        rec,
+        average_rating=np.ones(len(rec.book_ids)),
+        train_fraction=0.67,
+        ks=[1, 2],
+    )
+
+    assert set(summary["k"]) == {1, 2}
+    assert len(per_user) == 8
+    assert per_user.loc[per_user["system"] == "model", "diversity"].notna().all()

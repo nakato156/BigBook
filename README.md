@@ -332,8 +332,11 @@ env/bin/python -m src.reduction.build_user_centroids
 Run temporal evaluation over a bounded user cohort:
 
 ```bash
-env/bin/python -m src.reduction.evaluate_recommender --max-users 1000
+env/bin/python -m src.reduction.evaluate_recommender --max-users 1000 --k 5 10 20
 ```
+
+The runner selects only globally `valid` users, keeps their complete histories, and reports
+relevance, MAP, diversity, exposure and model slot metrics for every requested `k`.
 
 Run tests:
 

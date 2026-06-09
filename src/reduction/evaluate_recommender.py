@@ -5,13 +5,20 @@ from __future__ import annotations
 import argparse
 import math
 import zlib
+from dataclasses import replace
 from pathlib import Path
+from typing import Sequence
 
 import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 
-from src.config import BOOKS_MASTER_PATH, INTERACTIONS_CURATED_PATH, PROJECT_ROOT
+from src.config import (
+    BOOKS_MASTER_PATH,
+    INTERACTIONS_CURATED_PATH,
+    PROJECT_ROOT,
+    USER_FEATURES_GLOBAL_PATH,
+)
 from src.reduction.build_user_centroids import compute_engagement_weight
 from src.reduction.recommend import GENRE_COLUMNS, Recommender
 
@@ -65,7 +72,43 @@ def _binary_metrics(recommended: list[str], relevant: set[str], k: int) -> dict[
     dcg = float((hits * discounts).sum())
     ideal_n = min(len(relevant), k)
     idcg = float((1.0 / np.log2(np.arange(2, ideal_n + 2))).sum()) if ideal_n else 0.0
-    return {"recall": recall, "precision": precision, "ndcg": dcg / idcg if idcg else 0.0}
+    precision_at_hits = np.cumsum(hits) / np.arange(1, len(hits) + 1)
+    average_precision = (
+        float((precision_at_hits * hits).sum() / ideal_n) if ideal_n else 0.0
+    )
+    return {
+        "recall": recall,
+        "precision": precision,
+        "ndcg": dcg / idcg if idcg else 0.0,
+        "average_precision": average_precision,
+    }
+
+
+def _intra_list_diversity(recommender: Recommender, recommended: list[str]) -> float:
+    """Mean pairwise cosine distance in the ranking taste subspace."""
+    rows = [
+        recommender._book_row[book_id]
+        for book_id in recommended
+        if book_id in recommender._book_row
+    ]
+    if len(rows) < 2:
+        return 0.0
+    vectors = recommender.book_taste_norm[np.asarray(rows, dtype=np.int64)]
+    similarities = np.clip(vectors @ vectors.T, -1.0, 1.0)
+    upper = similarities[np.triu_indices(len(rows), k=1)]
+    return float(np.mean(1.0 - upper))
+
+
+def _slot_metrics(model: pd.DataFrame, relevant: set[str], slot: str) -> dict[str, float]:
+    """Precision and user-level hit rate for one model slot type."""
+    selected = model.loc[model["slot"] == slot, "book_id"].astype(str).tolist()
+    if not selected:
+        return {f"{slot}_precision": np.nan, f"{slot}_hit_rate": np.nan}
+    hits = sum(book_id in relevant for book_id in selected)
+    return {
+        f"{slot}_precision": hits / len(selected),
+        f"{slot}_hit_rate": float(hits > 0),
+    }
 
 
 def _ranked_candidates(
@@ -122,15 +165,20 @@ def evaluate_temporal(
     recommender: Recommender,
     average_rating: np.ndarray,
     train_fraction: float = 0.8,
+    ks: Sequence[int] | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Evaluate model and baselines under one chronological protocol."""
+    cutoffs = sorted({int(k) for k in (ks or (recommender.config.k,)) if int(k) > 0})
+    if not cutoffs:
+        raise ValueError("At least one positive k is required.")
+
     train, future = temporal_split(interactions, train_fraction)
     train_groups = {uid: group for uid, group in train.groupby("user_id", sort=False)}
     future_groups = {uid: group for uid, group in future.groupby("user_id", sort=False)}
     genre_flags = recommender.genres.reindex(recommender.book_ids)[GENRE_COLUMNS].fillna(0).to_numpy()
 
     rows: list[dict] = []
-    recommended_by_system: dict[str, set[str]] = {}
+    recommended_by_system: dict[tuple[str, int], set[str]] = {}
     popularity_by_book = dict(
         zip(recommender.book_ids, recommender.ratings_count, strict=False)
     )
@@ -163,11 +211,6 @@ def evaluate_temporal(
         if modes is None:
             continue
 
-        model = recommender.recommend_from_modes(
-            str(user_id), modes[0], modes[1], consumed
-        )
-        systems = {"model": model["book_id"].astype(str).tolist()}
-
         positive_rows = [
             recommender._book_row[book_id]
             for book_id in positive_ids
@@ -178,38 +221,71 @@ def evaluate_temporal(
             if positive_rows
             else np.zeros(len(GENRE_COLUMNS), dtype=int)
         )
-        systems.update(
-            baseline_recommendations(
-                recommender,
-                average_rating,
-                consumed,
-                train_genres,
-                str(user_id),
-                recommender.config.k,
+        for k in cutoffs:
+            original_config = recommender.config
+            recommender.config = replace(
+                original_config,
+                k=k,
+                explore_slots=min(original_config.explore_slots, k),
             )
-        )
+            try:
+                model = recommender.recommend_from_modes(
+                    str(user_id), modes[0], modes[1], consumed
+                )
+            finally:
+                recommender.config = original_config
 
-        for system, recommended in systems.items():
-            metrics = _binary_metrics(recommended, relevant, recommender.config.k)
-            segments = [segment_by_book[book_id] for book_id in recommended]
-            popularity = [math.log1p(popularity_by_book[book_id]) for book_id in recommended]
-            novelty = [
-                -math.log2((popularity_by_book[book_id] + 1.0) / popularity_denominator)
-                for book_id in recommended
-            ]
-            recommended_by_system.setdefault(system, set()).update(recommended)
-            rows.append(
-                {
-                    "user_id": str(user_id),
-                    "system": system,
-                    **metrics,
-                    "avg_recommendation_popularity": float(np.mean(popularity)) if popularity else 0.0,
-                    "novelty": float(np.mean(novelty)) if novelty else 0.0,
-                    "tail_share": segments.count("tail") / len(segments) if segments else 0.0,
-                    "mid_share": segments.count("mid") / len(segments) if segments else 0.0,
-                    "head_share": segments.count("head") / len(segments) if segments else 0.0,
-                }
+            systems = {"model": model["book_id"].astype(str).tolist()}
+            systems.update(
+                baseline_recommendations(
+                    recommender,
+                    average_rating,
+                    consumed,
+                    train_genres,
+                    str(user_id),
+                    k,
+                )
             )
+
+            model_slot_metrics = {
+                **_slot_metrics(model, relevant, "interest"),
+                **_slot_metrics(model, relevant, "exploration"),
+            }
+            for system, recommended in systems.items():
+                metrics = _binary_metrics(recommended, relevant, k)
+                segments = [segment_by_book[book_id] for book_id in recommended]
+                popularity = [math.log1p(popularity_by_book[book_id]) for book_id in recommended]
+                novelty = [
+                    -math.log2((popularity_by_book[book_id] + 1.0) / popularity_denominator)
+                    for book_id in recommended
+                ]
+                recommended_by_system.setdefault((system, k), set()).update(recommended)
+                rows.append(
+                    {
+                        "user_id": str(user_id),
+                        "system": system,
+                        "k": k,
+                        **metrics,
+                        "diversity": _intra_list_diversity(recommender, recommended),
+                        "avg_recommendation_popularity": (
+                            float(np.mean(popularity)) if popularity else 0.0
+                        ),
+                        "novelty": float(np.mean(novelty)) if novelty else 0.0,
+                        "tail_share": segments.count("tail") / len(segments) if segments else 0.0,
+                        "mid_share": segments.count("mid") / len(segments) if segments else 0.0,
+                        "head_share": segments.count("head") / len(segments) if segments else 0.0,
+                        **(
+                            model_slot_metrics
+                            if system == "model"
+                            else {
+                                "interest_precision": np.nan,
+                                "interest_hit_rate": np.nan,
+                                "exploration_precision": np.nan,
+                                "exploration_hit_rate": np.nan,
+                            }
+                        ),
+                    }
+                )
 
     per_user = pd.DataFrame(rows)
     if per_user.empty:
@@ -222,15 +298,18 @@ def evaluate_temporal(
         if segment_by_book.get(book_id) == "tail"
     }
     summary_rows = []
-    for system, group in per_user.groupby("system", sort=False):
-        exposed = recommended_by_system[system]
+    for (system, k), group in per_user.groupby(["system", "k"], sort=False):
+        exposed = recommended_by_system[(system, int(k))]
         summary_rows.append(
             {
                 "system": system,
+                "k": int(k),
                 "users": int(group["user_id"].nunique()),
                 "recall": float(group["recall"].mean()),
                 "precision": float(group["precision"].mean()),
                 "ndcg": float(group["ndcg"].mean()),
+                "map": float(group["average_precision"].mean()),
+                "diversity": float(group["diversity"].mean()),
                 "catalog_coverage": len(exposed) / len(eligible_books) if eligible_books else 0.0,
                 "long_tail_coverage": (
                     len(exposed & eligible_tail) / len(eligible_tail) if eligible_tail else 0.0
@@ -242,24 +321,37 @@ def evaluate_temporal(
                 "tail_share": float(group["tail_share"].mean()),
                 "mid_share": float(group["mid_share"].mean()),
                 "head_share": float(group["head_share"].mean()),
+                "interest_precision": float(group["interest_precision"].mean()),
+                "interest_hit_rate": float(group["interest_hit_rate"].mean()),
+                "exploration_precision": float(group["exploration_precision"].mean()),
+                "exploration_hit_rate": float(group["exploration_hit_rate"].mean()),
             }
         )
     return pd.DataFrame(summary_rows), per_user
 
 
-def collect_users(path: Path, max_users: int) -> pd.DataFrame:
-    """Scan the canonical parquet while retaining complete histories for a bounded user set."""
-    selected: set[str] = set()
+def collect_valid_user_ids(path: Path, max_users: int) -> list[str]:
+    """Return a deterministic bounded cohort from the global K-core valid users."""
+    valid = pd.read_parquet(path, columns=["user_id", "valid"])
+    return (
+        valid.loc[valid["valid"].fillna(False), "user_id"]
+        .astype(str)
+        .sort_values(kind="stable")
+        .head(max_users)
+        .tolist()
+    )
+
+
+def collect_users(path: Path, user_ids: Sequence[str]) -> pd.DataFrame:
+    """Scan the canonical parquet while retaining complete histories for selected users."""
+    selected = {str(user_id) for user_id in user_ids}
+    if not selected:
+        return pd.DataFrame(columns=INTERACTION_COLUMNS)
     chunks: list[pd.DataFrame] = []
     parquet = pq.ParquetFile(path)
     for batch in parquet.iter_batches(columns=INTERACTION_COLUMNS, batch_size=250_000):
         frame = batch.to_pandas()
         frame["user_id"] = frame["user_id"].astype(str)
-        if len(selected) < max_users:
-            for user_id in frame["user_id"].drop_duplicates():
-                selected.add(user_id)
-                if len(selected) >= max_users:
-                    break
         kept = frame[frame["user_id"].isin(selected)]
         if len(kept):
             chunks.append(kept)
@@ -270,11 +362,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--max-users", type=int, default=1_000)
     parser.add_argument("--train-fraction", type=float, default=0.8)
+    parser.add_argument("--k", type=int, nargs="+", default=[5, 10, 20])
     parser.add_argument("--output", type=Path, default=EVALUATION_OUTPUT)
     args = parser.parse_args()
 
     recommender = Recommender.from_artifacts()
-    interactions = collect_users(INTERACTIONS_CURATED_PATH, args.max_users)
+    valid_user_ids = collect_valid_user_ids(USER_FEATURES_GLOBAL_PATH, args.max_users)
+    interactions = collect_users(INTERACTIONS_CURATED_PATH, valid_user_ids)
     books = pd.read_parquet(BOOKS_MASTER_PATH, columns=["book_id", "average_rating"])
     books["book_id"] = books["book_id"].astype(str)
     average_rating = (
@@ -284,7 +378,11 @@ def main() -> None:
         .to_numpy(dtype=np.float64)
     )
     summary, _ = evaluate_temporal(
-        interactions, recommender, average_rating, args.train_fraction
+        interactions,
+        recommender,
+        average_rating,
+        args.train_fraction,
+        ks=args.k,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     summary.to_csv(args.output, index=False)
