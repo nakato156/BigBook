@@ -95,7 +95,7 @@ social, transacciones**. Metadata con nulos relevantes: `num_pages` (17.5%), `pu
 > `user_centroids.parquet`, construidos desde el canonical global
 > `data/processed/interactions_curated.parquet`. El ranking v1 implementa multi-centroides,
 > exclusión de consumidos, MMR, exploración y cold-start escalonado. El runner temporal B0/B1/B2
-> está implementado; falta ejecutar y reportar resultados.
+> y los proxies N1 están implementados; los resultados se publican en `docs/estado_v1.md`.
 
 ---
 
@@ -172,7 +172,8 @@ exploración = fuera de vecindad + ≥75% de la mejor similitud
               + solo tail/mid
 ```
 
-Regla de oro: **interés primero**. Popularidad no filtra ni ordena: segmenta el catálogo para
+Regla de oro: **interés primero**. Popularidad no filtra elegibilidad ni ordena los slots normales:
+segmenta el catálogo para
 medir y controlar exposición. Con los datos actuales, `tail <= 436` y `head >= 6,017` ratings.
 
 **Arquitectura del ranking:** `retrieve` (candidatos por cluster/macro-cluster cercano) → `score`
@@ -200,7 +201,7 @@ cambia; cambia la *fuerza de la evidencia*):
 | Nivel | Qué afirma | Métrica | Evidencia | Disponible |
 |---|---|---|---|---|
 | **N0** Relevancia (split temporal) | ¿Predice lo que el lector leyó **después**? (una *puerta*, no el hábito) | `Recall@k`, `NDCG@k`, `MAP` + `Coverage`/`Novelty`/`Diversity` | Predictiva | Hoy |
-| **N1** Proxy de hábito | ¿Se *asocia* a más lectura completada y diversa? | `completion_rate`, `reading_frequency`, `reading_breadth`, `activity_recency` | Correlacional | Hoy |
+| **N1** Proxy de hábito | ¿Cómo cambian los proxies futuros según la actividad previa? | `completion_rate`, `reading_frequency`, `reading_breadth`, `activity_recency` | Descriptiva/correlacional | Hoy |
 | **N2** Hábito causal | ¿Recomendar así *aumenta* la retención? | mismos proxies como *lift* A/B + señales en vivo | Causal | Con telemetría |
 
 > N0 (`Recall@k`) es **relevancia, no hábito**: acertar el próximo libro es condición necesaria, no
@@ -208,15 +209,14 @@ cambia; cambia la *fuerza de la evidencia*):
 > métrica de hábito.
 
 **Criterio de validez:** el sistema es válido si (1) **supera a la base de popularidad** en
-`Recall@k`/`NDCG@k`, (2) mejora o conserva `Coverage`, `Long-tail Coverage`, `Novelty` y
-`Diversity`, y (3)
-**correlaciona con mejores proxies de hábito**. Si gana ranking pero mata la diversidad o no se
-asocia a más lectura completada, **no** se considera válido para el objetivo de hábito.
+`Recall@k`/`NDCG@k` y (2) mejora o conserva `Coverage`, `Long-tail Coverage`, `Novelty` y
+`Diversity`. N1 describe diferencias de hábito por actividad previa, pero no es un gate atribuible
+al recomendador porque el dataset no contiene exposición real al sistema.
 
 **Límite explícito:** el impacto causal real sobre la retención requiere **telemetría de producto
 en vivo** (sesiones, retornos, libros terminados tras una recomendación), fuera del alcance del
-dataset estático. El runner offline existe, pero sus resultados aún no se han ejecutado ni
-reportado como evidencia del proyecto.
+dataset estático. El runner offline produce la evidencia N0/N1 y el veredicto reproducible en
+`docs/estado_v1.md`.
 
 ---
 

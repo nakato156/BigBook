@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import joblib
@@ -10,6 +11,12 @@ from scipy.cluster.hierarchy import dendrogram, fcluster, linkage
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from src.config import BOOKS_MASTER_PATH, MASTER_FEATURE_MATRIX_PATH, PROJECT_ROOT
+from src.utils.io import safe_write_parquet
 
 RANDOM_STATE = 42
 SELECTED_K = 100
@@ -17,9 +24,7 @@ COMPARISON_KS = [50, 100]
 N_MACRO_CLUSTERS = 10
 SILHOUETTE_SAMPLE_SIZE = 10000
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-FEATURE_MATRIX_PATH = PROJECT_ROOT / "data" / "features" / "master_feature_matrix.parquet"
-BOOKS_MASTER_PATH = PROJECT_ROOT / "data" / "processed" / "books_master.parquet"
+FEATURE_MATRIX_PATH = MASTER_FEATURE_MATRIX_PATH
 OUTPUT_DIR = PROJECT_ROOT / "data" / "outputs" / "clustering"
 
 GENRE_COLUMNS = {
@@ -74,7 +79,10 @@ def get_kmeans_model(k: int, x: np.ndarray) -> KMeans:
         if getattr(model, "n_clusters", None) == k and hasattr(model, "cluster_centers_"):
             return model
 
-    return KMeans(n_clusters=k, random_state=RANDOM_STATE, n_init="auto").fit(x)
+    model = KMeans(n_clusters=k, random_state=RANDOM_STATE, n_init="auto").fit(x)
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    joblib.dump(model, model_path)
+    return model
 
 
 def cluster_size_stats(labels: np.ndarray) -> dict[str, int | float]:
@@ -150,9 +158,9 @@ def write_assignments_and_quality(
             "distance_to_centroid": distances.astype(np.float32),
         }
     )
-    assignments[["book_id", "cluster"]].to_parquet(
+    safe_write_parquet(
+        assignments[["book_id", "cluster"]],
         OUTPUT_DIR / f"book_clusters_k{k}.parquet",
-        index=False,
     )
 
     counts = assignments["cluster"].value_counts().sort_index()

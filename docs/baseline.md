@@ -70,10 +70,9 @@ los que todavía no estaban disponibles en el snapshot.
 
 ## 3. ¿Qué performance tendría un sistema simple?
 
-Como el dataset es **observacional** y la capa final de ranking/evaluación temporal aún no se ha
-ejecutado (ver nota de estado en [metricas_evaluacion](metricas_evaluacion.md) §5), aquí
-**no afirmamos cifras medidas**: declaramos el **comportamiento esperado** de cada baseline, que es
-lo que la evaluación debe confirmar. La expectativa nace de propiedades conocidas de los datos
+Como el dataset es **observacional**, esta sección conserva las expectativas conceptuales de cada
+baseline. Las cifras medidas y su comparación con el modelo se publican en
+[`estado_v1.md`](estado_v1.md). La expectativa nace de propiedades conocidas de los datos
 (ver *PCA Block Diagnostics* del README: `pc_0` = popularidad).
 
 | Baseline | `Recall@k` / `NDCG@k` (relevancia) | `Coverage` / `Novelty` / `Diversity` (anti-popularidad) |

@@ -9,7 +9,7 @@ es separar tres conceptos que antes estaban mezclados: **elegibilidad técnica**
 | # | Problema | Estado en v1 |
 |---|---|---|
 | **P1** | Sostener el hábito de lectura | Objetivo de negocio. N0/N1 son evaluación predictiva y correlacional; el efecto causal requiere telemetría N2. |
-| **P2** | Evitar sesgo de popularidad | Objetivo principal. La popularidad no filtra ni ordena el ranking; se usa para medir exposición y segmentar resultados. |
+| **P2** | Evitar sesgo de popularidad | Objetivo principal. La popularidad no filtra elegibilidad ni ordena slots normales de interés; sí controla la política explícita de exploración `tail/mid` y las métricas de exposición. |
 | **P3** | Exponer libros menos explorados | **Objetivo secundario medible.** v1 reserva exploración controlada para libros afines de cola/media, sin prometer cobertura total. |
 
 P3 vuelve al alcance porque el catálogo real no presenta la tensión que se había supuesto. En
@@ -34,8 +34,8 @@ Un libro participa si:
 - tiene vector PCA finito;
 - tiene una asignación de cluster válida.
 
-`ratings_count` no excluye libros y no entra al score. Su función es diagnóstica: medir qué parte
-de las recomendaciones cae en cabeza, zona media o cola.
+`ratings_count` no excluye libros y no entra al score de interés. Además del diagnóstico, controla
+qué candidatos pueden ocupar los slots explícitos de exploración descritos en A3.
 
 ### A3 — Exploración controlada por afinidad y exposición
 
@@ -95,6 +95,7 @@ exposición de cola/media sin una caída inaceptable de relevancia.
   conserva PCA, embeddings y clusters ajustados con el catálogo completo. Esta fuga transductiva
   residual impide llamarla backtest estricto; reconstruir la geometría por corte queda fuera de v1.
 - El efecto causal sobre hábito requiere producto vivo y experimento A/B.
+- API/UI, telemetría de producto, item cold-start y bandits quedan fuera de la V1 académica.
 
 ## 5. Estado de implementación
 
@@ -107,6 +108,8 @@ exposición de cola/media sin una caída inaceptable de relevancia.
 | Fallback a interés si explorar degrada demasiado | Implementado |
 | A4 cold start diverso y sin orden de popularidad | Implementado |
 | Evaluación temporal N0 y baselines B0/B1/B2 | Implementada como `global_historical_snapshot_frozen_representation`: corte global, popularidad y catálogo históricos, holdout disponible, `k = 5/10/20`, MAP, diversidad, exposición y métricas por slot |
+| Proxies N1 por ventana y actividad previa | Implementados como descripción correlacional, sin atribución al recomendador |
+| Validación e informe de cierre | `src.validate_artifacts` y `docs/estado_v1.md` |
 | Item cold start y exploración adaptativa | Fuera de v1 |
 
 La siguiente deuda metodológica es un backtest estricto que reconstruya PCA y clustering por

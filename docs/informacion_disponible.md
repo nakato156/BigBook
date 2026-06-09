@@ -135,9 +135,9 @@ Métricas de hábito **derivables** de estos campos (aún no almacenadas como co
   `has_reading_duration_rate` para ser honestos con la cobertura.
 - **Spot checks semánticos débiles:** las pruebas de coseno del README son diagnósticos
   pequeños, no validación de calidad.
-- **Ranking implementado; evaluación pendiente:** retrieval, scoring por interés, MMR,
-  exploración controlada y cold-start viven en `src/reduction/recommend.py`. Falta ejecutar la
-  evaluación temporal y las métricas de exposición sobre cohortes.
+- **Ranking y evaluación implementados:** retrieval, scoring por interés, MMR, exploración
+  controlada y cold-start viven en `src/reduction/recommend.py`; N0 y N1 descriptivo se generan con
+  `src/reduction/evaluate_recommender.py` y se resumen en `docs/estado_v1.md`.
 
 ---
 

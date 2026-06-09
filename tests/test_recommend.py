@@ -13,13 +13,17 @@ import pandas as pd
 
 from src.reduction.evaluate_recommender import (
     _binary_metrics,
+    assign_activity_segments,
     baseline_recommendations,
+    build_habit_proxy_table,
     choose_global_cutoff,
     collect_valid_user_ids,
     evaluate_temporal,
     global_temporal_split,
+    habit_proxy_features,
     historical_catalog_mask,
     historical_popularity_snapshot,
+    summarize_by_activity,
     temporal_split,
 )
 from src.reduction.recommend import (
@@ -465,6 +469,113 @@ def test_valid_user_cohort_excludes_invalid_users(tmp_path) -> None:
     ).to_parquet(path, index=False)
 
     assert collect_valid_user_ids(path, max_users=10) == ["u1", "u3"]
+
+
+def test_valid_user_cohort_is_uniform_and_reproducible(tmp_path) -> None:
+    path = tmp_path / "user_features.parquet"
+    pd.DataFrame(
+        {
+            "user_id": [f"u{i:02d}" for i in range(20)],
+            "valid": [True] * 20,
+        }
+    ).to_parquet(path, index=False)
+
+    first = collect_valid_user_ids(path, max_users=5, random_state=42)
+    second = collect_valid_user_ids(path, max_users=5, random_state=42)
+
+    assert first == second
+    assert len(first) == 5
+    assert first != [f"u{i:02d}" for i in range(5)]
+
+
+def test_habit_proxies_handle_invalid_dates_zero_span_and_genre_breadth() -> None:
+    interactions = pd.DataFrame(
+        {
+            "user_id": ["u1", "u1", "u1", "u2"],
+            "book_id": ["b1", "b2", "b3", "b1"],
+            "is_read": [True, True, False, True],
+            "date_added": ["2020-01-01", "2020-01-01", "1012-01-01", "2020-01-02"],
+        }
+    )
+    genres = pd.DataFrame(
+        {
+            **{genre: [0, 0, 0] for genre in GENRES},
+        },
+        index=pd.Index(["b1", "b2", "b3"], name="book_id"),
+    )
+    genres.loc["b1", "genre_fantasy"] = 1
+    genres.loc["b2", "genre_romance"] = 1
+
+    proxies = habit_proxy_features(
+        interactions,
+        genres,
+        "train",
+        pd.Timestamp("2020-01-03", tz="UTC"),
+    ).set_index("user_id")
+
+    assert proxies.loc["u1", "train_interaction_count"] == 2
+    assert proxies.loc["u1", "train_completed_reads"] == 2
+    assert proxies.loc["u1", "train_active_span_days"] == 0
+    assert np.isfinite(proxies.loc["u1", "train_reading_frequency_monthly"])
+    assert proxies.loc["u1", "train_reading_breadth"] == 2
+    assert proxies.loc["u1", "train_activity_recency_days"] == 2
+
+
+def test_activity_segments_preserve_ties() -> None:
+    values = pd.Series([1, 1, 1, 2, 3, 3])
+    segments = assign_activity_segments(values)
+
+    assert segments[values == 1].nunique() == 1
+    assert segments[values == 3].nunique() == 1
+    assert segments.tolist() == ["low", "low", "low", "mid", "high", "high"]
+
+
+def test_habit_proxy_table_and_activity_summary_include_n1_columns() -> None:
+    rec = _toy_recommender(RankingConfig(k=2, explore_slots=0))
+    train = pd.DataFrame(
+        [("u", "b0", True, "2020-01-01"), ("u", "b1", True, "2020-01-02")],
+        columns=["user_id", "book_id", "is_read", "date_added"],
+    )
+    future = pd.DataFrame(
+        [("u", "b2", True, "2020-02-01")],
+        columns=["user_id", "book_id", "is_read", "date_added"],
+    )
+    proxies = build_habit_proxy_table(
+        train,
+        future,
+        rec.genres,
+        pd.Timestamp("2020-01-15", tz="UTC"),
+    )
+    per_user = pd.DataFrame(
+        {
+            "user_id": ["u"],
+            "system": ["model"],
+            "k": [2],
+            "activity_segment": proxies["activity_segment"],
+            "recall": [1.0],
+            "precision": [0.5],
+            "ndcg": [1.0],
+            "average_precision": [1.0],
+            "diversity": [0.5],
+            "novelty": [2.0],
+            "tail_share": [0.5],
+            "mid_share": [0.5],
+            "head_share": [0.0],
+            **{
+                column: proxies[column]
+                for column in proxies.columns
+                if column.startswith(("train_", "future_"))
+            },
+        }
+    )
+
+    activity = summarize_by_activity(per_user)
+
+    assert proxies.loc[0, "train_completed_reads"] == 2
+    assert proxies.loc[0, "future_completed_reads"] == 1
+    assert {"future_completion_rate", "future_reading_breadth", "map"}.issubset(
+        activity.columns
+    )
 
 
 def test_baselines_always_exclude_consumed_books() -> None:

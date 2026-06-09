@@ -128,12 +128,13 @@ El recomendador se considera **válido** si, en evaluación offline con split te
    lector leyó después que recomendar solo bestsellers).
 2. **No lo logra a costa del descubrimiento**: mejora o conserva `Coverage`, `Long-tail Coverage`,
    `Novelty`, `Diversity` y el mix de exposición frente a la base de popularidad.
-3. **Correlaciona con mejores proxies de hábito** (Capa 2): los grupos servidos por vecindad
-   tienden a mayor `completion_rate` / `reading_frequency` / `reading_breadth`.
 
-Si gana relevancia pero **colapsa la diversidad**, o si mejora métricas de ranking pero **no se
-asocia a más lectura completada**, el recomendador **no** se considera válido para el objetivo de
-hábito, aunque sus números recsys "se vean bien".
+N1 no es un gate del recomendador: describe `completion_rate`, `reading_frequency`,
+`activity_recency` y `reading_breadth` futuros por actividad previa. Como ningún usuario fue
+realmente expuesto al sistema, usar esos proxies para atribuir efecto al modelo sería incorrecto.
+
+Si gana relevancia pero **colapsa la diversidad**, el recomendador no se considera válido aunque
+sus números recsys "se vean bien".
 
 ---
 
@@ -145,9 +146,8 @@ hábito, aunque sus números recsys "se vean bien".
   el *efecto del recomendador* sobre él: esos libros se leyeron sin que el sistema existiera. Por eso
   N1 es correlacional **por construcción**, y solo N2 (telemetría, A/B) cierra la brecha. Esta es la
   *razón de ser* de la escalera de §1bis.
-- **`reading_frequency` divide por `active_span`**, así que usuarios de una sola interacción dan
-  `active_span = 0` (división por cero). Requiere un piso (p. ej. *clamp* a 1 día, o excluir `n = 1`)
-  al computar la métrica.
+- **`reading_frequency` divide por `active_span`**. El evaluador conserva
+  `active_span_days = 0` y usa un piso de un día en el denominador para evitar división por cero.
 - **`completion_rate` offline está sesgado por lo que cada usuario *registró* en Goodreads**, no por
   lo que leyó de verdad; en producto vivo (N2) la señal es limpia. El proxy offline es más ruidoso
   que su versión telemétrica — mismo nombre, distinta calidad.
@@ -158,10 +158,10 @@ hábito, aunque sus números recsys "se vean bien".
   del catálogo completo. El snapshot corrige la fuga operativa principal de popularidad y
   disponibilidad, pero no constituye un backtest estricto. Reconstruir representación y clustering
   por snapshot queda fuera de este alcance.
-- La capa de perfil, ranking, split temporal, cohorte global `valid`, cortes `k = 5, 10, 20`,
-  baselines B0/B1/B2, `MAP`, diversidad, exposición y métricas por slot están implementados en
-  `src/reduction/evaluate_recommender.py`. Sigue pendiente ejecutar y reportar resultados sobre la
-  cohorte acordada; no son resultados ya medidos.
+- La capa de perfil, ranking, split temporal, muestra uniforme reproducible de usuarios `valid`,
+  cortes `k = 5, 10, 20`, baselines B0/B1/B2, métricas N0 y proxies N1 están implementados en
+  `src/reduction/evaluate_recommender.py`. Los resultados medidos y el veredicto se publican en
+  `docs/estado_v1.md`.
 
 ---
 

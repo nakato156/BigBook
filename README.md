@@ -101,14 +101,16 @@ user_centroids.parquet
 
 ### Derived habit metrics
 
-These are **not yet stored as columns**; they are computed from the `date_*` fields and the aggregates above. They are the operational definition of "reading habit" per user:
+These are computed separately for the training and future windows by the temporal evaluator and
+stored in `temporal_evaluation_users.parquet`. They are the operational description of reading
+habit per user:
 
 ```text
 active_span_days   = last_interaction_date − first_interaction_date
 reading_frequency  = completed reads / active_span (e.g. readings per month)
 activity_recency   = days since last interaction        (churn proxy: higher = more at risk)
 completion_rate    = completed reads / interaction_count
-reading_breadth    = category_count                     (diversity across genres)
+reading_breadth    = number of active genres among completed books
 ```
 
 A reader "with a habit" shows a wide `active_span`, regular `reading_frequency`, low `activity_recency`, and high `completion_rate`. These per-user values are what we use as the **outcome label** when evaluating the recommender.
@@ -120,7 +122,7 @@ Reading habit is **not a vague hypothesis** — it *is* the proxy set above. Wha
 | Level | What we claim | Metric | Evidence type | Available |
 |---|---|---|---|---|
 | **N0 — Action** | "We predict the next relevant read" | `Recall@k`/`NDCG@k` over future `is_read` (temporal split) | **Predictive** (relevance) | **Today** |
-| **N1 — Habit, correlational** | "The model *is associated with* readers who read more, finish more, and read more broadly" | the 5 proxies as a per-user outcome label | **Correlational** | **Today** |
+| **N1 — Habit, descriptive** | "Future habit proxies differ across prior-activity segments" | the 5 proxies by `low`/`mid`/`high` training activity | **Descriptive/correlational** | **Today** |
 | **N2 — Habit, causal** | "Recommending this way *increases* reading frequency / retention" | the **same** 5 proxies as treatment-vs-control *lift* + live signals (return visits, books finished after a recommendation) | **Causal (A/B)** | **With telemetry** |
 
 > **Separation that avoids the overclaim:** N0 (`Recall@k`) is a **relevance gate** — a necessary condition, *not* the habit itself. A temporal-split `Recall@k` is still a **relevance** metric ("did I hit the next book?"), not a **habit** metric ("does the reader read more over time?"). The habit lives in N1/N2 (the proxies). The north star (sustaining the habit) is **kept**: today we measure it correlationally (N1); with telemetry we measure the same proxies causally (N2). Only the evidence matures, not the goal.
@@ -146,8 +148,11 @@ denominators.
 
 The temporal split improves the *predictive honesty* of the relevance metric: the question shifts from "did it match past reads?" to "does what it recommends match what the reader keeps reading?". But this is **still relevance (N0), not habit** — hitting the next book is a necessary condition; whether the reader *reads more over time* is Layer 2 (N1). Do not mistake a temporal `Recall@k` for a habit metric.
 
-**Layer 2 (N1) — Habit-proxy evaluation (correlational, today).**
-Compare the interest-similarity recommender against a popularity baseline and check whether readers exposed to neighborhood-based recommendations show higher `completion_rate`, `reading_frequency` and `reading_breadth` (`category_count`). In an offline setting this is correlational, not causal — the proxies describe the *user's* habit, not the recommender's *effect* on it (see Honest limitations).
+**Layer 2 (N1) — Habit-proxy description (correlational, today).**
+Segment users as `low`/`mid`/`high` using p33/p67 of completed training reads, keeping tied values
+together, then compare future `completion_rate`, `reading_frequency`, `activity_recency` and
+`reading_breadth`. This describes how observed habit differs by prior activity; because no user was
+actually exposed to the recommender, it is not an estimate of recommender lift.
 
 **Layer 3 (N2) — Product telemetry (causal, future / out of scope for the dataset).**
 Measuring true causal impact on retention requires instrumenting the live platform: sessions, return visits, books finished *after* a recommendation, click → reading conversion. This is future product work, not available in the static Goodreads dump, and is listed here as an explicit limitation.
@@ -156,14 +161,17 @@ Measuring true causal impact on retention requires instrumenting the live platfo
 
 - The dataset is observational; offline metrics approximate, but do not prove, causal impact on the reading habit.
 - **Attribution gap (the big one).** Offline, the habit proxies describe the *user's* habit, not the recommender's *effect* on it — those books were read without the system existing. That is why N1 is correlational **by construction**, and only N2 (telemetry / A/B) closes the gap. This is the reason the evidence ladder exists.
-- **`reading_frequency` divides by `active_span`**, so single-interaction users yield `active_span = 0` (division by zero). It needs a floor (e.g. clamp to 1 day, or drop `n = 1`) when computed.
+- **`reading_frequency` divides by `active_span`**; the evaluator clamps the denominator to one day
+  for single-day histories and preserves the raw `active_span_days = 0` diagnostic.
 - **`completion_rate` offline is biased by what each user *logged* on Goodreads**, not by what they actually read; in a live product (N2) the signal is clean. The offline proxy is noisier than its telemetry version — same name, different quality.
 - `started_at` / `read_at` and `reading_duration_days` can be sparse depending on what each user filled in, so duration-based metrics rely on `has_reading_duration` / `has_reading_duration_rate` to stay honest about coverage.
 - **Residual transductive leakage.** PCA, description embeddings and clusters remain frozen from
   the full catalog artifacts. The historical snapshot removes the main operational leakage from
   popularity and availability, but it is not a strict backtest. A strict protocol would rebuild
   the representation and clustering for every cutoff and is outside the current scope.
-- The ranking layer implements retrieval, multi-centroid interest scoring, MMR, controlled exploration, mandatory consumed-book exclusions and staged cold start. The temporal evaluation runner and B0/B1/B2 baselines are implemented; measured results remain pending.
+- The ranking layer implements retrieval, multi-centroid interest scoring, MMR, controlled
+  exploration, mandatory consumed-book exclusions and staged cold start. Final measured results and
+  the acceptance verdict are generated in [`docs/estado_v1.md`](docs/estado_v1.md).
 
 ## Business Logic
 
@@ -274,10 +282,11 @@ project/
 
 ## Pipeline
 
-The main flow is:
+The V1 production flow is:
 
 ```text
-clean -> reduce -> curation -> merge -> feature matrix -> PCA
+curated books -> master -> feature matrix/PCA -> clustering
+              -> global interactions -> user profiles -> ranking -> evaluation
 ```
 
 The `clean` and `reduce` phases are handled by genre-specific notebooks. The book curation expected input for the master pipeline is, per category:
@@ -324,6 +333,12 @@ Build the feature matrix, PCA model and metadata:
 env/bin/python -m src.reduction.build_master_feature_matrix
 ```
 
+Build KMeans and the macro-cluster hierarchy:
+
+```bash
+env/bin/python scripts/build_deliverable3_clustering_outputs.py
+```
+
 Build the global deduplicated interactions artifact (requires `books_master.parquet`; add `--max-rows-per-file 200000 --skip-views` for a fast dry-run):
 
 ```bash
@@ -342,22 +357,44 @@ Build multi-centroid user taste modes:
 env/bin/python -m src.reduction.build_user_centroids
 ```
 
-Run temporal evaluation over a bounded user cohort:
+Generate a small explained recommendation sample:
 
 ```bash
-env/bin/python -m src.reduction.evaluate_recommender --max-users 1000 --k 5 10 20
+env/bin/python -m src.reduction.recommend
 ```
 
-The runner selects only globally `valid` users, keeps their complete histories, and reports
-relevance, MAP, diversity, exposure and model slot metrics for every requested `k`. Pass
-`--cutoff YYYY-MM-DD` for an explicit snapshot; otherwise `--train-fraction` selects the global
-date percentile from the bounded cohort.
+Run temporal evaluation over the reproducible 5,000-user cohort:
+
+```bash
+env/bin/python -m src.reduction.evaluate_recommender --max-users 5000 --random-state 42 --k 5 10 20
+```
+
+The runner uniformly samples globally `valid` users, keeps complete histories, and writes:
+
+```text
+data/outputs/recommendations/temporal_evaluation.csv
+data/outputs/recommendations/temporal_evaluation_users.parquet
+data/outputs/recommendations/temporal_evaluation_by_activity.csv
+```
+
+It reports N0 relevance/exposure and descriptive N1 habit proxies. Pass `--cutoff YYYY-MM-DD` for
+an explicit snapshot; otherwise `--train-fraction` selects the global date percentile.
+
+Validate artifact contracts and generate the closure report:
+
+```bash
+env/bin/python -m src.validate_artifacts
+env/bin/python -m src.report_project_status
+```
 
 Run tests:
 
 ```bash
 env/bin/python -m pytest
 ```
+
+The academic V1 explicitly excludes API/UI, live telemetry, N2 causal claims, A/B tests, strict
+per-cutoff PCA/clustering rebuilds, item cold-start and adaptive bandits.
 
 ## Master Merge
 
