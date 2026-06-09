@@ -55,9 +55,10 @@ exploración. v1 separa elegibilidad, ranking y exposición:
 ```text
 elegible(b)  = id/título/vector PCA/cluster válidos
 score(u, b)  = similitud_de_interés(u, b)          ← coseno en subespacio de gusto
-lista_base   = MMR(score, redundancia)              ← relevancia + diversidad
+lista_base   = MMR(score, redundancia, género)      ← diversidad semántica + cross-género
+               + desempate suave por accesibilidad
 exploración  = fuera de vecindad + piso de afinidad
-               + prioridad tail → mid → head
+               + solo tail/mid
 ```
 
 Las reglas de prioridad (qué manda sobre qué) son las que importan:
@@ -67,10 +68,13 @@ Las reglas de prioridad (qué manda sobre qué) son las que importan:
    como gate ni como multiplicador.
 3. **Popularidad como diagnóstico.** El catálogo se divide dinámicamente en `tail` (≤ p25),
    `mid` y `head` (≥ p90). El segmento prioriza exploración, pero no modifica el score.
-4. **Diversidad explícita.** MMR penaliza redundancia en la lista base.
+4. **Diversidad explícita.** MMR penaliza redundancia semántica y solapamiento con los géneros ya
+   presentes en la lista.
 5. **Descubrimiento controlado.** Por defecto, 2 de 10 slots buscan libros fuera de los
-   macro-clusters recuperados, exigen al menos 75% de la mejor similitud y prefieren
-   `tail → mid → head`. Si no hay candidatos suficientemente afines, se completa con interés.
+   macro-clusters recuperados, exigen al menos 75% de la mejor similitud y solo aceptan
+   `tail`/`mid`. Si no hay candidatos suficientemente afines, se completa con interés.
+6. **Accesibilidad subordinada.** `num_pages` aporta un bonus pequeño para desempatar candidatos
+   de afinidad similar; no sustituye el score de interés.
 
 ---
 
@@ -98,8 +102,8 @@ Coherente con el clustering ya construido (KMeans k=100 + 10 macro-clusters):
 1. RETRIEVE   Encontrar los clusters/macro-clusters más cercanos al vec_gusto(u)
               y traer los libros candidatos de esas vecindades (+ algo de exploración).
 2. SCORE      Ordenar candidatos por coseno de interés; popularidad no entra al score.
-3. DIVERSIFY  Reordenar con MMR y reservar slots relevantes para tail/mid fuera de
-              la vecindad recuperada.
+3. DIVERSIFY  Reordenar con MMR semántico + penalización de género + accesibilidad suave,
+              y reservar slots relevantes exclusivamente para tail/mid.
 4. EXPLAIN    Justificar cada ítem por su cluster/género ("porque te gustó X, del mismo
               vecindario de lectura").
 ```
@@ -116,8 +120,8 @@ usuario) y **explicable** (la vecindad da la razón de la recomendación).
 - **Técnicamente válida:** la elegibilidad exige artefactos completos, no popularidad mínima.
 - **Pro-hábito como objetivo, no como factor demostrado:** `is_read` futuro alinea la validación
   predictiva con lecturas posteriores; el efecto sobre hábito se evalúa aparte.
-- **Anti-burbuja:** la diversificación (MMR + macro-clusters + género) garantiza que el top-k no
-  sea "cinco veces el mismo libro".
+- **Anti-burbuja:** la diversificación combina MMR, macro-clusters y penalización explícita por
+  repetición de género.
 - **Evaluable:** el orden se valida con `Recall@k`, `Precision@k`, `NDCG@k`, `MAP` (relevancia) y
   `Coverage`, `Novelty`, `Diversity` (anti-popularidad), tal como define el README.
 
@@ -129,8 +133,9 @@ El criterio de ranking v1 es **interés + diversidad + exploración controlada**
 **primario** es la
 **similitud de interés** —coseno entre el perfil de usuario (`user_matrix` o `user_centroids`) y
 el vector PCA del libro—, que define qué significa "más cercano": afinidad de
-tono/temática/accesibilidad, no de género. Sobre esa base se aplica MMR y se reservan slots
-exploratorios con piso de afinidad, priorizando segmentos menos expuestos. La popularidad no
+tono/temática/accesibilidad, no de género. Sobre esa base se aplica MMR semántico y de género,
+con un desempate suave por accesibilidad, y se reservan slots exploratorios con piso de afinidad
+exclusivamente para `tail`/`mid`. La popularidad no
 filtra ni ordena; sirve para segmentar y medir exposición. El ranking se produce con una arquitectura
 **retrieve (por cluster) → score → diversify → explain**, que lo hace escalable, explicable y
 evaluable con métricas de relevancia, anti-popularidad y proxy de hábito.

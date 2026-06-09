@@ -87,8 +87,8 @@ Mitigaciones ya previstas en el diseño (y por qué aplican):
   10 macro-clusters Ward sobre los centroides. Permite recomendar *dentro* de la vecindad
   (coherencia) pero también *saltar* a vecindades hermanas del mismo macro-cluster
   (diversidad controlada).
-- **Género como control de diversidad, no como unidad**: usar los flags `genre_*` para
-  forzar variedad intra-lista y romper burbujas cross-género.
+- **Género como control de diversidad, no como unidad**: los flags `genre_*` penalizan candidatos
+  que repiten los géneros ya presentes en la lista.
 - **Métricas anti-burbuja**: `Coverage`, `Novelty` e *intra-list Diversity* (README,
   *Evaluation layers*) existen precisamente para detectar si el modelo está amplificando lo
   popular en vez de descubrir.
@@ -117,8 +117,8 @@ control de género, novelty) sobre la base de similitud.
   exposición, no para ordenar.
 - La similitud pura produce **burbujas de filtro**, que en un producto de *hábito de
   lectura* son más dañinas que en uno de consumo puntual.
-  → Por eso se complementa con diversidad (macro-clusters, control de género, novelty) y con
-  progresión (sagas vía `series`, rampa de accesibilidad).
+  → Por eso se complementa con diversidad (macro-clusters, penalización de género, novelty) y un
+  desempate suave de accesibilidad por extensión.
 
 En una frase: **la similitud es necesaria pero no suficiente**. Es el motor correcto para
 este dominio, siempre que se mida sobre el gusto multidimensional, se saque la popularidad del

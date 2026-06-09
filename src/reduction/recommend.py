@@ -73,6 +73,10 @@ class RankingConfig:
     explore_min_relevance_ratio: float = 0.75
     # Diversity/relevance trade-off for MMR (1.0 = pure relevance, 0.0 = pure diversity).
     mmr_lambda: float = 0.7
+    # Explicit penalty when a candidate repeats genres already present in the list.
+    genre_diversity_weight: float = 0.15
+    # Soft tie-break toward shorter eligible books in the normal interest ranking.
+    accessibility_weight: float = 0.05
     # How many nearest fine clusters to pull candidates from (retrieve breadth).
     n_clusters_retrieve: int = 5
     # A4: accessibility floor so the cold-start sampler does not surface pamphlets.
@@ -150,13 +154,18 @@ def popularity_segments(
 
 
 def mmr_select(
-    cand_norm: np.ndarray, relevance: np.ndarray, k: int, lam: float
+    cand_norm: np.ndarray,
+    relevance: np.ndarray,
+    k: int,
+    lam: float,
+    candidate_genres: np.ndarray | None = None,
+    genre_weight: float = 0.0,
 ) -> list[int]:
     """Maximal Marginal Relevance over the candidate set (diversity vs. relevance).
 
     ``cand_norm`` are L2-normalized candidate vectors in the **taste subspace**, so the
     redundancy penalty is itself popularity-free (A1). Greedy, ``O(k·n·d)``; no popularity
-    enters here, only interest similarity and pairwise redundancy.
+    enters here, only interest similarity, pairwise redundancy and optional genre overlap.
     """
     n = len(relevance)
     if n == 0 or k <= 0:
@@ -169,12 +178,30 @@ def mmr_select(
             pick = remaining[int(np.argmax(relevance[remaining]))]
         else:
             mmr = lam * relevance[remaining] - (1.0 - lam) * max_sim[remaining]
+            if candidate_genres is not None and genre_weight > 0:
+                selected_genres = candidate_genres[selected].max(axis=0)
+                overlap = candidate_genres[remaining] @ selected_genres
+                denom = np.maximum(candidate_genres[remaining].sum(axis=1), 1.0)
+                mmr -= genre_weight * (overlap / denom)
             pick = remaining[int(np.argmax(mmr))]
         selected.append(pick)
         remaining.remove(pick)
         sims = cand_norm @ cand_norm[pick]
         max_sim = np.maximum(max_sim, sims)
     return selected
+
+
+def accessibility_scores(num_pages: np.ndarray, min_pages: int) -> np.ndarray:
+    """Soft accessibility score: shorter valid books rank higher; missing/too short get zero."""
+    pages = np.asarray(num_pages, dtype=np.float64)
+    valid = np.isfinite(pages) & (pages >= min_pages)
+    scores = np.zeros(len(pages), dtype=np.float64)
+    if not valid.any():
+        return scores
+    log_pages = np.log1p(pages[valid])
+    low, high = float(log_pages.min()), float(log_pages.max())
+    scores[valid] = 1.0 if high == low else 1.0 - ((log_pages - low) / (high - low))
+    return scores
 
 
 def nearest_clusters(user_taste_norm: np.ndarray, centroids_taste_norm: np.ndarray) -> np.ndarray:
@@ -191,20 +218,21 @@ def select_exploration_rows(
     best_relevance: float,
     min_relevance_ratio: float,
 ) -> np.ndarray:
-    """A3: select relevant exploration books, preferring tail then mid then head.
+    """A3: select relevant exploration books from tail/mid only.
 
-    Popularity segment is a priority among candidates that pass the relevance floor, never
-    a multiplicative score. Returned values are catalog row ids.
+    Head books are never eligible for exploration. Tail is preferred over mid among
+    candidates that pass the relevance floor. Returned values are catalog row ids.
     """
     if not len(rows) or k <= 0:
         return np.array([], dtype=np.int64)
     floor = best_relevance * min_relevance_ratio if best_relevance > 0 else best_relevance
-    keep = relevance >= floor
+    segments = popularity_segment[rows]
+    keep = (relevance >= floor) & np.isin(segments, ["tail", "mid"])
     if not keep.any():
         return np.array([], dtype=np.int64)
     eligible_rows = rows[keep]
     eligible_rel = relevance[keep]
-    priority = {"tail": 0, "mid": 1, "head": 2, "unknown": 3}
+    priority = {"tail": 0, "mid": 1}
     segment_priority = np.array(
         [priority.get(str(popularity_segment[row]), 3) for row in eligible_rows]
     )
@@ -258,6 +286,9 @@ class Recommender:
                 for uid, group in centroid_frame.groupby("user_id", sort=False)
             }
         titles = self.genres.reindex(self.book_ids)["title"].to_numpy()
+        self.genre_matrix = (
+            self.genres.reindex(self.book_ids)[GENRE_COLUMNS].fillna(0).to_numpy(dtype=np.float64)
+        )
         self.eligible_mask = eligibility_mask(
             self.book_ids,
             titles,
@@ -431,9 +462,18 @@ class Recommender:
             mode_sim = modes_taste_norm @ self.book_taste_norm[rows].T
             relevance = (weights[:, None] * mode_sim).max(axis=0)
             best_relevance = float(relevance.max())
+            ranking_relevance = relevance + (
+                cfg.accessibility_weight
+                * accessibility_scores(self.num_pages[rows], cfg.min_pages_accessible)
+            )
             # Select a full interest list first; exploration replaces only available slots.
             interest_order = mmr_select(
-                self.book_taste_norm[rows], relevance, cfg.k, cfg.mmr_lambda
+                self.book_taste_norm[rows],
+                ranking_relevance,
+                cfg.k,
+                cfg.mmr_lambda,
+                candidate_genres=self.genre_matrix[rows],
+                genre_weight=cfg.genre_diversity_weight,
             )
             n_interest = max(cfg.k - cfg.explore_slots, 0)
             records = [self._explain(int(rows[i]), "interest") for i in interest_order[:n_interest]]

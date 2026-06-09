@@ -208,8 +208,10 @@ Popularity signals are still useful, but they should be controlled:
   `ratings_count` does not filter or order books.
 - Popularity measures exposure through dynamic catalog segments: `tail` (≤ p25), `mid` and
   `head` (≥ p90).
-- Final recommendations reserve controlled exploration for relevant tail/mid books outside the
-  retrieved neighborhood, with fallback to normal interest ranking if the relevance floor is not met.
+- The normal interest ranking combines semantic MMR with an explicit genre-overlap penalty and a
+  small accessibility tie-break based on `num_pages`.
+- Exploration slots accept only relevant `tail`/`mid` books outside the retrieved neighborhood;
+  if none passes the relevance floor, normal interest ranking fills the slots.
 
 With the current catalog, `ratings_count` has minimum 49, p25 436 and p90 6,017. The previous
 `ratings_count >= 5` rule retained all 108,227 books and therefore was not a meaningful gate.

@@ -166,16 +166,18 @@ del libro. "Más cercano" = afinidad de tono/temática/accesibilidad, no de gén
 ```text
 elegible(b) = id/título/vector PCA/cluster válidos
 score(u,b)  = similitud_interés(u,b)         ← coseno en subespacio de gusto
-lista_base  = MMR(score, redundancia)
+lista_base  = MMR semántico + penalización por género
+              + desempate suave por accesibilidad
 exploración = fuera de vecindad + ≥75% de la mejor similitud
-              + prioridad tail → mid → head
+              + solo tail/mid
 ```
 
 Regla de oro: **interés primero**. Popularidad no filtra ni ordena: segmenta el catálogo para
 medir y controlar exposición. Con los datos actuales, `tail <= 436` y `head >= 6,017` ratings.
 
 **Arquitectura del ranking:** `retrieve` (candidatos por cluster/macro-cluster cercano) → `score`
-→ `diversify` (MMR + slots relevantes de cola/media) → `explain` (por vecindad/género). Escalable,
+→ `diversify` (MMR semántico, género, accesibilidad suave y slots solo tail/mid) → `explain`
+(por vecindad/género). Escalable,
 explicable y **evaluable** con `Recall@k`/`NDCG@k`/`MAP` (relevancia), `Coverage`/`Novelty`/
 `Diversity` (anti-popularidad) y proxies de hábito, con **split temporal** sobre `is_read`.
 
@@ -230,7 +232,7 @@ Justificación  →  la similitud sirve, si se mide sobre el gusto y se diversif
 Información     →  tenemos contenido + feedback de lectura; no telemetría ni social
 Perfil usuario  →  user_matrix + user_centroids: gusto PCA inferido de consumo positivo
 Representación   →  vector PCA híbrido por libro (texto + metadata + popularidad atenuada)
-Scoring          →  coseno + MMR; exploración relevante prioriza tail/mid, sin gate de popularidad
+Scoring          →  coseno + MMR/género + accesibilidad suave; exploración solo tail/mid
 Evaluación       →  válido si predice lo que se lee DESPUÉS (split temporal) y se asocia a
                     mejores proxies de hábito (correlacional, no causal — A/B queda fuera de alcance)
 ```

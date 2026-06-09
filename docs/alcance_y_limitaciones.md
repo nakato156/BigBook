@@ -43,7 +43,7 @@ En un top-10 se reservan por defecto **2 slots exploratorios**. Los candidatos:
 
 1. están fuera de los macro-clusters de la vecindad recuperada;
 2. conservan al menos el **75% de la mejor similitud** de interés del usuario;
-3. se priorizan por segmento `tail → mid → head`, y por similitud dentro del segmento;
+3. solo admiten segmentos `tail` o `mid`, priorizando `tail` y luego similitud;
 4. respetan exclusiones de libros ya consumidos;
 5. si ninguno supera el piso de relevancia, los slots vuelven al ranking normal de interés.
 
@@ -61,6 +61,12 @@ Con los artefactos actuales: `tail <= 436` y `head >= 6,017`.
 
 El fallback mantiene un libro técnicamente elegible y accesible por macro-cluster. No ordena por
 popularidad. `num_pages` es un proxy débil de accesibilidad y debe presentarse como limitación.
+
+En el ranking normal, `num_pages` también actúa como desempate suave: favorece libros más cortos
+entre candidatos de afinidad comparable, sin reemplazar la similitud como criterio principal.
+
+La diversidad de la lista base combina MMR semántico con una penalización explícita cuando un
+candidato repite los géneros ya presentes en la lista.
 
 ## 3. Cómo se mide P2/P3
 

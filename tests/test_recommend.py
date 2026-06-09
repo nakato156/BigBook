@@ -19,6 +19,7 @@ from src.reduction.evaluate_recommender import (
 from src.reduction.recommend import (
     RankingConfig,
     Recommender,
+    accessibility_scores,
     eligibility_mask,
     l2_normalize_rows,
     mmr_select,
@@ -70,6 +71,19 @@ def test_a3_exploration_prefers_tail_after_relevance_floor() -> None:
     assert picked.tolist() == [1, 2]
 
 
+def test_a3_exploration_never_uses_head_as_fallback() -> None:
+    rows = np.array([0, 1])
+    picked = select_exploration_rows(
+        rows,
+        relevance=np.array([0.99, 0.95]),
+        popularity_segment=np.array(["head", "head"]),
+        k=2,
+        best_relevance=1.0,
+        min_relevance_ratio=0.75,
+    )
+    assert picked.tolist() == []
+
+
 def test_mmr_prefers_relevance_then_diversifies() -> None:
     # Two near-duplicate high-relevance vectors + one orthogonal one.
     cand = l2_normalize_rows(np.array([[1.0, 0.0], [0.99, 0.01], [0.0, 1.0]]))
@@ -78,6 +92,28 @@ def test_mmr_prefers_relevance_then_diversifies() -> None:
     # First the top-relevance item, then the diverse one — not its near-duplicate.
     assert picked[0] == 0
     assert picked[1] == 2
+
+
+def test_mmr_penalizes_repeated_genres() -> None:
+    cand = l2_normalize_rows(np.array([[1.0, 0.0], [0.99, 0.01], [0.8, 0.2]]))
+    relevance = np.array([0.9, 0.89, 0.88])
+    genres = np.array([[1, 0], [1, 0], [0, 1]], dtype=np.float64)
+    picked = mmr_select(
+        cand,
+        relevance,
+        k=2,
+        lam=0.9,
+        candidate_genres=genres,
+        genre_weight=0.2,
+    )
+    assert picked == [0, 2]
+
+
+def test_accessibility_scores_favor_shorter_valid_books() -> None:
+    scores = accessibility_scores(np.array([np.nan, 30, 100, 500]), min_pages=50)
+    assert scores[0] == 0
+    assert scores[1] == 0
+    assert scores[2] > scores[3]
 
 
 # --------------------------------------------------------------------------- #
@@ -124,6 +160,10 @@ def _toy_recommender(config: RankingConfig) -> Recommender:
         {"title": [f"Title {b}" for b in book_ids], **{g: 0 for g in GENRES}},
         index=pd.Index(book_ids, name="book_id"),
     )
+    genres.loc[["b0", "b1"], "genre_fantasy"] = 1
+    genres.loc["b2", "genre_romance"] = 1
+    genres.loc[["b3", "b4"], "genre_mystery"] = 1
+    genres.loc[["b5", "b6", "b7"], "genre_history"] = 1
 
     # One user whose taste is region A (pc_1), and one cold-start user.
     user_ids = np.array(["u_taste_A"])
@@ -175,6 +215,20 @@ def test_a3_recommendation_includes_exploration_from_unoccupied_macro() -> None:
     # User occupies macro 0 (taste A). Exploration must come from a macro he does not occupy.
     assert (explore["macro_cluster"] != 0).all()
     assert set(explore["popularity_segment"]).issubset({"tail", "mid"})
+
+
+def test_normal_ranking_uses_accessibility_as_soft_tiebreak() -> None:
+    rec = _toy_recommender(
+        RankingConfig(
+            k=1,
+            explore_slots=0,
+            n_clusters_retrieve=1,
+            mmr_lambda=1.0,
+            accessibility_weight=0.2,
+        )
+    )
+    out = rec.recommend("u_taste_A", set())
+    assert out.iloc[0]["book_id"] == "b1"
 
 
 def test_a4_cold_start_has_no_popularity_and_spans_macros() -> None:
