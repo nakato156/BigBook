@@ -32,7 +32,7 @@ one row = one book_id = one book vector
 
 The main clustering input should be `data/features/master_feature_matrix.parquet`, using `pc_0..pc_N` as the vector columns. Cluster `book_id` rows, not genres. Genres should be used as signals, filters, explanations or diversity controls, but not as the unit of the main clustering model.
 
-Avoid popularity bias. Popularity features such as `ratings_count`, `text_reviews_count` and `average_rating` are useful quality/confidence signals, but they should not become the whole recommendation objective. The current pipeline reduces popularity outlier influence with `log1p` transforms and block weighting. Downstream ranking should prioritize interest similarity first, then use popularity as a secondary signal.
+Avoid popularity bias. Popularity features such as `ratings_count`, `text_reviews_count` and `average_rating` remain in the hybrid item representation, with outlier influence reduced through `log1p` transforms and block weighting. Downstream ranking prioritizes interest similarity and does not use popularity to filter or order books. `ratings_count` is used only to define dynamic `tail`/`mid`/`head` exposure segments and evaluation metrics.
 
 ## Pipeline Architecture
 
@@ -46,7 +46,7 @@ The notebook stages must produce a `books_curated.parquet` for every genre key i
 data/processed/<category>/books_curated.parquet
 ```
 
-Category keys are `fantasy_paranormal`, `mystery_thriller_crime`, `history_biography`, `young_adult`, `romance`. `src/merge_master.py` and `src/reduction/feature_matrix.py` both consult `LEGACY_PROCESSED_DIRS` to also accept the older `data/processed/fantasy` and `data/processed/history` paths, so do not delete that fallback when refactoring.
+Category keys are `fantasy_paranormal`, `mystery_thriller_crime`, `history_biography`, `young_adult`, `romance`. `src/merge_master.py` consults `LEGACY_PROCESSED_DIRS` to also accept the older `data/processed/fantasy` and `data/processed/history` paths, so do not delete that fallback when refactoring.
 
 The legacy per-genre `data/processed/<category>/interactions_curated.parquet` files are **deprecated** (kept only as a historical backup, never overwritten). They were biased (0% `rating_missing`, 100% `is_read` — the whole implicit layer was dropped upstream), wrongly partitioned (~71% of users span >=2 genres, so per-category K-core and rating bias are wrong), and duplicated (~19% of `(user, book)` pairs repeated across dumps). The interaction side is now a single **global** artifact (see below), not per-genre.
 
@@ -107,7 +107,7 @@ Outputs go to `data/outputs/clustering/`: `book_clusters_k{K}.parquet` (book_id 
 - All paths derive from `src/config.py::PROJECT_ROOT`; do not hardcode absolute paths.
 - Use `src/utils/io.py::safe_write_parquet` for writes (it handles `mkdir -p` of the parent and uses pyarrow); use `read_jsonl_chunks` / `read_parquet_chunks` for streaming reads of the raw Goodreads JSON dumps.
 - Float features are `float32` everywhere in the reduction pipeline — the PCA matrix assembly asserts `np.isfinite(values).all()` and will reject NaN/Inf, so impute before passing into `standardize_and_weight_blocks`.
-- The `src/reduction/feature_matrix.py` module (per-category book/interaction/user features) is a separate, older pipeline from `build_master_feature_matrix.py` (PCA on books_master). They share the curated-parquet inputs but produce different artifacts; do not conflate them.
+- The legacy per-category feature-matrix module was removed. `src/reduction/build_master_feature_matrix.py`, operating on `books_master.parquet`, is the canonical item representation pipeline.
 
 ## graphify
 
