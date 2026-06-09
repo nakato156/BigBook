@@ -27,6 +27,9 @@ dimensiones (`pc_0..pc_172`) por `book_id`.
 6. [Criterio de similitud y scoring](#6-criterio-de-similitud-y-scoring) · *(detalle: [criterio_scoring.md](criterio_scoring.md))*
 7. [Métricas de evaluación: ¿cuándo es válido?](#7-métricas-de-evaluación-cuándo-es-válido) · *(detalle: [metricas_evaluacion.md](metricas_evaluacion.md))*
 
+> **Alcance y límites de v1:** qué resolvemos, qué admitimos y qué aplazamos (estado real de los 3
+> problemas de negocio + 4 contradicciones, en tres cubos) → [alcance_y_limitaciones.md](alcance_y_limitaciones.md).
+
 ---
 
 ## 1. Definición del problema
