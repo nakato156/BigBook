@@ -27,6 +27,14 @@ dimensiones (`pc_0..pc_172`) por `book_id`.
 6. [Criterio de similitud y scoring](#6-criterio-de-similitud-y-scoring) · *(detalle: [criterio_scoring.md](criterio_scoring.md))*
 7. [Métricas de evaluación: ¿cuándo es válido?](#7-métricas-de-evaluación-cuándo-es-válido) · *(detalle: [metricas_evaluacion.md](metricas_evaluacion.md))*
 
+Documentos de cierre para el entregable:
+
+- [Task framing formal](task_framing.md): recommendation/ranking top-k y rol del clustering.
+- [Data alignment](data_alignment.md): claves, cardinalidades, candidate pool y contratos
+  temporales.
+- [Error analysis](error_analysis.md): casos fuertes, fallos de retrieval/scoring, exploración e
+  identidad de obra.
+
 > **Alcance y límites de v1:** qué resolvemos, qué admitimos y qué aplazamos (estado real de los 3
 > problemas de negocio + 4 contradicciones, en tres cubos) → [alcance_y_limitaciones.md](alcance_y_limitaciones.md).
 
@@ -55,6 +63,11 @@ para optimizar Z = lecturas empezadas y terminadas (proxy: is_read + rating posi
 | **Ítem** | Libro (`book_id`) = **un vector PCA** (`pc_0..pc_172`). El género es señal, no la unidad. |
 | **Recomendación útil** | Lista corta, **relevante** (afinidad antes que popularidad), **accesible**, **diversa pero coherente** (cross-género) y **explicable** (por cluster/género). |
 | **Acción objetivo** | **Empezar y completar una lectura** (`is_read`), reforzada por rating alto/review. North-star = **retención del hábito**. No compra ni clic. |
+
+**Clasificación formal:** BigBook es un sistema de **recomendación personalizada mediante ranking
+top-k**. El clustering de libros es candidate generation; no es la salida final. No es predicción
+de ratings ni segmentación de usuarios. El stronger system es un ranking híbrido de contenido y
+comportamiento con perfiles multi-interés. Detalle en [task_framing.md](task_framing.md).
 
 ---
 
@@ -96,6 +109,12 @@ social, transacciones**. Metadata con nulos relevantes: `num_pages` (17.5%), `pu
 > `data/processed/interactions_curated.parquet`. El ranking v1 implementa multi-centroides,
 > exclusión de consumidos, MMR, exploración y cold-start escalonado. El runner temporal B0/B1/B2
 > y los proxies N1 están implementados; los resultados se publican en `docs/estado_v1.md`.
+
+**Contrato de alineamiento:** catálogo, PCA y clusters contienen el mismo conjunto exacto de
+`book_id`; libros y usuarios comparten el mismo esquema ordenado `pc_*`; `user_meta` coincide con
+usuarios globalmente válidos y `user_centroids` es subconjunto de `user_matrix`. En evaluación,
+perfil, consumidos y popularidad provienen solo de train. Detalle en
+[data_alignment.md](data_alignment.md).
 
 ---
 
@@ -217,6 +236,12 @@ al recomendador porque el dataset no contiene exposición real al sistema.
 en vivo** (sesiones, retornos, libros terminados tras una recomendación), fuera del alcance del
 dataset estático. El runner offline produce la evidencia N0/N1 y el veredicto reproducible en
 `docs/estado_v1.md`.
+
+El análisis agregado se complementa con casos reconstruidos bajo el mismo corte temporal. Se
+distinguen fallos de candidate generation, scoring/MMR, exploración, identidad entre ediciones y
+etiqueta offline incompleta. La métrica diagnóstica pendiente es `candidate_recall`, necesaria
+para separar objetivos que nunca llegaron al ranker de los que fueron recuperados pero quedaron
+fuera del top-k. Casos y taxonomía en [error_analysis.md](error_analysis.md).
 
 ---
 

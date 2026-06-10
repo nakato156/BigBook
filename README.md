@@ -21,6 +21,39 @@ to optimize   Z = relevant readings started and finished (proxy: is_read + posit
                   and single-genre filter bubbles.
 ```
 
+### Formal task framing
+
+BigBook is a **personalized top-k recommendation/ranking system**:
+
+```text
+input   = user history before time t + catalog available at t
+output  = an ordered list of k books for that user
+target  = future positive reads appearing near the top of the list
+```
+
+The stronger system is best described as a **content-behavior hybrid ranker with multi-interest
+user profiles, cluster-based candidate generation, cosine scoring, MMR and controlled
+exploration**.
+
+It is not a rating-prediction task: ratings define positive evidence but the output is not a
+predicted numeric score. It is not user segmentation: activity segments are evaluation
+descriptors only. Clustering is not the final task either; book clusters narrow the candidate
+pool before individual books are ranked.
+
+The common historical candidate pool is:
+
+```text
+C(u,t) =
+    master catalog
+    ∩ technically eligible books
+    ∩ books available at t
+    - books consumed by u before t
+```
+
+Baselines rank directly over `C(u,t)`. The model further retrieves books from the five closest
+fine clusters and eligible exploration neighborhoods. See
+[`docs/task_framing.md`](docs/task_framing.md) for the complete contract.
+
 ### What is a user
 
 A reader identified by `user_id`, represented by their **interaction history** over books — what they read (`is_read`), rated (`rating_clean`) and reviewed (`has_review_text`) — as captured in the canonical `interactions_curated.parquet`. The implemented user-side artifacts are `user_matrix.parquet` (one PCA-space taste vector per user with positives), `user_meta.parquet` (behavior/confidence metadata) and `user_centroids.parquet` (multi-centroid taste modes for users with enough positive history).
@@ -173,6 +206,59 @@ Measuring true causal impact on retention requires instrumenting the live platfo
   exploration, mandatory consumed-book exclusions and staged cold start. Final measured results and
   the acceptance verdict are generated in [`docs/estado_v1.md`](docs/estado_v1.md).
 
+### Error analysis
+
+Aggregate metrics are supplemented with stage-level error analysis. A future relevant book can
+fail because:
+
+1. its cluster was not retrieved;
+2. it was retrieved but lost during scoring/MMR;
+3. an exploration slot added exposure without matching future behavior;
+4. another edition of an already consumed work was treated as a different `book_id`;
+5. the offline log never observed exposure or eventual consumption.
+
+Reconstructed examples under the exact historical protocol include:
+
+- a clean rank-1 hit where the future book belonged to the nearest cluster;
+- a single-target failure where the relevant book's cluster was outside the five retrieved
+  clusters;
+- a multi-hit mystery case where retrieval worked but several relevant books from the same cluster
+  remained outside the top-10;
+- a broad-history user where relevant books were split between retrieval misses and ranking
+  misses.
+
+The next diagnostic metric is candidate recall:
+
+```text
+candidate_recall =
+    future relevant books present in retrieved candidates
+    / eligible future relevant books
+```
+
+This separates candidate-generation errors from ranking errors. Detailed cases, IDs, clusters and
+recommended improvements are in [`docs/error_analysis.md`](docs/error_analysis.md).
+
+### Data alignment
+
+The artifact chain uses explicit key and schema contracts:
+
+```text
+ids(books_master)
+  = ids(master_feature_matrix)
+  = ids(book_clusters_k100)
+```
+
+Book, user-matrix and user-centroid artifacts must also expose the same ordered `pc_*` schema.
+`user_meta` matches globally valid users, `user_matrix` matches users with positive history, and
+`user_centroids` is a subset of `user_matrix`. During evaluation, profiles, consumed books,
+popularity and genre history use training data only.
+
+`src.validate_artifacts` raises on missing/extra IDs, duplicates, invalid cluster counts, PCA
+schema mismatch and incompatible user sets. The current item key is edition-level Goodreads
+`book_id`; a canonical work key is still required to prevent cross-edition duplicates. See
+[`docs/data_alignment.md`](docs/data_alignment.md) for cardinalities, temporal contracts and
+explicit assumptions.
+
 ## Business Logic
 
 The recommendation logic should model user interests as multidimensional reading tastes rather than as a single genre choice. A platform for reading habits should not be limited to:
@@ -254,6 +340,14 @@ External project artifacts:
 
 - [Cleaned and reduced data by genre](https://drive.google.com/drive/folders/1un4RNi8W0dvh7cRwx_0Ovgmb9Q4nNh7X?usp=drive_link)
 - [books_master](https://drive.google.com/drive/folders/17vpKc3Q4OvQtRkkvOc4GL8sTpjJB-7bv)
+
+Project documentation:
+
+- [Task framing](docs/task_framing.md)
+- [Data alignment](docs/data_alignment.md)
+- [Error analysis](docs/error_analysis.md)
+- [Current V1 status](docs/estado_v1.md)
+- [Consolidated report](report.md)
 
 ## Repository Structure
 
