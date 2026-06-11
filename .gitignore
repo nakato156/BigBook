@@ -14,6 +14,15 @@ data/interim/*
 !data/interim/.gitkeep
 data/embeddings/*
 !data/embeddings/.gitkeep
+outputs/
+*.parquet
+*.csv
+*.json
+*.pkl
+*.h5
+*.hdf5
+*.npy
+*.joblib
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -2,6 +2,329 @@
 
 Course project for Big Data. The project builds a hybrid book representation for recommendation and analysis by combining Goodreads metadata, genre labels, interaction-derived popularity signals and text embeddings from book descriptions. The final artifact is a PCA-reduced feature matrix with one vector per `book_id`.
 
+The business goal is to build a book recommendation platform that helps users discover books aligned with their interests and, more importantly, supports the habit of reading: ayudar a mas personas a tener el habito de lectura. The system should recommend books that feel approachable, relevant and motivating for each reader, not only the books that are already the most popular.
+
+## Problem Definition
+
+This is the core statement of what the system does. Everything else in this README (representation, clustering, ranking) exists to serve it.
+
+> **We recommend books (`book_id`, each one a PCA vector `pc_0..pc_172`) to readers (`user_id`), based on the multidimensional reading taste inferred from their interaction history (reads, ratings, reviews) and on book-to-book similarity in the reduced feature space, in order to optimize relevant and motivating reading starts and completions — prioritizing interest similarity over popularity — so that readers sustain and grow the habit of reading.**
+
+The same idea in `X / Y / Z` form:
+
+```text
+We recommend  X = books from the catalog, as PCA vectors, grouped into taste clusters
+based on      Y = the user's interaction history + similarity in PCA space + book clusters
+                  (genre as a filter/explanation/diversity signal; popularity as exposure diagnostic)
+to optimize   Z = relevant readings started and finished (proxy: is_read + positive rating)
+                  that sustain the reading habit (retention), avoiding popularity bias
+                  and single-genre filter bubbles.
+```
+
+### Formal task framing
+
+BigBook is a **personalized top-k recommendation/ranking system**:
+
+```text
+input   = user history before time t + catalog available at t
+output  = an ordered list of k books for that user
+target  = future positive reads appearing near the top of the list
+```
+
+The stronger system is best described as a **content-behavior hybrid ranker with multi-interest
+user profiles, cluster-based candidate generation, cosine scoring, MMR and controlled
+exploration**.
+
+It is not a rating-prediction task: ratings define positive evidence but the output is not a
+predicted numeric score. It is not user segmentation: activity segments are evaluation
+descriptors only. Clustering is not the final task either; book clusters narrow the candidate
+pool before individual books are ranked.
+
+The common historical candidate pool is:
+
+```text
+C(u,t) =
+    master catalog
+    ∩ technically eligible books
+    ∩ books available at t
+    - books consumed by u before t
+```
+
+Baselines rank directly over `C(u,t)`. The model further retrieves books from the five closest
+fine clusters and eligible exploration neighborhoods. See
+[`docs/task_framing.md`](docs/task_framing.md) for the complete contract.
+
+### What is a user
+
+A reader identified by `user_id`, represented by their **interaction history** over books — what they read (`is_read`), rated (`rating_clean`) and reviewed (`has_review_text`) — as captured in the canonical `interactions_curated.parquet`. The implemented user-side artifacts are `user_matrix.parquet` (one PCA-space taste vector per user with positives), `user_meta.parquet` (behavior/confidence metadata) and `user_centroids.parquet` (multi-centroid taste modes for users with enough positive history).
+
+A user is **not** modeled as a single genre label. The user profile is a multidimensional taste vector built by aggregating the PCA vectors of the books they engaged with positively. Users with 1–2 positives use shrinkage toward their nearest catalog cluster; users with no history use optional seed books or a diverse accessible sample across macro-clusters.
+
+### What is an item
+
+A book, identified by `book_id`, where **one row = one book vector** in PCA space (`pc_0..pc_172`). That vector is the unit of recommendation and of clustering. Genres are a signal, filter, explanation or diversity control — never the unit of the recommendation model.
+
+### What a useful recommendation means
+
+A short list of books the reader is likely to read and enjoy, that is also:
+
+- **Relevant**: close to the user's taste by interest similarity first (distance in PCA space / shared cluster), not by popularity.
+- **Approachable and motivating**: aligned with the product goal of building a reading habit, favoring accessible books rather than only the most popular ones.
+- **Diverse yet coherent**: it exploits cross-genre patterns (youthful tone + romance + adventure + light fantasy) instead of locking the reader into one genre.
+- **Explainable**: justifiable through its cluster / macro-cluster and genres ("because you liked X, from the same reading neighborhood").
+
+### Target action
+
+The primary action the system tries to provoke is **starting and completing a reading**. In Goodreads data the observable proxy is `is_read = True`, reinforced by a high `rating` and/or a written review. The ultimate objective is **retention of the reading habit**, not a single click or purchase.
+
+| Level | Signal in the data | Role |
+|---|---|---|
+| Target action | `is_read` (reading) | What we optimize |
+| Quality confirmation | high `rating`, `has_review_text` | Reinforcement |
+| Engagement / interest | click / open book page | Early proxy (to instrument in the product) |
+| Business objective | retention / habit | North-star metric |
+
+## Evaluation & Reading-Habit Metrics
+
+The problem statement optimizes for `Z = sustaining the reading habit`. That target is only meaningful if we can measure it, so this section defines how we measure reading habit and how we evaluate the recommender against it.
+
+### The measurement challenge
+
+"Reading habit" is a **longitudinal, causal** outcome: does a reader keep reading over time because of what we recommended? The Goodreads Dataset Collection (UCSD) is **observational and historical** — it is not a live A/B test, so we cannot measure causal impact directly. What we can do is:
+
+1. Derive **habit proxies** from the temporal and behavioral signals already present in the data.
+2. Evaluate the recommender **offline** with a temporal split, so the metric reflects "what the reader actually read next", not just "what they read in the past".
+3. Document the **production telemetry** that would be required to measure true causal impact, which is out of scope for the static dataset.
+
+### Features available for habit measurement
+
+These columns already exist in the canonical interaction pipeline (`src/curation/interactions.py`) and are exposed through `interactions_curated.parquet`, `user_features_global.parquet`, `user_meta.parquet` and `user_centroids.parquet`. They are the raw material for any habit metric.
+
+Per-interaction signals:
+
+| Feature | What it captures | Reading-habit signal |
+|---|---|---|
+| `date_added`, `date_updated` | When each interaction happened | Cadence / frequency and temporal span — the basis of everything |
+| `started_at`, `read_at` | Reading start and end (raw `GOODREADS_DATE_COLUMNS`) | Completion of a reading, not just saving it |
+| `reading_duration_days`, `has_reading_duration` | Actual reading duration | Effective reading vs. mere intention |
+| `engagement_mode` | `want_to_read`, `read_no_rating`, `rating_only`, `review` | Separates intention from completed/stronger engagement |
+| `is_read` | Reading completed | Target action (direct proxy) |
+| `rating`, `rating_clean`, `has_review_text` | Rated / reviewed | Depth of engagement (writing a review = high commitment) |
+
+Per-user aggregates and user artifacts:
+
+```text
+user_features_global.parquet
+  user_mean_rating, user_rating_std, user_rating_count, user_rating_bias
+  read_or_rated_count, valid
+
+user_matrix.parquet
+  user_id + pc_0..pc_172
+  baseline taste vector = mean PCA vector of positives:
+  is_read == True AND rating_clean >= 4
+
+user_meta.parquet
+  positive_count, interaction_count, review_count, want_to_read_count
+  user_rating_bias, category_count, last_date_added, is_cold_start
+
+user_centroids.parquet
+  user_id, centroid_id, n_books, weight, centroid_weight, pc_0..pc_172
+  multi-centroid taste modes; centroid_weight uses rating + review + reading duration
+```
+
+### Derived habit metrics
+
+These are computed separately for the training and future windows by the temporal evaluator and
+stored in `temporal_evaluation_users.parquet`. They are the operational description of reading
+habit per user:
+
+```text
+active_span_days   = last_interaction_date − first_interaction_date
+reading_frequency  = completed reads / active_span (e.g. readings per month)
+activity_recency   = days since last interaction        (churn proxy: higher = more at risk)
+completion_rate    = completed reads / interaction_count
+reading_breadth    = number of active genres among completed books
+```
+
+A reader "with a habit" shows a wide `active_span`, regular `reading_frequency`, low `activity_recency`, and high `completion_rate`. These per-user values are what we use as the **outcome label** when evaluating the recommender.
+
+### The habit evidence ladder (N0 → N1 → N2)
+
+Reading habit is **not a vague hypothesis** — it *is* the proxy set above. What matures over time is not the *metric* but the **strength of evidence** with which we can claim the recommender influences it. The promise is therefore staged in three levels, and **every claim is tagged with its level** so we never overclaim what we cannot yet prove:
+
+| Level | What we claim | Metric | Evidence type | Available |
+|---|---|---|---|---|
+| **N0 — Action** | "We predict the next relevant read" | `Recall@k`/`NDCG@k` over future `is_read` (temporal split) | **Predictive** (relevance) | **Today** |
+| **N1 — Habit, descriptive** | "Future habit proxies differ across prior-activity segments" | the 5 proxies by `low`/`mid`/`high` training activity | **Descriptive/correlational** | **Today** |
+| **N2 — Habit, causal** | "Recommending this way *increases* reading frequency / retention" | the **same** 5 proxies as treatment-vs-control *lift* + live signals (return visits, books finished after a recommendation) | **Causal (A/B)** | **With telemetry** |
+
+> **Separation that avoids the overclaim:** N0 (`Recall@k`) is a **relevance gate** — a necessary condition, *not* the habit itself. A temporal-split `Recall@k` is still a **relevance** metric ("did I hit the next book?"), not a **habit** metric ("does the reader read more over time?"). The habit lives in N1/N2 (the proxies). The north star (sustaining the habit) is **kept**: today we measure it correlationally (N1); with telemetry we measure the same proxies causally (N2). Only the evidence matures, not the goal.
+
+### Evaluation layers (= the three evidence levels)
+
+The three layers below implement the ladder: **Layer 1 → N0**, **Layer 2 → N1**, **Layer 3 → N2**.
+
+**Layer 1 (N0) — Offline evaluation with a temporal split (doable today).**
+Use one reproducible global cutoff over valid `date_added` values (on or after `2006-01-01`),
+train on interactions at or before that cutoff, and hold out the future. Measure whether the
+recommender would have surfaced the available books the reader **actually read later**
+(`is_read = True`, ideally with a high rating):
+
+- `Recall@k`, `Precision@k`, `NDCG@k`, `MAP` — relevance of the ranked list.
+- `Coverage`, `Novelty`, intra-list `Diversity` — to confirm the model is not just amplifying popular books (enforces the popularity-bias rule from the Business Logic section).
+
+The evaluation mode is `global_historical_snapshot_frozen_representation`. B1/B2, popularity
+segments, novelty and average recommendation popularity use only rating evidence available by the
+cutoff. Books with a known publication year must already be published; books without a year must
+have been observed by the cutoff. Unavailable holdout books are excluded from relevance
+denominators.
+
+The temporal split improves the *predictive honesty* of the relevance metric: the question shifts from "did it match past reads?" to "does what it recommends match what the reader keeps reading?". But this is **still relevance (N0), not habit** — hitting the next book is a necessary condition; whether the reader *reads more over time* is Layer 2 (N1). Do not mistake a temporal `Recall@k` for a habit metric.
+
+**Layer 2 (N1) — Habit-proxy description (correlational, today).**
+Segment users as `low`/`mid`/`high` using p33/p67 of completed training reads, keeping tied values
+together, then compare future `completion_rate`, `reading_frequency`, `activity_recency` and
+`reading_breadth`. This describes how observed habit differs by prior activity; because no user was
+actually exposed to the recommender, it is not an estimate of recommender lift.
+
+**Layer 3 (N2) — Product telemetry (causal, future / out of scope for the dataset).**
+Measuring true causal impact on retention requires instrumenting the live platform: sessions, return visits, books finished *after* a recommendation, click → reading conversion. This is future product work, not available in the static Goodreads dump, and is listed here as an explicit limitation.
+
+### Honest limitations
+
+- The dataset is observational; offline metrics approximate, but do not prove, causal impact on the reading habit.
+- **Attribution gap (the big one).** Offline, the habit proxies describe the *user's* habit, not the recommender's *effect* on it — those books were read without the system existing. That is why N1 is correlational **by construction**, and only N2 (telemetry / A/B) closes the gap. This is the reason the evidence ladder exists.
+- **`reading_frequency` divides by `active_span`**; the evaluator clamps the denominator to one day
+  for single-day histories and preserves the raw `active_span_days = 0` diagnostic.
+- **`completion_rate` offline is biased by what each user *logged* on Goodreads**, not by what they actually read; in a live product (N2) the signal is clean. The offline proxy is noisier than its telemetry version — same name, different quality.
+- `started_at` / `read_at` and `reading_duration_days` can be sparse depending on what each user filled in, so duration-based metrics rely on `has_reading_duration` / `has_reading_duration_rate` to stay honest about coverage.
+- **Residual transductive leakage.** PCA, description embeddings and clusters remain frozen from
+  the full catalog artifacts. The historical snapshot removes the main operational leakage from
+  popularity and availability, but it is not a strict backtest. A strict protocol would rebuild
+  the representation and clustering for every cutoff and is outside the current scope.
+- The ranking layer implements retrieval, multi-centroid interest scoring, MMR, controlled
+  exploration, mandatory consumed-book exclusions and staged cold start. Final measured results and
+  the acceptance verdict are generated in [`docs/estado_v1.md`](docs/estado_v1.md).
+
+### Error analysis
+
+Aggregate metrics are supplemented with stage-level error analysis. A future relevant book can
+fail because:
+
+1. its cluster was not retrieved;
+2. it was retrieved but lost during scoring/MMR;
+3. an exploration slot added exposure without matching future behavior;
+4. another edition of an already consumed work was treated as a different `book_id`;
+5. the offline log never observed exposure or eventual consumption.
+
+Reconstructed examples under the exact historical protocol include:
+
+- a clean rank-1 hit where the future book belonged to the nearest cluster;
+- a single-target failure where the relevant book's cluster was outside the five retrieved
+  clusters;
+- a multi-hit mystery case where retrieval worked but several relevant books from the same cluster
+  remained outside the top-10;
+- a broad-history user where relevant books were split between retrieval misses and ranking
+  misses.
+
+The next diagnostic metric is candidate recall:
+
+```text
+candidate_recall =
+    future relevant books present in retrieved candidates
+    / eligible future relevant books
+```
+
+This separates candidate-generation errors from ranking errors. Detailed cases, IDs, clusters and
+recommended improvements are in [`docs/error_analysis.md`](docs/error_analysis.md).
+
+### Data alignment
+
+The artifact chain uses explicit key and schema contracts:
+
+```text
+ids(books_master)
+  = ids(master_feature_matrix)
+  = ids(book_clusters_k100)
+```
+
+Book, user-matrix and user-centroid artifacts must also expose the same ordered `pc_*` schema.
+`user_meta` matches globally valid users, `user_matrix` matches users with positive history, and
+`user_centroids` is a subset of `user_matrix`. During evaluation, profiles, consumed books,
+popularity and genre history use training data only.
+
+`src.validate_artifacts` raises on missing/extra IDs, duplicates, invalid cluster counts, PCA
+schema mismatch and incompatible user sets. The current item key is edition-level Goodreads
+`book_id`; a canonical work key is still required to prevent cross-edition duplicates. See
+[`docs/data_alignment.md`](docs/data_alignment.md) for cardinalities, temporal contracts and
+explicit assumptions.
+
+## Business Logic
+
+The recommendation logic should model user interests as multidimensional reading tastes rather than as a single genre choice. A platform for reading habits should not be limited to:
+
+```text
+If you like fantasy, recommend more fantasy.
+```
+
+That behavior is too basic for the product goal. The system should be able to discover patterns such as:
+
+```text
+This reader likes books with a youthful tone, romance, adventure, light fantasy
+and accessible reading, even when the books do not all belong to the exact same genre.
+```
+
+For that reason, genre is treated as one useful signal, not as the full definition of a reader's interests. The hybrid representation also includes semantic description embeddings, ratings metadata, page count, publication information, language, series status and multi-genre structure.
+
+### K-Means Granularity
+
+K-means should be applied at the book level across the full catalog:
+
+```text
+one row = one book_id = one book vector
+```
+
+The recommended input for k-means is:
+
+```text
+data/features/master_feature_matrix.parquet
+```
+
+Use `pc_0` through `pc_172` as the clustering features. The clustering unit is `book_id`, not genre. Genres can still be used for interpretation, filtering and personalization, but they should not be the granularity of the main clustering model.
+
+This means clusters represent interest neighborhoods in the book catalog. A cluster may contain books that share tone, audience, themes, accessibility, popularity level or semantic content, even if they cross genre boundaries.
+
+Recommended recommendation flow:
+
+1. Cluster all books using the PCA vectors.
+2. Build a user interest vector from books the user actually read and rated positively (`is_read == True AND rating_clean >= 4`).
+3. Optionally split broad user histories into `user_centroids` so different taste modes are preserved instead of averaged away.
+4. Find the closest clusters, nearest books or nearest user centroids to that user representation.
+5. Recommend books from those neighborhoods.
+6. Use genre as a filter, explanation or diversity control, not as the only recommendation rule.
+
+### Avoiding Popularity Bias
+
+The system should avoid popularity bias. A recommendation platform should not only surface books with the highest `ratings_count`, `text_reviews_count` or `average_rating`, because that would make popular books even more visible and reduce discovery for users with specific or emerging interests.
+
+Popularity signals are still useful, but they should be controlled:
+
+- `ratings_count` and `text_reviews_count` are transformed with `log1p` to reduce extreme outlier influence.
+- Numeric, binary and embedding blocks are standardized and weighted before PCA so one feature family does not dominate only because it has more columns.
+- Ranking eligibility is technical (`book_id`, title, PCA vector and cluster must be valid);
+  `ratings_count` does not filter or order books.
+- Popularity measures exposure through dynamic catalog segments: `tail` (≤ p25), `mid` and
+  `head` (≥ p90).
+- The normal interest ranking combines semantic MMR with an explicit genre-overlap penalty and a
+  small accessibility tie-break based on `num_pages`.
+- Exploration slots accept only relevant `tail`/`mid` books outside the retrieved neighborhood;
+  if none passes the relevance floor, normal interest ranking fills the slots.
+
+With the current catalog, `ratings_count` has minimum 49, p25 436 and p90 6,017. The previous
+`ratings_count >= 5` rule retained all 108,227 books and therefore was not a meaningful gate.
+Discovery in v1 means improving measurable exposure within this curated catalog, not solving
+coverage of books outside the dataset or item cold start.
+
 ## Dataset
 
 Source: [Goodreads Dataset Collection from UCSD](https://cseweb.ucsd.edu/~jmcauley/datasets/goodreads.html)
@@ -17,6 +340,14 @@ External project artifacts:
 
 - [Cleaned and reduced data by genre](https://drive.google.com/drive/folders/1un4RNi8W0dvh7cRwx_0Ovgmb9Q4nNh7X?usp=drive_link)
 - [books_master](https://drive.google.com/drive/folders/17vpKc3Q4OvQtRkkvOc4GL8sTpjJB-7bv)
+
+Project documentation:
+
+- [Task framing](docs/task_framing.md)
+- [Data alignment](docs/data_alignment.md)
+- [Error analysis](docs/error_analysis.md)
+- [Current V1 status](docs/estado_v1.md)
+- [Consolidated report](report.md)
 
 ## Repository Structure
 
@@ -45,17 +376,17 @@ project/
 
 ## Pipeline
 
-The main flow is:
+The V1 production flow is:
 
 ```text
-clean -> reduce -> curation -> merge -> feature matrix -> PCA
+curated books -> master -> feature matrix/PCA -> clustering
+              -> global interactions -> user profiles -> ranking -> evaluation
 ```
 
-The `clean`, `reduce` and `curation` phases are handled by genre-specific notebooks. The expected curated inputs for the master pipeline are:
+The `clean` and `reduce` phases are handled by genre-specific notebooks. The book curation expected input for the master pipeline is, per category:
 
 ```text
 data/processed/<category>/books_curated.parquet
-data/processed/<category>/interactions_curated.parquet
 ```
 
 The categories used by the master flow are:
@@ -69,6 +400,16 @@ romance
 ```
 
 Some legacy processed paths are also supported by `src/merge_master.py`, such as `data/processed/fantasy` and `data/processed/history`.
+
+The **interaction** side is no longer per-genre. `src/curation/interactions.py` rebuilds a single global, deduplicated artifact from the five raw dumps and writes:
+
+```text
+data/processed/interactions_curated.parquet   # canonical, cross-category, deduplicated, no review text
+data/processed/review_texts.parquet           # review text, joinable by interaction_key
+data/processed/user_features_global.parquet   # global per-user stats + bias + K-core valid flag
+```
+
+Schema of the canonical `interactions_curated.parquet`: `interaction_key` (uint64, stable hash of `review_id` or `user_id|book_id`), `user_id`, `book_id`, `review_id`, `is_read`, `rating_clean` (1–5 or NA), `rating_missing`, `has_review_text`, `review_text_length`, `reading_duration_days`, `engagement_mode` (`want_to_read` / `read_no_rating` / `rating_only` / `review`), `is_want_to_read`, `interaction_weight`, `user_rating_bias` (global), the date columns, and `source_category_count` only when built with `--with-source-category-count`. K-core and `user_rating_bias` are **global** (cross-category); the implicit `want_to_read` / `read_no_rating` layer is recovered and kept. The legacy per-genre `data/processed/<category>/interactions_curated.parquet` files are deprecated (kept only as a historical backup); per-category `interactions_view.parquet` files are derived for EDA only.
 
 ## Running the Pipeline
 
@@ -86,11 +427,68 @@ Build the feature matrix, PCA model and metadata:
 env/bin/python -m src.reduction.build_master_feature_matrix
 ```
 
+Build KMeans and the macro-cluster hierarchy:
+
+```bash
+env/bin/python scripts/build_deliverable3_clustering_outputs.py
+```
+
+Build the global deduplicated interactions artifact (requires `books_master.parquet`; add `--max-rows-per-file 200000 --skip-views` for a fast dry-run):
+
+```bash
+env/bin/python -m src.curation.interactions
+```
+
+Build the baseline user taste matrix and user metadata:
+
+```bash
+env/bin/python -m src.reduction.build_user_matrix
+```
+
+Build multi-centroid user taste modes:
+
+```bash
+env/bin/python -m src.reduction.build_user_centroids
+```
+
+Generate a small explained recommendation sample:
+
+```bash
+env/bin/python -m src.reduction.recommend
+```
+
+Run temporal evaluation over the reproducible 5,000-user cohort:
+
+```bash
+env/bin/python -m src.reduction.evaluate_recommender --max-users 5000 --random-state 42 --k 5 10 20
+```
+
+The runner uniformly samples globally `valid` users, keeps complete histories, and writes:
+
+```text
+data/outputs/recommendations/temporal_evaluation.csv
+data/outputs/recommendations/temporal_evaluation_users.parquet
+data/outputs/recommendations/temporal_evaluation_by_activity.csv
+```
+
+It reports N0 relevance/exposure and descriptive N1 habit proxies. Pass `--cutoff YYYY-MM-DD` for
+an explicit snapshot; otherwise `--train-fraction` selects the global date percentile.
+
+Validate artifact contracts and generate the closure report:
+
+```bash
+env/bin/python -m src.validate_artifacts
+env/bin/python -m src.report_project_status
+```
+
 Run tests:
 
 ```bash
 env/bin/python -m pytest
 ```
+
+The academic V1 explicitly excludes API/UI, live telemetry, N2 causal claims, A/B tests, strict
+per-cutoff PCA/clustering rebuilds, item cold-start and adaptive bandits.
 
 ## Master Merge
 

@@ -1,4 +1,22 @@
 {
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(git mv *)",
+      "Bash(ln -s AGENTS.md CLAUDE.md)",
+      "Bash(git add *)",
+      "Bash(mkdir -p ~/Code)",
+      "Bash(rm -rf ~/Code/project-kit)",
+      "Bash(cp -rf /tmp/project-kit ~/Code/project-kit)",
+      "Read(//home/nakato/Code/**)",
+      "Read(//home/nakato/Code/project-kit/.claude-plugin/**)",
+      "Read(//home/nakato/.claude/**)",
+      "Bash(python3 -c \"import json; json.load\\(open\\('/home/nakato/.claude/settings.json'\\)\\); print\\('OK valid JSON'\\)\")"
+    ],
+    "additionalDirectories": [
+      "/home/nakato/.claude"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
