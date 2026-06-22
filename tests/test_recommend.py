@@ -447,6 +447,35 @@ def test_retrieve_clusters_per_mode_round_robin_balances_modes_under_budget() ->
     assert 3 in near.tolist()  # mode C's top cluster
 
 
+def test_retrieve_clusters_per_mode_clamps_when_request_exceeds_available_clusters() -> None:
+    # Regression test: when clusters_per_mode (requested) exceeds n_clusters (available),
+    # np.argsort(...)[:, :clusters_per_mode] silently clips to shape (n_modes, n_clusters).
+    # The round-robin loop must iterate over that clipped shape, not the raw request, or it
+    # raises IndexError. retrieve_top_clusters already degrades gracefully via 1-D slicing;
+    # this asserts retrieve_clusters_per_mode matches that behaviour by returning the union
+    # of everything available instead of crashing.
+    centroids_taste_norm = l2_normalize_rows(
+        np.array(
+            [
+                [1.0, 0.0],  # cluster 0
+                [0.0, 1.0],  # cluster 1
+            ]
+        )
+    )
+    modes_taste_norm = l2_normalize_rows(
+        np.array(
+            [
+                [1.0, 0.0],  # mode 0 -> nearest cluster 0
+                [0.0, 1.0],  # mode 1 -> nearest cluster 1
+            ]
+        )
+    )
+
+    near = retrieve_clusters_per_mode(modes_taste_norm, centroids_taste_norm, clusters_per_mode=5)
+
+    assert sorted(near.tolist()) == [0, 1]
+
+
 def test_temporal_split_is_chronological_per_user() -> None:
     interactions = pd.DataFrame(
         {

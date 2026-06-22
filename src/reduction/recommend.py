@@ -253,7 +253,7 @@ def retrieve_clusters_per_mode(
     n_modes = per_mode_ranked.shape[0]
     union: list[int] = []
     seen: set[int] = set()
-    for rank in range(clusters_per_mode):
+    for rank in range(per_mode_ranked.shape[1]):
         for mode in range(n_modes):
             cluster_id = int(per_mode_ranked[mode, rank])
             if cluster_id not in seen:
