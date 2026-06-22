@@ -82,6 +82,11 @@ class RankingConfig:
     accessibility_weight: float = 0.05
     # How many nearest fine clusters to pull candidates from (retrieve breadth).
     n_clusters_retrieve: int = 5
+    # Opt-in per-mode retrieve (E1/E6 fix): each mode keeps its own top clusters instead of
+    # max-pooling. None preserves today's exact behaviour (retrieve_top_clusters).
+    clusters_per_mode: int | None = None
+    # Final cap on the round-robin union when clusters_per_mode is set; None = no cap.
+    retrieve_budget: int | None = None
     # A4: accessibility floor so the cold-start sampler does not surface pamphlets.
     min_pages_accessible: int = 50
     # Users with 1-2 positives keep their profile, shrunk toward the nearest catalog cluster.
@@ -226,6 +231,40 @@ def retrieve_top_clusters(
     return ranked_clusters[:n_clusters_retrieve]
 
 
+def retrieve_clusters_per_mode(
+    modes_taste_norm: np.ndarray,
+    centroids_taste_norm: np.ndarray,
+    clusters_per_mode: int,
+    total_budget: int | None = None,
+) -> np.ndarray:
+    """Each taste mode retrieves its own top clusters; union via round-robin by rank.
+
+    Unlike :func:`retrieve_top_clusters` (max-pooling across modes), no mode is crowded out
+    by a stronger one: every mode contributes its own nearest clusters, interleaved
+    rank-1-of-each-mode-first so no single mode monopolizes the pool under a shared budget.
+
+    The candidate pool grows with ``n_modes x clusters_per_mode`` (downstream ``mmr_select``
+    is ``O(k*n*d)`` over that pool); for this project's expected ranges (<=4 modes,
+    ``clusters_per_mode`` ~5-8) this stays small, but it is not a fixed-size pool like
+    :func:`retrieve_top_clusters`.
+    """
+    sims = modes_taste_norm @ centroids_taste_norm.T
+    per_mode_ranked = np.argsort(-sims, axis=1)[:, :clusters_per_mode]
+    n_modes = per_mode_ranked.shape[0]
+    union: list[int] = []
+    seen: set[int] = set()
+    for rank in range(clusters_per_mode):
+        for mode in range(n_modes):
+            cluster_id = int(per_mode_ranked[mode, rank])
+            if cluster_id not in seen:
+                seen.add(cluster_id)
+                union.append(cluster_id)
+    result = np.array(union, dtype=np.int64)
+    if total_budget is not None:
+        result = result[:total_budget]
+    return result
+
+
 def select_exploration_rows(
     rows: np.ndarray,
     relevance: np.ndarray,
@@ -368,9 +407,17 @@ class Recommender:
         modes_taste_norm = l2_normalize_rows(modes_pc[:, self.taste_idx].astype(np.float64))
         weights = np.asarray(mode_weights, dtype=np.float64)
         weights = weights / (weights.sum() or 1.0)
-        near = retrieve_top_clusters(
-            modes_taste_norm, weights, self.centroids_taste_norm, self.config.n_clusters_retrieve
-        )
+        if self.config.clusters_per_mode is not None:
+            near = retrieve_clusters_per_mode(
+                modes_taste_norm,
+                self.centroids_taste_norm,
+                self.config.clusters_per_mode,
+                self.config.retrieve_budget,
+            )
+        else:
+            near = retrieve_top_clusters(
+                modes_taste_norm, weights, self.centroids_taste_norm, self.config.n_clusters_retrieve
+            )
         rows = self._candidate_rows(near, exclude)
         return near, rows
 

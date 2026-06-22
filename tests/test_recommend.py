@@ -37,6 +37,7 @@ from src.reduction.recommend import (
     l2_normalize_rows,
     mmr_select,
     popularity_segments,
+    retrieve_clusters_per_mode,
     retrieve_top_clusters,
     select_exploration_rows,
     taste_pc_indices,
@@ -374,6 +375,76 @@ def test_retrieve_top_clusters_matches_recommend_from_modes_retrieval() -> None:
     )
     near_via_method, _ = rec.retrieved_candidate_rows(modes[0], modes[1], set())
     assert near_direct.tolist() == near_via_method.tolist()
+
+
+def test_retrieve_clusters_per_mode_is_opt_in_and_preserves_default_behaviour() -> None:
+    # clusters_per_mode=None (the RankingConfig default) must leave retrieved_candidate_rows
+    # byte-identical to the existing max-pooling retrieve — this is the opt-in contract.
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2))
+    modes = rec._profile_modes("u_taste_A")
+    assert rec.config.clusters_per_mode is None
+
+    modes_taste_norm = l2_normalize_rows(modes[0][:, rec.taste_idx].astype(np.float64))
+    weights = modes[1] / modes[1].sum()
+    near_direct = retrieve_top_clusters(
+        modes_taste_norm, weights, rec.centroids_taste_norm, rec.config.n_clusters_retrieve
+    )
+    near_via_method, rows_via_method = rec.retrieved_candidate_rows(modes[0], modes[1], set())
+    assert near_via_method.tolist() == near_direct.tolist()
+
+    direct_rows = rec._candidate_rows(near_direct, set())
+    assert rows_via_method.tolist() == direct_rows.tolist()
+
+
+def test_retrieve_clusters_per_mode_recovers_minority_mode_cluster() -> None:
+    # E6: a dominant mode (taste A, weight 0.9) and a minority mode (taste C, weight 0.1).
+    # Today's weighted max-pooling never lets cluster 3 (the minority mode's nearest
+    # centroid) into the top-2, because cluster 1 (also taste A) outranks it once weighted.
+    # retrieve_clusters_per_mode, with no weighting, lets the minority mode bring its own
+    # nearest cluster regardless of the dominant mode.
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2))
+    taste_idx = rec.taste_idx
+    modes_pc = np.array(
+        [
+            [0.0, 1.0, 0.0, 0.0],  # dominant mode: taste A
+            [0.0, 0.0, 0.0, 1.0],  # minority mode: taste C
+        ]
+    )
+    weights = np.array([0.9, 0.1])
+    modes_taste_norm = l2_normalize_rows(modes_pc[:, taste_idx].astype(np.float64))
+
+    near_pooled = retrieve_top_clusters(
+        modes_taste_norm, weights, rec.centroids_taste_norm, 2
+    )
+    near_per_mode = retrieve_clusters_per_mode(modes_taste_norm, rec.centroids_taste_norm, 1)
+
+    assert 3 not in near_pooled.tolist()
+    assert 3 in near_per_mode.tolist()
+
+
+def test_retrieve_clusters_per_mode_round_robin_balances_modes_under_budget() -> None:
+    # 3 modes (taste A/B/C), clusters_per_mode=2 -> up to 6 candidate clusters, but
+    # total_budget=3 truncates the already-interleaved round-robin sequence. Because the
+    # union is built rank-1-of-each-mode-first (not mode-by-mode concatenation), every mode
+    # keeps at least one cluster even after the budget cut.
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2))
+    taste_idx = rec.taste_idx
+    modes_pc = np.array(
+        [
+            [0.0, 1.0, 0.0, 0.0],  # taste A -> nearest cluster 0
+            [0.0, 0.0, 1.0, 0.0],  # taste B -> nearest cluster 2
+            [0.0, 0.0, 0.0, 1.0],  # taste C -> nearest cluster 3
+        ]
+    )
+    modes_taste_norm = l2_normalize_rows(modes_pc[:, taste_idx].astype(np.float64))
+
+    near = retrieve_clusters_per_mode(
+        modes_taste_norm, rec.centroids_taste_norm, clusters_per_mode=2, total_budget=3
+    )
+    assert len(near) == 3
+    assert 0 in near.tolist()  # mode A's top cluster
+    assert 2 in near.tolist()  # mode B's top cluster
+    assert 3 in near.tolist()  # mode C's top cluster
 
 
 def test_temporal_split_is_chronological_per_user() -> None:
