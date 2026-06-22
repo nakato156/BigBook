@@ -213,6 +213,19 @@ def nearest_clusters(user_taste_norm: np.ndarray, centroids_taste_norm: np.ndarr
     return np.argsort(-sims)
 
 
+def retrieve_top_clusters(
+    modes_taste_norm: np.ndarray,
+    weights: np.ndarray,
+    centroids_taste_norm: np.ndarray,
+    n_clusters_retrieve: int,
+) -> np.ndarray:
+    """Top-N cluster ids by max-pooled weighted cosine across taste modes (today's retrieve)."""
+    cluster_mode_sim = modes_taste_norm @ centroids_taste_norm.T
+    cluster_relevance = (weights[:, None] * cluster_mode_sim).max(axis=0)
+    ranked_clusters = np.argsort(-cluster_relevance)
+    return ranked_clusters[:n_clusters_retrieve]
+
+
 def select_exploration_rows(
     rows: np.ndarray,
     relevance: np.ndarray,
@@ -344,6 +357,22 @@ class Recommender:
         if exclude:
             rows = np.array([r for r in rows if self.book_ids[r] not in exclude], dtype=np.int64)
         return rows
+
+    def retrieved_candidate_rows(
+        self,
+        modes_pc: np.ndarray,
+        mode_weights: np.ndarray,
+        exclude: set[str],
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Cluster ids retrieved for these modes, and the technically-eligible candidate rows in them."""
+        modes_taste_norm = l2_normalize_rows(modes_pc[:, self.taste_idx].astype(np.float64))
+        weights = np.asarray(mode_weights, dtype=np.float64)
+        weights = weights / (weights.sum() or 1.0)
+        near = retrieve_top_clusters(
+            modes_taste_norm, weights, self.centroids_taste_norm, self.config.n_clusters_retrieve
+        )
+        rows = self._candidate_rows(near, exclude)
+        return near, rows
 
     def _explain(self, row: int, slot: str) -> dict:
         bid = self.book_ids[row]
@@ -477,11 +506,7 @@ class Recommender:
         weights = weights / (weights.sum() or 1.0)
 
         # RETRIEVE: use the strongest weighted taste mode for each cluster.
-        cluster_mode_sim = modes_taste_norm @ self.centroids_taste_norm.T
-        cluster_relevance = (weights[:, None] * cluster_mode_sim).max(axis=0)
-        ranked_clusters = np.argsort(-cluster_relevance)
-        near = ranked_clusters[: cfg.n_clusters_retrieve]
-        rows = self._candidate_rows(near, exclude)
+        near, rows = self.retrieved_candidate_rows(modes_pc, mode_weights, exclude)
 
         records: list[dict] = []
         interest_order: list[int] = []

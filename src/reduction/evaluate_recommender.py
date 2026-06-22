@@ -377,6 +377,13 @@ def _binary_metrics(recommended: list[str], relevant: set[str], k: int) -> dict[
     }
 
 
+def _candidate_recall(candidate_ids: set[str], relevant: set[str]) -> float:
+    """Fraction of the relevant holdout that retrieval actually surfaced as candidates."""
+    if not relevant:
+        return 0.0
+    return len(candidate_ids & relevant) / len(relevant)
+
+
 def _intra_list_diversity(recommender: Recommender, recommended: list[str]) -> float:
     """Mean pairwise cosine distance in the ranking taste subspace."""
     rows = [
@@ -660,6 +667,10 @@ def evaluate_temporal(
                     explore_slots=min(original_config.explore_slots, k),
                 )
                 try:
+                    near_clusters, candidate_rows = recommender.retrieved_candidate_rows(
+                        modes[0], modes[1], consumed
+                    )
+                    candidate_ids = set(recommender.book_ids[candidate_rows])
                     model = recommender.recommend_from_modes(
                         str(user_id), modes[0], modes[1], consumed
                     )
@@ -708,6 +719,11 @@ def evaluate_temporal(
                             "tail_share": segments.count("tail") / len(segments) if segments else 0.0,
                             "mid_share": segments.count("mid") / len(segments) if segments else 0.0,
                             "head_share": segments.count("head") / len(segments) if segments else 0.0,
+                            "candidate_recall": (
+                                _candidate_recall(candidate_ids, relevant)
+                                if system == "model"
+                                else np.nan
+                            ),
                             **user_habit,
                             **(
                                 model_slot_metrics
@@ -786,6 +802,7 @@ def evaluate_temporal(
                 "tail_share": float(group["tail_share"].mean()),
                 "mid_share": float(group["mid_share"].mean()),
                 "head_share": float(group["head_share"].mean()),
+                "candidate_recall": float(group["candidate_recall"].mean()),
                 "interest_precision": float(group["interest_precision"].mean()),
                 "interest_hit_rate": float(group["interest_hit_rate"].mean()),
                 "exploration_precision": float(group["exploration_precision"].mean()),

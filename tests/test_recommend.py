@@ -13,6 +13,7 @@ import pandas as pd
 
 from src.reduction.evaluate_recommender import (
     _binary_metrics,
+    _candidate_recall,
     assign_activity_segments,
     baseline_recommendations,
     build_habit_proxy_table,
@@ -36,6 +37,7 @@ from src.reduction.recommend import (
     l2_normalize_rows,
     mmr_select,
     popularity_segments,
+    retrieve_top_clusters,
     select_exploration_rows,
     taste_pc_indices,
 )
@@ -326,6 +328,52 @@ def test_multi_centroid_modes_drive_ranking() -> None:
 
     out = rec.recommend("u_taste_A", set())
     assert out.iloc[0]["book_id"] in {"b3", "b4"}
+
+
+def test_candidate_recall_separates_retrieval_from_ranking_failure() -> None:
+    # Case 1 (E1, retrieval failure): with only 1 cluster retrieved, the user's profile
+    # (taste A) pulls candidates exclusively from cluster 0 ({b0, b1}); the target book
+    # b2 lives in cluster 1 (taste A', not retrieved) and never becomes a candidate at all.
+    rec_e1 = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=1))
+    modes = rec_e1._profile_modes("u_taste_A")
+    near, candidate_rows = rec_e1.retrieved_candidate_rows(modes[0], modes[1], set())
+    candidate_ids = set(rec_e1.book_ids[candidate_rows])
+    relevant = {"b2"}
+    assert "b2" not in candidate_ids
+    assert _candidate_recall(candidate_ids, relevant) == 0.0
+
+    # Case 2 (E2, ranking/MMR failure): with 2 clusters retrieved, b2 (cluster 1) *is* a
+    # candidate, so retrieval succeeded (candidate_recall == 1.0) — but with k=1 and pure
+    # relevance ranking (mmr_lambda=1.0), the more relevant b1 wins the only slot and b2
+    # never reaches the final top-k (recall == 0). This is the metric distinguishing E1
+    # from E2: retrieval is not the bottleneck here, scoring/MMR is.
+    rec_e2 = _toy_recommender(
+        RankingConfig(k=1, explore_slots=0, n_clusters_retrieve=2, mmr_lambda=1.0)
+    )
+    modes2 = rec_e2._profile_modes("u_taste_A")
+    near2, candidate_rows2 = rec_e2.retrieved_candidate_rows(modes2[0], modes2[1], set())
+    candidate_ids2 = set(rec_e2.book_ids[candidate_rows2])
+    assert "b2" in candidate_ids2
+    assert _candidate_recall(candidate_ids2, relevant) == 1.0
+
+    final = rec_e2.recommend_from_modes("u_taste_A", modes2[0], modes2[1], set())
+    recommended = final["book_id"].astype(str).tolist()
+    final_recall = _binary_metrics(recommended, relevant, k=1)["recall"]
+    assert final_recall == 0.0
+
+
+def test_retrieve_top_clusters_matches_recommend_from_modes_retrieval() -> None:
+    # The extracted pure function must produce the same cluster ids that the end-to-end
+    # retrieve step inside recommend_from_modes uses (extract-method, no behavior change).
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2))
+    modes = rec._profile_modes("u_taste_A")
+    modes_taste_norm = l2_normalize_rows(modes[0][:, rec.taste_idx].astype(np.float64))
+    weights = modes[1] / modes[1].sum()
+    near_direct = retrieve_top_clusters(
+        modes_taste_norm, weights, rec.centroids_taste_norm, rec.config.n_clusters_retrieve
+    )
+    near_via_method, _ = rec.retrieved_candidate_rows(modes[0], modes[1], set())
+    assert near_direct.tolist() == near_via_method.tolist()
 
 
 def test_temporal_split_is_chronological_per_user() -> None:
