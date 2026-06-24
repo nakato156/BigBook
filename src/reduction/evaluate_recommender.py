@@ -7,7 +7,7 @@ import math
 import zlib
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Sequence
+from typing import Callable, Sequence
 
 import numpy as np
 import pandas as pd
@@ -20,7 +20,12 @@ from src.config import (
     USER_FEATURES_GLOBAL_PATH,
 )
 from src.reduction.build_user_centroids import compute_engagement_weight
-from src.reduction.recommend import GENRE_COLUMNS, Recommender, popularity_segments
+from src.reduction.recommend import (
+    GENRE_COLUMNS,
+    HybridV12Weights,
+    Recommender,
+    popularity_segments,
+)
 from src.utils.io import safe_write_parquet
 
 RANDOM_STATE = 42
@@ -30,6 +35,7 @@ EVALUATION_DIR = PROJECT_ROOT / "data" / "outputs" / "recommendations"
 EVALUATION_OUTPUT = EVALUATION_DIR / "temporal_evaluation.csv"
 EVALUATION_USERS_OUTPUT = EVALUATION_DIR / "temporal_evaluation_users.parquet"
 EVALUATION_ACTIVITY_OUTPUT = EVALUATION_DIR / "temporal_evaluation_by_activity.csv"
+EVALUATION_BOOTSTRAP_OUTPUT = EVALUATION_DIR / "temporal_evaluation_bootstrap_ci.csv"
 INTERACTION_COLUMNS = [
     "user_id",
     "book_id",
@@ -39,7 +45,7 @@ INTERACTION_COLUMNS = [
     "reading_duration_days",
     "date_added",
 ]
-POPULARITY_COLUMNS = ["book_id", "rating_clean", "date_added"]
+POPULARITY_COLUMNS = ["book_id", "rating_clean", "has_review_text", "date_added"]
 
 
 @dataclass(frozen=True)
@@ -48,6 +54,7 @@ class HistoricalSnapshot:
 
     rating_count: np.ndarray
     average_rating: np.ndarray
+    review_count: np.ndarray
     first_observed: np.ndarray
     invalid_date_count: int
 
@@ -142,6 +149,7 @@ def historical_popularity_snapshot(
     book_ids: np.ndarray,
     cutoff: pd.Timestamp,
     batch_size: int = 500_000,
+    progress_every_batches: int = 0,
 ) -> HistoricalSnapshot:
     """Aggregate rating evidence and first observation from one canonical scan."""
     cutoff = _utc_timestamp(cutoff)
@@ -150,11 +158,15 @@ def historical_popularity_snapshot(
     book_row = {str(book_id): row for row, book_id in enumerate(book_ids)}
     counts = np.zeros(len(book_ids), dtype=np.int64)
     sums = np.zeros(len(book_ids), dtype=np.float64)
+    review_counts = np.zeros(len(book_ids), dtype=np.int64)
     first_observed_ns = np.full(len(book_ids), np.iinfo(np.int64).max, dtype=np.int64)
     invalid_date_count = 0
 
     parquet = pq.ParquetFile(interactions_path)
-    for batch in parquet.iter_batches(columns=POPULARITY_COLUMNS, batch_size=batch_size):
+    for batch_idx, batch in enumerate(
+        parquet.iter_batches(columns=POPULARITY_COLUMNS, batch_size=batch_size),
+        start=1,
+    ):
         frame = batch.to_pandas()
         dates, valid_dates = _valid_dates(frame["date_added"])
         invalid_date_count += int((~valid_dates).sum())
@@ -171,8 +183,21 @@ def historical_popularity_snapshot(
             np.minimum.at(first_observed_ns, observed_rows, observed_ns)
 
         ratings = pd.to_numeric(frame["rating_clean"], errors="coerce")
+        reviews = frame["has_review_text"].fillna(False).to_numpy(dtype=bool)
+        review_keep = valid_dates & (dates <= cutoff).to_numpy() & reviews
+        if review_keep.any():
+            review_rows = mapped.loc[review_keep]
+            review_rows = review_rows.loc[review_rows.notna()].to_numpy(dtype=np.int64)
+            np.add.at(review_counts, review_rows, 1)
         keep = valid_dates & (dates <= cutoff).to_numpy() & ratings.notna().to_numpy()
         if not keep.any():
+            if progress_every_batches and batch_idx % progress_every_batches == 0:
+                print(
+                    "[ranker_grid] historical snapshot "
+                    f"batch={batch_idx:,}, rated_rows_seen={int(counts.sum()):,}, "
+                    f"invalid_dates={invalid_date_count:,}",
+                    flush=True,
+                )
             continue
         rated_rows = mapped.loc[keep]
         present = rated_rows.notna()
@@ -180,6 +205,13 @@ def historical_popularity_snapshot(
         values = ratings.loc[keep].loc[present].to_numpy(dtype=np.float64)
         np.add.at(counts, rows, 1)
         np.add.at(sums, rows, values)
+        if progress_every_batches and batch_idx % progress_every_batches == 0:
+            print(
+                "[ranker_grid] historical snapshot "
+                f"batch={batch_idx:,}, rated_rows_seen={int(counts.sum()):,}, "
+                f"invalid_dates={invalid_date_count:,}",
+                flush=True,
+            )
 
     averages = np.divide(
         sums,
@@ -193,6 +225,7 @@ def historical_popularity_snapshot(
     return HistoricalSnapshot(
         rating_count=counts.astype(np.float64),
         average_rating=averages,
+        review_count=review_counts.astype(np.float64),
         first_observed=first_observed,
         invalid_date_count=invalid_date_count,
     )
@@ -553,6 +586,16 @@ def evaluate_temporal(
     invalid_date_count: int = 0,
     evaluation_mode: str | None = None,
     users_selected: int | None = None,
+    additional_score_fn: Callable[[np.ndarray, str], np.ndarray] | None = None,
+    blend_alpha: float = 1.0,
+    model_label: str = "model",
+    hybrid_v12_weights: HybridV12Weights | dict[str, float] | None = None,
+    cooccurrence_score_fn: Callable[[np.ndarray, str], np.ndarray] | None = None,
+    user_knn_score_fn: Callable[[np.ndarray, str], np.ndarray] | None = None,
+    hybrid_extra_candidate_rows_fn: Callable[[str], np.ndarray] | None = None,
+    hybrid_source_limit: int = 250,
+    progress_every_users: int = 0,
+    progress_label: str = "evaluate_temporal",
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Evaluate with fold-local or historical popularity, never full-catalog future aggregates."""
     cutoffs = sorted({int(k) for k in (ks or (recommender.config.k,)) if int(k) > 0})
@@ -621,7 +664,13 @@ def evaluate_temporal(
     )
 
     try:
-        for user_id, train_user in train_groups.items():
+        for user_idx, (user_id, train_user) in enumerate(train_groups.items(), start=1):
+            if progress_every_users and user_idx % progress_every_users == 0:
+                print(
+                    f"[ranker_grid] {progress_label}: processed_train_users="
+                    f"{user_idx:,}/{len(train_groups):,}; metric_rows={len(rows):,}",
+                    flush=True,
+                )
             future_user = future_groups.get(user_id)
             if future_user is None:
                 continue
@@ -659,6 +708,9 @@ def evaluate_temporal(
                 if positive_rows
                 else np.zeros(len(GENRE_COLUMNS), dtype=int)
             )
+            genre_mask = sum(
+                (1 << bit) for bit, enabled in enumerate(train_genres) if bool(enabled)
+            )
             for k in cutoffs:
                 original_config = recommender.config
                 recommender.config = replace(
@@ -670,14 +722,58 @@ def evaluate_temporal(
                     near_clusters, candidate_rows = recommender.retrieved_candidate_rows(
                         modes[0], modes[1], consumed
                     )
+                    content_candidate_ids = set(recommender.book_ids[candidate_rows])
+                    if hybrid_v12_weights is not None:
+                        global_rows = baseline_rankings.global_popularity_rows
+                        genre_rows = baseline_rankings.genre_popularity_rows[genre_mask]
+                        model = recommender.recommend_hybrid_v12(
+                            str(user_id),
+                            modes[0],
+                            modes[1],
+                            consumed,
+                            popularity_count,
+                            average_rating,
+                            train_genres,
+                            global_rows,
+                            genre_rows,
+                            weights=hybrid_v12_weights,
+                            cooccurrence_score_fn=cooccurrence_score_fn,
+                            user_knn_score_fn=user_knn_score_fn,
+                            extra_candidate_rows_fn=hybrid_extra_candidate_rows_fn,
+                            source_limit=hybrid_source_limit,
+                        )
+                        extra_rows = (
+                            hybrid_extra_candidate_rows_fn(str(user_id))
+                            if hybrid_extra_candidate_rows_fn is not None
+                            else np.array([], dtype=np.int64)
+                        )
+                        candidate_rows = np.unique(
+                            np.concatenate(
+                                [
+                                    candidate_rows,
+                                    recommender._ordered_unseen_rows(
+                                        global_rows, consumed, hybrid_source_limit
+                                    ),
+                                    recommender._ordered_unseen_rows(
+                                        genre_rows, consumed, hybrid_source_limit
+                                    ),
+                                    recommender._ordered_unseen_rows(
+                                        extra_rows, consumed, hybrid_source_limit
+                                    ),
+                                ]
+                            ).astype(np.int64)
+                        )
+                    else:
+                        model = recommender.recommend_from_modes(
+                            str(user_id), modes[0], modes[1], consumed,
+                            additional_score_fn=additional_score_fn,
+                            blend_alpha=blend_alpha,
+                        )
                     candidate_ids = set(recommender.book_ids[candidate_rows])
-                    model = recommender.recommend_from_modes(
-                        str(user_id), modes[0], modes[1], consumed
-                    )
                 finally:
                     recommender.config = original_config
 
-                systems = {"model": model["book_id"].astype(str).tolist()}
+                systems = {model_label: model["book_id"].astype(str).tolist()}
                 systems.update(
                     baseline_recommendations(
                         recommender,
@@ -721,13 +817,18 @@ def evaluate_temporal(
                             "head_share": segments.count("head") / len(segments) if segments else 0.0,
                             "candidate_recall": (
                                 _candidate_recall(candidate_ids, relevant)
-                                if system == "model"
+                                if system == model_label
+                                else np.nan
+                            ),
+                            "content_candidate_recall": (
+                                _candidate_recall(content_candidate_ids, relevant)
+                                if system == model_label
                                 else np.nan
                             ),
                             **user_habit,
                             **(
                                 model_slot_metrics
-                                if system == "model"
+                                if system == model_label
                                 else {
                                     "interest_precision": np.nan,
                                     "interest_hit_rate": np.nan,
@@ -803,6 +904,7 @@ def evaluate_temporal(
                 "mid_share": float(group["mid_share"].mean()),
                 "head_share": float(group["head_share"].mean()),
                 "candidate_recall": float(group["candidate_recall"].mean()),
+                "content_candidate_recall": float(group["content_candidate_recall"].mean()),
                 "interest_precision": float(group["interest_precision"].mean()),
                 "interest_hit_rate": float(group["interest_hit_rate"].mean()),
                 "exploration_precision": float(group["exploration_precision"].mean()),
@@ -849,6 +951,58 @@ def summarize_by_activity(per_user: pd.DataFrame) -> pd.DataFrame:
     return summary.rename(columns={"average_precision": "map"})
 
 
+def bootstrap_confidence_intervals(
+    per_user: pd.DataFrame,
+    metrics: Sequence[str] = ("recall", "precision", "ndcg", "average_precision"),
+    n_resamples: int = 1_000,
+    confidence: float = 0.95,
+    random_state: int = RANDOM_STATE,
+) -> pd.DataFrame:
+    """Bootstrap user-level metric means by ``(system, k)``."""
+    if per_user.empty:
+        return pd.DataFrame(
+            columns=["system", "k", "metric", "users", "mean", "ci_low", "ci_high"]
+        )
+    if n_resamples <= 0:
+        raise ValueError("n_resamples must be positive.")
+    if not 0.0 < confidence < 1.0:
+        raise ValueError("confidence must be between 0 and 1.")
+    available = [metric for metric in metrics if metric in per_user.columns]
+    if not available:
+        raise ValueError("None of the requested bootstrap metrics exist in per_user.")
+
+    rng = np.random.default_rng(random_state)
+    alpha = (1.0 - confidence) / 2.0
+    rows: list[dict] = []
+    for (system, k), group in per_user.groupby(["system", "k"], sort=True):
+        users = group["user_id"].astype(str).to_numpy()
+        if pd.Index(users).duplicated().any():
+            raise ValueError("per_user must contain at most one row per user/system/k.")
+        n_users = len(group)
+        sampled = rng.integers(0, n_users, size=(n_resamples, n_users))
+        for metric in available:
+            values = pd.to_numeric(group[metric], errors="coerce").to_numpy(dtype=np.float64)
+            values = values[np.isfinite(values)]
+            if len(values) != n_users:
+                continue
+            bootstrap_means = values[sampled].mean(axis=1)
+            rows.append(
+                {
+                    "system": str(system),
+                    "k": int(k),
+                    "metric": metric,
+                    "users": n_users,
+                    "mean": float(values.mean()),
+                    "ci_low": float(np.quantile(bootstrap_means, alpha)),
+                    "ci_high": float(np.quantile(bootstrap_means, 1.0 - alpha)),
+                    "confidence": float(confidence),
+                    "n_resamples": int(n_resamples),
+                    "random_state": int(random_state),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
 def collect_valid_user_ids(
     path: Path,
     max_users: int,
@@ -870,19 +1024,34 @@ def collect_valid_user_ids(
     return sorted(selected.tolist())
 
 
-def collect_users(path: Path, user_ids: Sequence[str]) -> pd.DataFrame:
+def collect_users(
+    path: Path,
+    user_ids: Sequence[str],
+    progress_every_batches: int = 0,
+) -> pd.DataFrame:
     """Scan the canonical parquet while retaining complete histories for selected users."""
     selected = {str(user_id) for user_id in user_ids}
     if not selected:
         return pd.DataFrame(columns=INTERACTION_COLUMNS)
     chunks: list[pd.DataFrame] = []
     parquet = pq.ParquetFile(path)
-    for batch in parquet.iter_batches(columns=INTERACTION_COLUMNS, batch_size=250_000):
+    kept_rows = 0
+    for batch_idx, batch in enumerate(
+        parquet.iter_batches(columns=INTERACTION_COLUMNS, batch_size=250_000),
+        start=1,
+    ):
         frame = batch.to_pandas()
         frame["user_id"] = frame["user_id"].astype(str)
         kept = frame[frame["user_id"].isin(selected)]
         if len(kept):
             chunks.append(kept)
+            kept_rows += len(kept)
+        if progress_every_batches and batch_idx % progress_every_batches == 0:
+            print(
+                "[ranker_grid] collect_users "
+                f"batch={batch_idx:,}, kept_rows={kept_rows:,}",
+                flush=True,
+            )
     return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame(columns=INTERACTION_COLUMNS)
 
 
@@ -896,7 +1065,27 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=EVALUATION_OUTPUT)
     parser.add_argument("--users-output", type=Path, default=EVALUATION_USERS_OUTPUT)
     parser.add_argument("--activity-output", type=Path, default=EVALUATION_ACTIVITY_OUTPUT)
+    parser.add_argument("--bootstrap-ci", action="store_true")
+    parser.add_argument("--bootstrap-resamples", type=int, default=1_000)
+    parser.add_argument("--bootstrap-output", type=Path, default=EVALUATION_BOOTSTRAP_OUTPUT)
+    parser.add_argument(
+        "--bootstrap-from-users",
+        type=Path,
+        help="Read an existing per-user parquet and write CIs without rerunning recommendation.",
+    )
     args = parser.parse_args()
+
+    if args.bootstrap_from_users is not None:
+        per_user = pd.read_parquet(args.bootstrap_from_users)
+        bootstrap = bootstrap_confidence_intervals(
+            per_user,
+            n_resamples=args.bootstrap_resamples,
+            random_state=args.random_state,
+        )
+        args.bootstrap_output.parent.mkdir(parents=True, exist_ok=True)
+        bootstrap.to_csv(args.bootstrap_output, index=False)
+        print(f"Wrote bootstrap confidence intervals to {args.bootstrap_output}")
+        return
 
     recommender = Recommender.from_artifacts()
     valid_user_ids = collect_valid_user_ids(
@@ -936,11 +1125,23 @@ def main() -> None:
         users_selected=len(valid_user_ids),
     )
     by_activity = summarize_by_activity(per_user)
+    bootstrap = (
+        bootstrap_confidence_intervals(
+            per_user,
+            n_resamples=args.bootstrap_resamples,
+            random_state=args.random_state,
+        )
+        if args.bootstrap_ci
+        else pd.DataFrame()
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     summary.to_csv(args.output, index=False)
     safe_write_parquet(per_user, args.users_output)
     args.activity_output.parent.mkdir(parents=True, exist_ok=True)
     by_activity.to_csv(args.activity_output, index=False)
+    if args.bootstrap_ci:
+        args.bootstrap_output.parent.mkdir(parents=True, exist_ok=True)
+        bootstrap.to_csv(args.bootstrap_output, index=False)
     print(f"Temporal cutoff: {cutoff}")
     print(
         f"Users selected/evaluable/discarded: {len(valid_user_ids):,}/"
@@ -950,6 +1151,8 @@ def main() -> None:
     print(f"Wrote temporal evaluation to {args.output}")
     print(f"Wrote per-user evaluation to {args.users_output}")
     print(f"Wrote activity summary to {args.activity_output}")
+    if args.bootstrap_ci:
+        print(f"Wrote bootstrap confidence intervals to {args.bootstrap_output}")
 
 
 if __name__ == "__main__":

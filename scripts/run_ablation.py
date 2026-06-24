@@ -68,6 +68,18 @@ ABLATION_CONFIGS = [
         "n_clusters_retrieve=15,explore_slots=0",
         {"n_clusters_retrieve": 15, "explore_slots": 0},
     ),
+    AblationConfig(
+        "clusters_per_mode=5,retrieve_budget=20",
+        {"clusters_per_mode": 5, "retrieve_budget": 20},
+    ),
+    AblationConfig(
+        "clusters_per_mode=8,retrieve_budget=20",
+        {"clusters_per_mode": 8, "retrieve_budget": 20},
+    ),
+    AblationConfig(
+        "clusters_per_mode=5,retrieve_budget=20,explore_slots=0",
+        {"clusters_per_mode": 5, "retrieve_budget": 20, "explore_slots": 0},
+    ),
 ]
 
 
@@ -87,15 +99,22 @@ def run_ablation(
     base_config = recommender.config
     frames = []
     for cfg in configs:
-        recommender.config = replace(base_config, **cfg.overrides)
+        resolved = replace(base_config, **cfg.overrides)
+        recommender.config = resolved
         try:
             summary, _ = evaluate_temporal(interactions, recommender, **evaluate_temporal_kwargs)
         finally:
             recommender.config = base_config
         summary = summary.copy()
         summary["config_label"] = cfg.label
-        for param, value in cfg.overrides.items():
-            summary[param] = value
+        for param in (
+            "n_clusters_retrieve",
+            "clusters_per_mode",
+            "retrieve_budget",
+            "mmr_lambda",
+            "explore_slots",
+        ):
+            summary[param] = getattr(resolved, param)
         frames.append(summary)
     return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
 

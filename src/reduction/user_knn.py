@@ -109,6 +109,7 @@ def neighbor_unread_books(
     neighbor_scores: dict[str, list[tuple[str, float]]],
     consumed_by_eval_user: dict[str, set[str]],
     interactions_path: Path,
+    cutoff=None,
 ) -> dict[str, dict[str, float]]:
     """Books read by neighbours (and not by the evaluated user) -> aggregated score.
 
@@ -123,7 +124,17 @@ def neighbor_unread_books(
         for neighbor_id, _sim in neighbors:
             unique_neighbor_ids.add(str(neighbor_id))
 
-    consumed_by_neighbor = consumed_books_for_users(interactions_path, sorted(unique_neighbor_ids))
+    if cutoff is None:
+        consumed_by_neighbor = consumed_books_for_users(
+            interactions_path,
+            sorted(unique_neighbor_ids),
+        )
+    else:
+        consumed_by_neighbor = consumed_books_for_users(
+            interactions_path,
+            sorted(unique_neighbor_ids),
+            cutoff=cutoff,
+        )
 
     result: dict[str, dict[str, float]] = {}
     for eval_user_id, neighbors in neighbor_scores.items():

@@ -50,6 +50,7 @@ MIN_CO_COUNT = 3
 CHUNK_SIZE = 1_000_000
 
 INTERACTION_COLUMNS = ["user_id", "book_id", "is_read", "rating_clean"]
+DATED_INTERACTION_COLUMNS = [*INTERACTION_COLUMNS, "date_added"]
 
 
 # --------------------------------------------------------------------------- #
@@ -230,6 +231,25 @@ def build_item_cooccurrence(
 # --------------------------------------------------------------------------- #
 def _interaction_chunks(path: Path, chunksize: int = CHUNK_SIZE) -> Iterator[pd.DataFrame]:
     yield from read_parquet_chunks(path, chunksize, columns=INTERACTION_COLUMNS)
+
+
+def interaction_chunks_before(
+    path: Path,
+    cutoff: pd.Timestamp,
+    chunksize: int = CHUNK_SIZE,
+) -> Iterator[pd.DataFrame]:
+    """Yield canonical interaction chunks observed on or before one UTC cutoff."""
+    resolved_cutoff = pd.Timestamp(cutoff)
+    resolved_cutoff = (
+        resolved_cutoff.tz_localize("UTC")
+        if resolved_cutoff.tzinfo is None
+        else resolved_cutoff.tz_convert("UTC")
+    )
+    for chunk in read_parquet_chunks(path, chunksize, columns=DATED_INTERACTION_COLUMNS):
+        dates = pd.to_datetime(chunk["date_added"], errors="coerce", utc=True)
+        keep = dates.notna() & (dates <= resolved_cutoff)
+        if keep.any():
+            yield chunk.loc[keep, INTERACTION_COLUMNS].copy()
 
 
 def print_validations(result: pd.DataFrame, diagnostics: dict[str, Any]) -> None:
