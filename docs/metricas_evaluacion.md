@@ -122,19 +122,34 @@ explícita.
 
 ## 4. Criterio de validez (cómo decidimos "sí sirve")
 
-El recomendador se considera **válido** si, en evaluación offline con split temporal:
+La evaluación V1.2 dejó una decisión metodológica importante: B1 es una línea base de exposición
+histórica, no la métrica norte del producto. `Recall@k` y `NDCG@k` siguen siendo métricas correctas
+para N0, pero responden a "¿predije futuras lecturas observadas en Goodreads?", no a "¿construí
+hábito lector?". Por eso se usan como compuerta de relevancia, no como criterio único de negocio.
+La decisión completa está en [decisiones_negocio.md](decisiones_negocio.md).
+
+El recomendador se considera **válido como predictor N0 superior** si, en evaluación offline con
+split temporal:
 
 1. **Supera a la línea base de popularidad** en `Recall@k` / `NDCG@k` (predice mejor lo que el
    lector leyó después que recomendar solo bestsellers).
 2. **No lo logra a costa del descubrimiento**: mejora o conserva `Coverage`, `Long-tail Coverage`,
    `Novelty`, `Diversity` y el mix de exposición frente a la base de popularidad.
 
+El recomendador se considera **alineado con el negocio de hábito lector** si, además de pasar una
+compuerta mínima de relevancia frente a B0/B1/B2, muestra utilidad de descubrimiento:
+`DiscoveryRecall@k` sobre futuros no-head, `TailNDCG@k`, novelty, cobertura, menor `head_share`,
+diversidad y baja repetición de obra/edición. Estas métricas no reemplazan a N0; lo complementan
+para evitar que el sistema gane copiando la exposición histórica.
+
 N1 no es un gate del recomendador: describe `completion_rate`, `reading_frequency`,
 `activity_recency` y `reading_breadth` futuros por actividad previa. Como ningún usuario fue
 realmente expuesto al sistema, usar esos proxies para atribuir efecto al modelo sería incorrecto.
 
-Si gana relevancia pero **colapsa la diversidad**, el recomendador no se considera válido aunque
-sus números recsys "se vean bien".
+Si gana relevancia pero **colapsa la diversidad**, el recomendador no se considera alineado con el
+negocio aunque sus números recsys "se vean bien". Si pierde contra B1 en relevancia pura, tampoco
+se presenta como ranker N0 superior; se reporta como sistema de descubrimiento pendiente de cerrar
+brecha predictiva.
 
 ---
 
@@ -172,7 +187,8 @@ evidencia de tres niveles** (§1bis): **N0** relevancia (`Recall@k`/`NDCG@k` con
 `is_read` — una *puerta*, no el hábito), **N1** proxy de hábito correlacional (`completion_rate`,
 `reading_frequency`, `reading_breadth`, `activity_recency`) y **N2** hábito causal con telemetría
 (A/B + señales en vivo). El recomendador se declara **válido** no por ordenar bien en abstracto,
-sino por **superar a la popularidad en relevancia (N0) sin colapsar la diversidad** y **asociarse a
-mejores proxies de hábito (N1)**. La afirmación causal ("recomendar así *aumenta* la retención")
+sino por pasar una **compuerta de relevancia (N0)**, no colapsar diversidad, mejorar
+descubrimiento frente a popularidad y reportar **proxies de hábito (N1)** sin atribución causal. La
+afirmación causal ("recomendar así *aumenta* la retención")
 queda etiquetada como **N2** y requiere telemetría de producto en vivo, límite explícito del dataset
 estático: lo que madura con los datos es la **fuerza de la evidencia**, no el objetivo.

@@ -66,8 +66,10 @@ Las reglas de prioridad (qué manda sobre qué) son las que importan:
 1. **Interés primero.** `similitud_de_interés` domina el orden.
 2. **Elegibilidad técnica.** Solo se excluyen artefactos inválidos. `ratings_count` no funciona
    como gate ni como multiplicador.
-3. **Popularidad como diagnóstico.** El catálogo se divide dinámicamente en `tail` (≤ p25),
-   `mid` y `head` (≥ p90). El segmento prioriza exploración, pero no modifica el score.
+3. **Popularidad como diagnóstico y señal calibrable.** En V1 content-only, el segmento prioriza
+   exploración y no modifica el score. En V1.2, la popularidad histórica puede entrar como
+   percentil calibrado dentro de una mezcla híbrida, siempre que se audite contra `head_share`,
+   novelty y long-tail coverage.
 4. **Diversidad explícita.** MMR penaliza redundancia semántica y solapamiento con los géneros ya
    presentes en la lista.
 5. **Descubrimiento controlado.** Por defecto, 2 de 10 slots buscan libros fuera de los
@@ -85,7 +87,8 @@ Las reglas de prioridad (qué manda sobre qué) son las que importan:
 | **Solo popularidad** (`ratings_count`, `average_rating`) | Lo más conocido primero | Ignora el gusto; amplifica bestsellers; mata el descubrimiento. **Rechazado** como criterio principal. |
 | **Solo similitud** (coseno puro) | Lo más parecido primero | "Más de lo mismo"; burbuja; no distingue calidad ni accesibilidad. Necesario pero **insuficiente**. |
 | **Similitud + diversidad (MMR)** | Parecido pero variado | Mejor; evita redundancia. Base de nuestra lista. |
-| **Interés + MMR + exploración controlada** (el nuestro) | Afinidad primero; tail/mid dentro de slots con piso de relevancia | Equilibra relevancia, diversidad y exposición. **Adoptado.** |
+| **Interés + MMR + exploración controlada** (V1 content-only) | Afinidad primero; tail/mid dentro de slots con piso de relevancia | Equilibra relevancia, diversidad y exposición. **Adoptado como baseline interno.** |
+| **Híbrido V1.2 calibrado** | Afinidad + popularidad histórica + género-popularidad + colaboración en percentiles | Puede cerrar brecha N0, pero solo es válido si no colapsa a head items. |
 | **Cluster-first** (vecindad → ranking interno) | Primero el barrio, luego dentro | Eficiente y explicable; lo usamos como **arquitectura** del retrieval (ver §4). |
 
 La diferencia conceptual central: un score por **popularidad** responde "¿qué leen todos?"; uno
@@ -101,7 +104,8 @@ Coherente con el clustering ya construido (KMeans k=100 + 10 macro-clusters):
 ```text
 1. RETRIEVE   Encontrar los clusters/macro-clusters más cercanos al vec_gusto(u)
               y traer los libros candidatos de esas vecindades (+ algo de exploración).
-2. SCORE      Ordenar candidatos por coseno de interés; popularidad no entra al score.
+2. SCORE      Ordenar candidatos por coseno de interés o, en V1.2, por mezcla calibrada de
+              percentiles históricos y de afinidad.
 3. DIVERSIFY  Reordenar con MMR semántico + penalización de género + accesibilidad suave,
               y reservar slots relevantes exclusivamente para tail/mid.
 4. EXPLAIN    Justificar cada ítem por su cluster/género ("porque te gustó X, del mismo
@@ -122,8 +126,9 @@ usuario) y **explicable** (la vecindad da la razón de la recomendación).
   predictiva con lecturas posteriores; el efecto sobre hábito se evalúa aparte.
 - **Anti-burbuja:** la diversificación combina MMR, macro-clusters y penalización explícita por
   repetición de género.
-- **Evaluable:** el orden se valida con `Recall@k`, `Precision@k`, `NDCG@k`, `MAP` (relevancia) y
-  `Coverage`, `Novelty`, `Diversity` (anti-popularidad), tal como define el README.
+- **Evaluable:** el orden se valida con `Recall@k`, `Precision@k`, `NDCG@k`, `MAP` (relevancia N0)
+  y `Coverage`, `Novelty`, `Diversity`, `head_share` y long-tail coverage (descubrimiento), tal
+  como define el README y [decisiones_negocio](decisiones_negocio.md).
 
 ---
 
@@ -135,7 +140,7 @@ El criterio de ranking v1 es **interés + diversidad + exploración controlada**
 el vector PCA del libro—, que define qué significa "más cercano": afinidad de
 tono/temática/accesibilidad, no de género. Sobre esa base se aplica MMR semántico y de género,
 con un desempate suave por accesibilidad, y se reservan slots exploratorios con piso de afinidad
-exclusivamente para `tail`/`mid`. La popularidad no
-filtra ni ordena; sirve para segmentar y medir exposición. El ranking se produce con una arquitectura
+exclusivamente para `tail`/`mid`. La popularidad no filtra elegibilidad; en V1 content-only no
+ordena, y en V1.2 solo puede actuar como señal histórica calibrada bajo auditoría de exposición. El ranking se produce con una arquitectura
 **retrieve (por cluster) → score → diversify → explain**, que lo hace escalable, explicable y
 evaluable con métricas de relevancia, anti-popularidad y proxy de hábito.
