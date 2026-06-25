@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>BigBook — Grafo de co-lectura</title>
+<script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; background: #0e1117; color: #e6e6e6; }
+  #app { display: flex; height: 100%; }
+  #cy { flex: 1; background: #0e1117; }
+  #sidebar { width: 320px; padding: 16px; overflow-y: auto; background: #161a23; border-left: 1px solid #2a2f3a; }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  .sub { font-size: 12px; color: #8b93a7; margin-bottom: 16px; }
+  label { display: block; font-size: 12px; margin-top: 12px; color: #b6bdcc; }
+  input[type=range] { width: 100%; }
+  input[type=text] { width: 100%; padding: 6px; box-sizing: border-box; background: #0e1117; color: #e6e6e6; border: 1px solid #2a2f3a; border-radius: 4px; }
+  #legend { margin-top: 16px; font-size: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  #info { margin-top: 16px; font-size: 12px; line-height: 1.5; border-top: 1px solid #2a2f3a; padding-top: 12px; }
+  #info b { color: #fff; }
+  #meta { font-size: 11px; color: #6b7280; margin-top: 16px; border-top: 1px solid #2a2f3a; padding-top: 12px; white-space: pre-wrap; }
+  #suggestions { max-height: 140px; overflow-y: auto; font-size: 12px; margin-top: 4px; }
+  .suggestion { padding: 4px; cursor: pointer; border-radius: 3px; }
+  .suggestion:hover { background: #232838; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="cy"></div>
+  <div id="sidebar">
+    <h1>Grafo de co-lectura</h1>
+    <div class="sub">Top nodos por PageRank, aristas podadas por PMI. Ver <code>docs/grafo_libros.md</code> para el reporte completo.</div>
+
+    <label for="search">Buscar libro</label>
+    <input type="text" id="search" placeholder="Título..." autocomplete="off" />
+    <div id="suggestions"></div>
+
+    <label for="pmiSlider">PMI mínimo de arista: <span id="pmiValue">0</span></label>
+    <input type="range" id="pmiSlider" min="0" max="5" step="0.1" value="0" />
+
+    <label for="genreFilter">Género</label>
+    <select id="genreFilter" style="width:100%;padding:6px;background:#0e1117;color:#e6e6e6;border:1px solid #2a2f3a;border-radius:4px;">
+      <option value="all">Todos</option>
+    </select>
+
+    <div id="legend"></div>
+    <div id="info">Click en un nodo para ver sus métricas.</div>
+    <div id="meta"></div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
