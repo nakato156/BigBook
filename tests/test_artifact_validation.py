@@ -90,11 +90,24 @@ def test_validate_artifacts_accepts_aligned_contracts(tmp_path) -> None:
                 }
             ),
         ),
+        book_graph_nodes_path=_write(
+            tmp_path / "graph_nodes.parquet",
+            pd.DataFrame(
+                {
+                    "book_id": books["book_id"],
+                    "degree": [1] + [0] * (len(books) - 1),
+                    "weighted_degree": [0.5] + [0.0] * (len(books) - 1),
+                    "pagerank": [1.0 / len(books)] * len(books),
+                    "component_id": range(len(books)),
+                }
+            ),
+        ),
     )
 
     assert counts["books"] == 100
     assert counts["interactions"] == 1
     assert counts["book_cooccurrence"] == 1
+    assert counts["book_graph_nodes"] == 100
 
 
 def test_validate_artifacts_rejects_misaligned_book_ids(tmp_path) -> None:
