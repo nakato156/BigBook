@@ -12,40 +12,34 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from src.reduction.baselines import baseline_recommendations, historical_catalog_mask, historical_popularity_snapshot
 from src.reduction.collaborative import blend_percentile_scores, percentile_scores
-from src.reduction.evaluate_recommender import (
-    _binary_metrics,
-    _candidate_recall,
+from src.reduction.evaluate_recommender import collect_valid_user_ids, evaluate_temporal
+from src.reduction.habit_proxies import (
     assign_activity_segments,
-    baseline_recommendations,
-    bootstrap_confidence_intervals,
     build_habit_proxy_table,
-    choose_global_cutoff,
-    collect_valid_user_ids,
-    evaluate_temporal,
-    global_temporal_split,
     habit_proxy_features,
-    historical_catalog_mask,
-    historical_popularity_snapshot,
     summarize_by_activity,
-    temporal_split,
 )
-from src.reduction.recommend import (
+from src.reduction.metrics import _binary_metrics, _candidate_recall, bootstrap_confidence_intervals
+from src.reduction.ranking import (
     HybridV12Weights,
     RankingConfig,
-    Recommender,
     accessibility_scores,
-    build_recommendation_sample,
+    mmr_select,
+    select_exploration_rows,
+)
+from src.reduction.recommend import Recommender, build_recommendation_sample
+from src.reduction.retrieval import (
     consumed_books_for_users,
     eligibility_mask,
     l2_normalize_rows,
-    mmr_select,
     popularity_segments,
     retrieve_clusters_per_mode,
     retrieve_top_clusters,
-    select_exploration_rows,
     taste_pc_indices,
 )
+from src.reduction.temporal_split import choose_global_cutoff, global_temporal_split, temporal_split
 
 GENRES = ["genre_fantasy", "genre_mystery", "genre_history", "genre_ya", "genre_romance"]
 

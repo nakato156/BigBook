@@ -25,7 +25,7 @@ from pathlib import Path
 
 import numpy as np
 
-from src.reduction.recommend import consumed_books_for_users
+from src.reduction.retrieval import consumed_books_for_users
 
 __all__ = ["compute_user_knn_scores", "neighbor_unread_books"]
 

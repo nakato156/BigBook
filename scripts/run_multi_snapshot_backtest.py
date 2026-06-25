@@ -27,15 +27,12 @@ from src.config import (
 from src.reduction.build_master_feature_matrix import build_feature_matrix
 from src.reduction.build_user_centroids import build_user_centroids
 from src.reduction.build_user_matrix import build_user_artifacts
-from src.reduction.evaluate_recommender import (
-    MIN_VALID_DATE,
-    collect_users,
-    collect_valid_user_ids,
-    evaluate_temporal,
-    historical_catalog_mask,
-    historical_popularity_snapshot,
-)
-from src.reduction.recommend import GENRE_COLUMNS, RankingConfig, Recommender, pc_columns
+from src.reduction.baselines import historical_catalog_mask, historical_popularity_snapshot
+from src.reduction.evaluate_recommender import collect_users, collect_valid_user_ids, evaluate_temporal
+from src.reduction.ranking import RankingConfig
+from src.reduction.recommend import GENRE_COLUMNS, Recommender
+from src.reduction.retrieval import pc_columns
+from src.reduction.temporal_split import MIN_VALID_DATE
 from src.utils.io import safe_write_parquet
 
 RANDOM_STATE = 42

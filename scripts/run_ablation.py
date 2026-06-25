@@ -29,16 +29,11 @@ from src.config import (
     PROJECT_ROOT,
     USER_FEATURES_GLOBAL_PATH,
 )
-from src.reduction.evaluate_recommender import (
-    choose_global_cutoff,
-    collect_users,
-    collect_valid_user_ids,
-    evaluate_temporal,
-    historical_catalog_mask,
-    historical_popularity_snapshot,
-    MIN_VALID_DATE,
-)
-from src.reduction.recommend import Recommender, RankingConfig
+from src.reduction.baselines import historical_catalog_mask, historical_popularity_snapshot
+from src.reduction.evaluate_recommender import collect_users, collect_valid_user_ids, evaluate_temporal
+from src.reduction.ranking import RankingConfig
+from src.reduction.recommend import Recommender
+from src.reduction.temporal_split import MIN_VALID_DATE, choose_global_cutoff
 
 RANDOM_STATE = 42
 OUTPUT_PATH = PROJECT_ROOT / "data" / "outputs" / "recommendations" / "ablation_results.csv"

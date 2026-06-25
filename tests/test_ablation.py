@@ -13,7 +13,8 @@ import numpy as np
 import pandas as pd
 
 from scripts.run_ablation import ABLATION_CONFIGS, AblationConfig, run_ablation
-from src.reduction.recommend import RankingConfig, Recommender
+from src.reduction.ranking import RankingConfig
+from src.reduction.recommend import Recommender
 
 GENRES = ["genre_fantasy", "genre_mystery", "genre_history", "genre_ya", "genre_romance"]
 

@@ -29,19 +29,17 @@ from src.reduction.build_user_matrix import (
     INTERACTION_COLUMNS as USER_INTERACTION_COLUMNS,
     build_user_artifacts,
 )
+from src.reduction.baselines import historical_catalog_mask, historical_popularity_snapshot
 from src.reduction.collaborative import CooccurrenceIndex, score_map_callback
 from src.reduction.evaluate_recommender import (
     INTERACTION_COLUMNS as EVAL_INTERACTION_COLUMNS,
-    MIN_VALID_DATE,
-    choose_global_cutoff,
     collect_users,
     collect_valid_user_ids,
     evaluate_temporal,
-    global_temporal_split,
-    historical_catalog_mask,
-    historical_popularity_snapshot,
 )
-from src.reduction.recommend import Recommender, l2_normalize_rows
+from src.reduction.recommend import Recommender
+from src.reduction.retrieval import l2_normalize_rows
+from src.reduction.temporal_split import MIN_VALID_DATE, choose_global_cutoff, global_temporal_split
 from src.reduction.user_knn import compute_user_knn_scores, neighbor_unread_books
 from src.utils.io import read_parquet_chunks, safe_write_parquet
 

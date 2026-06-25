@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import numpy as np
 
-from src.reduction.recommend import l2_normalize_rows
+from src.reduction.retrieval import l2_normalize_rows
 from src.reduction.user_knn import compute_user_knn_scores, neighbor_unread_books
 
 
