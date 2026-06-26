@@ -17,6 +17,11 @@ P3 vuelve al alcance porque el catálogo real no presenta la tensión que se hab
 percentil 90 **6,017**. El antiguo gate `ratings_count >= 5` conservaba **108,227/108,227 libros**:
 era un no-op y no eliminaba ninguna cola larga.
 
+La decisión de negocio posterior a V1.2 queda documentada en
+[decisiones_negocio.md](decisiones_negocio.md): B1 popularidad es baseline principal de relevancia
+observada, no north-star. El éxito del producto exige una compuerta N0 de relevancia más evidencia
+de descubrimiento, menor dependencia de head items y proxies N1 de hábito sin afirmar causalidad.
+
 ## 2. Decisiones implementadas
 
 ### A1 — Mitigación geométrica
@@ -95,6 +100,9 @@ exposición de cola/media sin una caída inaceptable de relevancia.
   conserva PCA, embeddings y clusters ajustados con el catálogo completo. Esta fuga transductiva
   residual impide llamarla backtest estricto; reconstruir la geometría por corte queda fuera de v1.
 - El efecto causal sobre hábito requiere producto vivo y experimento A/B.
+- `Recall@k` y `NDCG@k` son métricas correctas para predecir futuras lecturas observadas, pero no
+  miden por sí solas hábito lector ni descubrimiento. B1 puede ganar esas métricas por exposición
+  histórica, no por personalización.
 - API/UI, telemetría de producto, item cold-start y bandits quedan fuera de la V1 académica.
 
 ## 5. Estado de implementación

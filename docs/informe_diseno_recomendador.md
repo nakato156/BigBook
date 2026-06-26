@@ -227,10 +227,13 @@ cambia; cambia la *fuerza de la evidencia*):
 > el objetivo. El hábito vive en N1/N2 (proxies). No conflacionar un `Recall@k` temporal con una
 > métrica de hábito.
 
-**Criterio de validez:** el sistema es válido si (1) **supera a la base de popularidad** en
-`Recall@k`/`NDCG@k` y (2) mejora o conserva `Coverage`, `Long-tail Coverage`, `Novelty` y
-`Diversity`. N1 describe diferencias de hábito por actividad previa, pero no es un gate atribuible
-al recomendador porque el dataset no contiene exposición real al sistema.
+**Criterio de validez:** B1 popularidad es la base principal de relevancia observada, no la métrica
+norte del producto. El sistema es predictor N0 superior solo si supera a B1 en
+`Recall@k`/`NDCG@k`; y es negocio-alineado solo si además mejora descubrimiento:
+`Coverage`, `Long-tail Coverage`, `Novelty`, menor `head_share`, diversidad y baja duplicación de
+obra/edición. N1 describe diferencias de hábito por actividad previa, pero no es un gate atribuible
+al recomendador porque el dataset no contiene exposición real al sistema. La decisión completa está
+en [decisiones_negocio.md](decisiones_negocio.md).
 
 **Límite explícito:** el impacto causal real sobre la retención requiere **telemetría de producto
 en vivo** (sesiones, retornos, libros terminados tras una recomendación), fuera del alcance del
@@ -239,9 +242,9 @@ dataset estático. El runner offline produce la evidencia N0/N1 y el veredicto r
 
 El análisis agregado se complementa con casos reconstruidos bajo el mismo corte temporal. Se
 distinguen fallos de candidate generation, scoring/MMR, exploración, identidad entre ediciones y
-etiqueta offline incompleta. La métrica diagnóstica pendiente es `candidate_recall`, necesaria
-para separar objetivos que nunca llegaron al ranker de los que fueron recuperados pero quedaron
-fuera del top-k. Casos y taxonomía en [error_analysis.md](error_analysis.md).
+etiqueta offline incompleta. V1.1 implementa `candidate_recall` para separar objetivos que nunca
+llegaron al ranker de los que fueron recuperados pero quedaron fuera del top-k. Casos y taxonomía
+en [error_analysis.md](error_analysis.md).
 
 ---
 

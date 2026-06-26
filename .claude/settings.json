@@ -11,7 +11,26 @@
       "Read(//home/nakato/Code/**)",
       "Read(//home/nakato/Code/project-kit/.claude-plugin/**)",
       "Read(//home/nakato/.claude/**)",
-      "Bash(python3 -c \"import json; json.load\\(open\\('/home/nakato/.claude/settings.json'\\)\\); print\\('OK valid JSON'\\)\")"
+      "Bash(python3 -c \"import json; json.load\\(open\\('/home/nakato/.claude/settings.json'\\)\\); print\\('OK valid JSON'\\)\")",
+      "Bash(break)",
+      "Bash(ps -o pid,etime,%cpu,%mem,rss,stat -p 3814975)",
+      "Read(//proc/3814975/**)",
+      "Bash(awk '{print \"utime+stime ticks:\", $14+$15}')",
+      "Bash(kill 3814975 3814955)",
+      "Bash(ps -o pid,etime,%cpu,rss,stat -p 1823895)",
+      "Read(//proc/1823895/**)",
+      "Bash(xargs ls -la --time-style=+%H:%M)",
+      "Bash(python3 -c ' *)",
+      "Bash(git check-ignore *)",
+      "Bash(/home/nakato/.claude/plugins/cache/claude-plugins-official/superpowers/6.0.3/skills/subagent-driven-development/scripts/review-package bf41048 *)",
+      "Bash(git commit -m ' *)",
+      "Bash(/home/nakato/.claude/plugins/cache/claude-plugins-official/superpowers/6.0.3/skills/subagent-driven-development/scripts/review-package f58d668 *)",
+      "Bash(env/bin/python3 -c ' *)",
+      "Bash(/home/nakato/.claude/plugins/cache/claude-plugins-official/superpowers/6.0.3/skills/subagent-driven-development/scripts/review-package 42ae4c0 HEAD)",
+      "Bash(/home/nakato/.claude/plugins/cache/claude-plugins-official/superpowers/6.0.3/skills/subagent-driven-development/scripts/review-package d8301c0 *)",
+      "Bash(/home/nakato/.claude/plugins/cache/claude-plugins-official/superpowers/6.0.3/skills/subagent-driven-development/scripts/review-package f8b5578 *)",
+      "Bash(/home/nakato/.claude/plugins/cache/claude-plugins-official/superpowers/6.0.3/skills/subagent-driven-development/scripts/review-package ee75aa5 *)",
+      "Bash(env/bin/python3 -)"
     ],
     "additionalDirectories": [
       "/home/nakato/.claude"

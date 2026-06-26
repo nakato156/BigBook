@@ -79,10 +79,35 @@ def test_validate_artifacts_accepts_aligned_contracts(tmp_path) -> None:
         user_matrix_path=_write(tmp_path / "matrix.parquet", user_matrix),
         user_meta_path=_write(tmp_path / "meta.parquet", user_meta),
         user_centroids_path=_write(tmp_path / "centroids.parquet", user_centroids),
+        cooccurrence_path=_write(
+            tmp_path / "cooccurrence.parquet",
+            pd.DataFrame(
+                {
+                    "book_id_a": ["b1"],
+                    "book_id_b": ["b2"],
+                    "pmi": [0.5],
+                    "co_count": [3],
+                }
+            ),
+        ),
+        book_graph_nodes_path=_write(
+            tmp_path / "graph_nodes.parquet",
+            pd.DataFrame(
+                {
+                    "book_id": books["book_id"],
+                    "degree": [1] + [0] * (len(books) - 1),
+                    "weighted_degree": [0.5] + [0.0] * (len(books) - 1),
+                    "pagerank": [1.0 / len(books)] * len(books),
+                    "component_id": range(len(books)),
+                }
+            ),
+        ),
     )
 
     assert counts["books"] == 100
     assert counts["interactions"] == 1
+    assert counts["book_cooccurrence"] == 1
+    assert counts["book_graph_nodes"] == 100
 
 
 def test_validate_artifacts_rejects_misaligned_book_ids(tmp_path) -> None:

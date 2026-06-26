@@ -10,35 +10,36 @@ from dataclasses import replace
 
 import numpy as np
 import pandas as pd
+import pytest
 
-from src.reduction.evaluate_recommender import (
-    _binary_metrics,
+from src.reduction.baselines import baseline_recommendations, historical_catalog_mask, historical_popularity_snapshot
+from src.reduction.collaborative import blend_percentile_scores, percentile_scores
+from src.reduction.evaluate_recommender import collect_valid_user_ids, evaluate_temporal
+from src.reduction.habit_proxies import (
     assign_activity_segments,
-    baseline_recommendations,
     build_habit_proxy_table,
-    choose_global_cutoff,
-    collect_valid_user_ids,
-    evaluate_temporal,
-    global_temporal_split,
     habit_proxy_features,
-    historical_catalog_mask,
-    historical_popularity_snapshot,
     summarize_by_activity,
-    temporal_split,
 )
-from src.reduction.recommend import (
+from src.reduction.metrics import _binary_metrics, _candidate_recall, bootstrap_confidence_intervals
+from src.reduction.ranking import (
+    HybridV12Weights,
     RankingConfig,
-    Recommender,
     accessibility_scores,
-    build_recommendation_sample,
+    mmr_select,
+    select_exploration_rows,
+)
+from src.reduction.recommend import Recommender, build_recommendation_sample
+from src.reduction.retrieval import (
     consumed_books_for_users,
     eligibility_mask,
     l2_normalize_rows,
-    mmr_select,
     popularity_segments,
-    select_exploration_rows,
+    retrieve_clusters_per_mode,
+    retrieve_top_clusters,
     taste_pc_indices,
 )
+from src.reduction.temporal_split import choose_global_cutoff, global_temporal_split, temporal_split
 
 GENRES = ["genre_fantasy", "genre_mystery", "genre_history", "genre_ya", "genre_romance"]
 
@@ -126,6 +127,20 @@ def test_accessibility_scores_favor_shorter_valid_books() -> None:
     assert scores[0] == 0
     assert scores[1] == 0
     assert scores[2] > scores[3]
+
+
+def test_percentile_scores_are_deterministic_and_constant_signal_is_neutral() -> None:
+    np.testing.assert_allclose(percentile_scores(np.array([20.0, 10.0, 20.0])), [0.75, 0.0, 0.75])
+    np.testing.assert_allclose(percentile_scores(np.ones(3)), [0.5, 0.5, 0.5])
+
+
+def test_blend_percentiles_validates_alpha_shape_and_finiteness() -> None:
+    with pytest.raises(ValueError, match="blend_alpha"):
+        blend_percentile_scores(np.array([0.1]), np.array([1.0]), 1.1)
+    with pytest.raises(ValueError, match="one score"):
+        blend_percentile_scores(np.array([0.1, 0.2]), np.array([1.0]), 0.5)
+    with pytest.raises(ValueError, match="finite"):
+        blend_percentile_scores(np.array([0.1]), np.array([np.nan]), 0.5)
 
 
 # --------------------------------------------------------------------------- #
@@ -243,6 +258,37 @@ def test_normal_ranking_uses_accessibility_as_soft_tiebreak() -> None:
     assert out.iloc[0]["book_id"] == "b1"
 
 
+def test_additional_score_fn_blends_without_breaking_defaults() -> None:
+    rec = _toy_recommender(
+        RankingConfig(
+            k=1,
+            explore_slots=0,
+            n_clusters_retrieve=1,
+            mmr_lambda=1.0,
+            accessibility_weight=0.0,
+        )
+    )
+    modes = rec._profile_modes("u_taste_A")
+    baseline = rec.recommend_from_modes("u_taste_A", modes[0], modes[1], set())
+    neutral = rec.recommend_from_modes(
+        "u_taste_A", modes[0], modes[1], set(), additional_score_fn=None, blend_alpha=1.0
+    )
+    pd.testing.assert_frame_equal(baseline, neutral)
+
+    def favor_b0(rows: np.ndarray, _user_id: str) -> np.ndarray:
+        return np.array([10.0 if rec.book_ids[row] == "b0" else 0.0 for row in rows])
+
+    blended = rec.recommend_from_modes(
+        "u_taste_A",
+        modes[0],
+        modes[1],
+        set(),
+        additional_score_fn=favor_b0,
+        blend_alpha=0.0,
+    )
+    assert blended.iloc[0]["book_id"] == "b0"
+
+
 def test_a4_cold_start_has_no_popularity_and_spans_macros() -> None:
     rec = _toy_recommender(RankingConfig(min_pages_accessible=50))
     out = rec.recommend_cold_start("new_user", set())
@@ -328,6 +374,176 @@ def test_multi_centroid_modes_drive_ranking() -> None:
     assert out.iloc[0]["book_id"] in {"b3", "b4"}
 
 
+def test_candidate_recall_separates_retrieval_from_ranking_failure() -> None:
+    # Case 1 (E1, retrieval failure): with only 1 cluster retrieved, the user's profile
+    # (taste A) pulls candidates exclusively from cluster 0 ({b0, b1}); the target book
+    # b2 lives in cluster 1 (taste A', not retrieved) and never becomes a candidate at all.
+    rec_e1 = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=1))
+    modes = rec_e1._profile_modes("u_taste_A")
+    near, candidate_rows = rec_e1.retrieved_candidate_rows(modes[0], modes[1], set())
+    candidate_ids = set(rec_e1.book_ids[candidate_rows])
+    relevant = {"b2"}
+    assert "b2" not in candidate_ids
+    assert _candidate_recall(candidate_ids, relevant) == 0.0
+
+    # Case 2 (E2, ranking/MMR failure): with 2 clusters retrieved, b2 (cluster 1) *is* a
+    # candidate, so retrieval succeeded (candidate_recall == 1.0) — but with k=1 and pure
+    # relevance ranking (mmr_lambda=1.0), the more relevant b1 wins the only slot and b2
+    # never reaches the final top-k (recall == 0). This is the metric distinguishing E1
+    # from E2: retrieval is not the bottleneck here, scoring/MMR is.
+    rec_e2 = _toy_recommender(
+        RankingConfig(k=1, explore_slots=0, n_clusters_retrieve=2, mmr_lambda=1.0)
+    )
+    modes2 = rec_e2._profile_modes("u_taste_A")
+    near2, candidate_rows2 = rec_e2.retrieved_candidate_rows(modes2[0], modes2[1], set())
+    candidate_ids2 = set(rec_e2.book_ids[candidate_rows2])
+    assert "b2" in candidate_ids2
+    assert _candidate_recall(candidate_ids2, relevant) == 1.0
+
+    final = rec_e2.recommend_from_modes("u_taste_A", modes2[0], modes2[1], set())
+    recommended = final["book_id"].astype(str).tolist()
+    final_recall = _binary_metrics(recommended, relevant, k=1)["recall"]
+    assert final_recall == 0.0
+
+
+def test_hybrid_v12_union_can_recover_candidate_outside_content_clusters() -> None:
+    rec = _toy_recommender(RankingConfig(k=1, explore_slots=0, n_clusters_retrieve=1))
+    modes = rec._profile_modes("u_taste_A")
+    _, content_rows = rec.retrieved_candidate_rows(modes[0], modes[1], set())
+    assert "b3" not in set(rec.book_ids[content_rows])
+
+    global_rows = np.array([rec._book_row["b3"], rec._book_row["b0"]], dtype=np.int64)
+    out = rec.recommend_hybrid_v12(
+        "u_taste_A",
+        modes[0],
+        modes[1],
+        set(),
+        popularity_count=np.array([1, 1, 1, 100, 1, 1, 1, 1], dtype=float),
+        average_rating=np.ones(len(rec.book_ids), dtype=float),
+        train_genres=np.zeros(len(GENRES), dtype=int),
+        global_popularity_rows=global_rows,
+        genre_popularity_rows=np.array([], dtype=np.int64),
+        weights=HybridV12Weights(content=0.0, global_popularity=1.0, genre_popularity=0.0),
+        source_limit=2,
+    )
+
+    assert out.iloc[0]["book_id"] == "b3"
+    assert out.iloc[0]["slot"] == "hybrid_v12"
+
+
+def test_retrieve_top_clusters_matches_recommend_from_modes_retrieval() -> None:
+    # The extracted pure function must produce the same cluster ids that the end-to-end
+    # retrieve step inside recommend_from_modes uses (extract-method, no behavior change).
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2))
+    modes = rec._profile_modes("u_taste_A")
+    modes_taste_norm = l2_normalize_rows(modes[0][:, rec.taste_idx].astype(np.float64))
+    weights = modes[1] / modes[1].sum()
+    near_direct = retrieve_top_clusters(
+        modes_taste_norm, weights, rec.centroids_taste_norm, rec.config.n_clusters_retrieve
+    )
+    near_via_method, _ = rec.retrieved_candidate_rows(modes[0], modes[1], set())
+    assert near_direct.tolist() == near_via_method.tolist()
+
+
+def test_retrieve_clusters_per_mode_is_opt_in_and_preserves_default_behaviour() -> None:
+    # clusters_per_mode=None (the RankingConfig default) must leave retrieved_candidate_rows
+    # byte-identical to the existing max-pooling retrieve — this is the opt-in contract.
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2))
+    modes = rec._profile_modes("u_taste_A")
+    assert rec.config.clusters_per_mode is None
+
+    modes_taste_norm = l2_normalize_rows(modes[0][:, rec.taste_idx].astype(np.float64))
+    weights = modes[1] / modes[1].sum()
+    near_direct = retrieve_top_clusters(
+        modes_taste_norm, weights, rec.centroids_taste_norm, rec.config.n_clusters_retrieve
+    )
+    near_via_method, rows_via_method = rec.retrieved_candidate_rows(modes[0], modes[1], set())
+    assert near_via_method.tolist() == near_direct.tolist()
+
+    direct_rows = rec._candidate_rows(near_direct, set())
+    assert rows_via_method.tolist() == direct_rows.tolist()
+
+
+def test_retrieve_clusters_per_mode_recovers_minority_mode_cluster() -> None:
+    # E6: a dominant mode (taste A, weight 0.9) and a minority mode (taste C, weight 0.1).
+    # Today's weighted max-pooling never lets cluster 3 (the minority mode's nearest
+    # centroid) into the top-2, because cluster 1 (also taste A) outranks it once weighted.
+    # retrieve_clusters_per_mode, with no weighting, lets the minority mode bring its own
+    # nearest cluster regardless of the dominant mode.
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2))
+    taste_idx = rec.taste_idx
+    modes_pc = np.array(
+        [
+            [0.0, 1.0, 0.0, 0.0],  # dominant mode: taste A
+            [0.0, 0.0, 0.0, 1.0],  # minority mode: taste C
+        ]
+    )
+    weights = np.array([0.9, 0.1])
+    modes_taste_norm = l2_normalize_rows(modes_pc[:, taste_idx].astype(np.float64))
+
+    near_pooled = retrieve_top_clusters(
+        modes_taste_norm, weights, rec.centroids_taste_norm, 2
+    )
+    near_per_mode = retrieve_clusters_per_mode(modes_taste_norm, rec.centroids_taste_norm, 1)
+
+    assert 3 not in near_pooled.tolist()
+    assert 3 in near_per_mode.tolist()
+
+
+def test_retrieve_clusters_per_mode_round_robin_balances_modes_under_budget() -> None:
+    # 3 modes (taste A/B/C), clusters_per_mode=2 -> up to 6 candidate clusters, but
+    # total_budget=3 truncates the already-interleaved round-robin sequence. Because the
+    # union is built rank-1-of-each-mode-first (not mode-by-mode concatenation), every mode
+    # keeps at least one cluster even after the budget cut.
+    rec = _toy_recommender(RankingConfig(k=3, explore_slots=0, n_clusters_retrieve=2))
+    taste_idx = rec.taste_idx
+    modes_pc = np.array(
+        [
+            [0.0, 1.0, 0.0, 0.0],  # taste A -> nearest cluster 0
+            [0.0, 0.0, 1.0, 0.0],  # taste B -> nearest cluster 2
+            [0.0, 0.0, 0.0, 1.0],  # taste C -> nearest cluster 3
+        ]
+    )
+    modes_taste_norm = l2_normalize_rows(modes_pc[:, taste_idx].astype(np.float64))
+
+    near = retrieve_clusters_per_mode(
+        modes_taste_norm, rec.centroids_taste_norm, clusters_per_mode=2, total_budget=3
+    )
+    assert len(near) == 3
+    assert 0 in near.tolist()  # mode A's top cluster
+    assert 2 in near.tolist()  # mode B's top cluster
+    assert 3 in near.tolist()  # mode C's top cluster
+
+
+def test_retrieve_clusters_per_mode_clamps_when_request_exceeds_available_clusters() -> None:
+    # Regression test: when clusters_per_mode (requested) exceeds n_clusters (available),
+    # np.argsort(...)[:, :clusters_per_mode] silently clips to shape (n_modes, n_clusters).
+    # The round-robin loop must iterate over that clipped shape, not the raw request, or it
+    # raises IndexError. retrieve_top_clusters already degrades gracefully via 1-D slicing;
+    # this asserts retrieve_clusters_per_mode matches that behaviour by returning the union
+    # of everything available instead of crashing.
+    centroids_taste_norm = l2_normalize_rows(
+        np.array(
+            [
+                [1.0, 0.0],  # cluster 0
+                [0.0, 1.0],  # cluster 1
+            ]
+        )
+    )
+    modes_taste_norm = l2_normalize_rows(
+        np.array(
+            [
+                [1.0, 0.0],  # mode 0 -> nearest cluster 0
+                [0.0, 1.0],  # mode 1 -> nearest cluster 1
+            ]
+        )
+    )
+
+    near = retrieve_clusters_per_mode(modes_taste_norm, centroids_taste_norm, clusters_per_mode=5)
+
+    assert sorted(near.tolist()) == [0, 1]
+
+
 def test_temporal_split_is_chronological_per_user() -> None:
     interactions = pd.DataFrame(
         {
@@ -358,6 +574,24 @@ def test_global_temporal_split_uses_one_shared_cutoff() -> None:
 
     assert set(train["book_id"]) == {"a", "c"}
     assert set(future["book_id"]) == {"b", "d"}
+
+
+def test_bootstrap_confidence_intervals_are_reproducible_and_bracket_the_mean() -> None:
+    per_user = pd.DataFrame(
+        {
+            "user_id": ["u1", "u2", "u3"],
+            "system": ["model"] * 3,
+            "k": [10] * 3,
+            "recall": [0.0, 0.5, 1.0],
+            "precision": [0.0, 0.1, 0.2],
+            "ndcg": [0.0, 0.4, 0.8],
+            "average_precision": [0.0, 0.3, 0.6],
+        }
+    )
+    first = bootstrap_confidence_intervals(per_user, n_resamples=500, random_state=7)
+    second = bootstrap_confidence_intervals(per_user, n_resamples=500, random_state=7)
+    pd.testing.assert_frame_equal(first, second)
+    assert ((first["ci_low"] <= first["mean"]) & (first["mean"] <= first["ci_high"])).all()
 
 
 def test_global_temporal_split_discards_pre_goodreads_dates() -> None:
@@ -401,6 +635,7 @@ def test_historical_popularity_snapshot_ignores_future_ratings(tmp_path) -> None
         {
             "book_id": ["past", "past", "future_hit", "future_hit", "corrupt"],
             "rating_clean": [4.0, 5.0, 5.0, 5.0, 5.0],
+            "has_review_text": [True, False, True, True, True],
             "date_added": pd.to_datetime(
                 ["2020-01-01", "2020-01-02", "2020-03-01", "2020-03-02", "2001-01-01"],
                 utc=True,
@@ -417,6 +652,7 @@ def test_historical_popularity_snapshot_ignores_future_ratings(tmp_path) -> None
 
     assert snapshot.rating_count.tolist() == [2.0, 0.0, 0.0]
     assert snapshot.average_rating.tolist() == [4.5, 0.0, 0.0]
+    assert snapshot.review_count.tolist() == [1.0, 0.0, 0.0]
     np.testing.assert_array_equal(
         snapshot.first_observed[:2],
         np.array(["2020-01-01", "2020-03-01"], dtype="datetime64[ns]"),

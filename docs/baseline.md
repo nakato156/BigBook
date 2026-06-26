@@ -8,10 +8,11 @@ comparación: qué es una recomendación ingenua en nuestro dominio, qué perfor
 un sistema simple, y **contra qué baseline concreto** se mide el recomendador principal.
 
 > Engancha directamente con el **criterio de validez** de
-> [metricas_evaluacion](metricas_evaluacion.md): el sistema es válido si **supera a la base de
-> popularidad** en `Recall@k`/`NDCG@k` **sin colapsar** `Coverage`/`Novelty`/`Diversity`. Aquí se
-> formaliza qué es esa "base de popularidad" y cómo se construye, de modo que la comparación sea
-> reproducible y honesta.
+> [metricas_evaluacion](metricas_evaluacion.md): B1 es la base principal de relevancia observada,
+> pero no la métrica norte del producto. El sistema es un predictor N0 superior solo si supera a B1
+> en `Recall@k`/`NDCG@k`; y es negocio-alineado solo si además mejora descubrimiento, cobertura,
+> novedad y exposición long-tail. La decisión completa vive en
+> [decisiones_negocio](decisiones_negocio.md).
 
 ---
 
@@ -21,12 +22,11 @@ Sin línea base, cualquier número del recomendador (`Recall@10 = 0.12`, p. ej.)
 no se sabe si es bueno, malo o trivial. El baseline cumple tres funciones:
 
 - **Piso de cordura (sanity floor):** si el modelo no supera ni al azar, está roto.
-- **Techo de la trivialidad:** la popularidad es lo que consigue cualquiera sin modelar gusto;
-  superarla es la barra mínima para justificar todo el pipeline (PCA + clusters + perfil de
-  usuario).
+- **Techo de la trivialidad predictiva:** la popularidad es lo que consigue cualquiera sin modelar
+  gusto; superarla en N0 justifica el pipeline como predictor de lecturas observadas.
 - **Control del objetivo de negocio:** el baseline de popularidad es precisamente lo que el
   producto **quiere evitar** (sesgo de popularidad, burbuja de bestsellers). Compararse contra él
-  no solo mide relevancia: mide si de verdad estamos descubriendo, no amplificando.
+  mide si de verdad estamos descubriendo, no amplificando.
 
 ---
 
@@ -82,9 +82,11 @@ baseline. Las cifras medidas y su comparación con el modelo se publican en
 | **B2 Popularidad por género** | Medio (un poco mejor que B1: filtra por el género del usuario) | Coverage/Novelty algo mejores que B1, pero sigue siendo burbuja de género |
 
 La intuición clave: **B1 acierta sin entender al usuario**. Si mucha gente leyó *Harry Potter*,
-recomendar *Harry Potter* a todos consigue un `Recall@k` no nulo "gratis". Por eso ganar en
-relevancia es necesario, pero **no suficiente**: el recomendador debe ganar en relevancia
-**manteniendo** la diversidad/cobertura que B1 destruye. Ese es el doble criterio del entregable.
+recomendar *Harry Potter* a todos consigue un `Recall@k` no nulo "gratis". Por eso B1 se interpreta
+como baseline de **exposición histórica**: es correcto para medir predicción N0, pero incompleto
+para juzgar el producto de hábito lector. Ganar en relevancia es evidencia fuerte, pero **no
+suficiente**; y perder contra B1 no autoriza a reclamar superioridad predictiva, aunque el modelo
+pueda aportar valor de descubrimiento.
 
 ---
 
@@ -100,18 +102,41 @@ B1 Popularidad       → BASELINE PRINCIPAL   (debe superarse en relevancia SIN 
 B2 Popularidad/género→ rival realista       (ganar aquí justifica el gusto cross-género)
 ```
 
-**Criterio de éxito (hereda el de [metricas_evaluacion](metricas_evaluacion.md) §4):** el
-recomendador es válido si
+**Criterio de éxito predictivo N0 (hereda el de
+[metricas_evaluacion](metricas_evaluacion.md) §4):** el recomendador es superior a B1 si
 
 1. `Recall@k` / `NDCG@k` (modelo) **>** los de **B1** (y de B2), y
 2. `Coverage` / `Long-tail Coverage` / `Novelty` / `Diversity` (modelo) **≥** los de **B1**
    (B1 fija el piso de diversidad que **no** se debe empeorar — y dado lo malo que es B1 ahí, el
-   modelo debería superarlo con claridad), y
-3. el modelo se asocia a mejores **proxies de hábito** (Capa 2: `completion_rate`,
-   `reading_frequency`, `reading_breadth`).
+   modelo debería superarlo con claridad).
+
+**Criterio de negocio-alineamiento:** además de la compuerta N0, el modelo debe mostrar valor de
+descubrimiento y hábito: `DiscoveryRecall@k` sobre futuros no-head, `TailNDCG@k`, menor
+`head_share`, cobertura/novelty/diversidad superiores a B1, baja repetición de obra/edición y
+proxies N1 (`completion_rate`, `reading_frequency`, `reading_breadth`) reportados como
+correlacionales.
 
 Si el modelo solo gana relevancia copiando a B1 (recomendando populares), las métricas
 anti-popularidad lo delatan y **no se considera válido** para el objetivo de hábito.
+
+### V1.2: stronger system calibrado contra B1
+
+La ruta `hybrid_v12` conserva `content_only` como baseline interno, pero agrega una unión de
+candidatos más fuerte:
+
+- clusters cercanos por perfil multi-interés;
+- top histórico de B1;
+- top histórico de B2 por géneros de train;
+- candidatos colaborativos cuando existe coocurrencia PMI o user-kNN.
+
+El score final no mezcla magnitudes crudas: cada señal se transforma a percentiles dentro del pool
+del usuario (`content`, popularidad global, popularidad por género, coocurrencia, user-kNN) y luego
+se pondera. La grilla reproducible vive en `scripts/run_ranker_grid.py`. Su selector solo marca
+ganador si la configuración supera a B1 en `Recall@k` y `NDCG@k` para todos los `k` reportados y
+mantiene los pisos de `Coverage`, `Long-tail Coverage` y `Novelty` de B1. Si ninguna configuración
+cumple, el ganador operativo queda como `content_only` y el veredicto sigue siendo **no validado
+como predictor N0 superior**. Esto no debe maquillarse como 10/10: debe reportarse junto con la
+evidencia de descubrimiento y la brecha metodológica que queda.
 
 ---
 
@@ -152,6 +177,7 @@ La **línea base** del proyecto es la **recomendación por popularidad** (**B1**
 (**B0 Random**) y un **rival de regla simple por género** (**B2**, popularidad dentro de los
 géneros leídos). El recomendador principal **no se presenta solo**: se reporta siempre junto a
 estos baselines, bajo el mismo split temporal, mismo `k` y mismos usuarios. Se declara una mejora
-real **solo si supera a la popularidad en relevancia (`Recall@k`/`NDCG@k`) sin sacrificar la
-diversidad/cobertura** que la popularidad destruye — porque en este producto ganar copiando a los
+real **solo si separa dos afirmaciones**: superioridad predictiva N0 cuando supera a B1 en
+`Recall@k`/`NDCG@k`, y alineamiento de negocio cuando mejora descubrimiento, cobertura, novedad y
+exposición long-tail sin copiar la lista de bestsellers. En este producto, ganar copiando a los
 bestsellers es, precisamente, perder.

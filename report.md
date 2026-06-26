@@ -247,7 +247,21 @@ Temporalmente:
 - PCA, embeddings y clusters permanecen congelados, por lo que subsiste fuga transductiva
   residual.
 
-El contrato completo y sus supuestos están en `docs/data_alignment.md`.
+Supuestos y riesgos que condicionan la interpretación:
+
+| Supuesto | Riesgo |
+|---|---|
+| `book_id` equivale al ítem de producto | Dos ediciones de una obra pueden tratarse como libros distintos |
+| Ausencia de interacción equivale a desconocido | No existen negativos de exposición |
+| Leído con rating ≥4 equivale a positivo | Sesgo de selección y diferencias personales al calificar |
+| Fechas Goodreads representan el orden real | Fechas faltantes o carga retrospectiva |
+| Metadata imputada conserva comparabilidad | Páginas/año faltantes pueden introducir ruido |
+| El catálogo completo representa un snapshot | La evaluación congelada conserva fuga transductiva |
+| Un cluster cercano contiene los próximos positivos | El retrieval puede eliminar objetivos antes del scoring |
+
+V1.1 añade un backtest manual que reconstruye PCA, clustering y perfiles por corte para medir el
+último riesgo. Los espacios de snapshots distintos se mantienen aislados: solo se comparan
+métricas agregadas, nunca componentes PCA ni identificadores de cluster.
 
 ---
 
@@ -538,6 +552,10 @@ No se excluye un libro por tener poca popularidad.
 
 Selecciona libros elegibles no consumidos usando una semilla determinista por usuario.
 
+```text
+B0(u,k) = muestra_determinista(C(u,t) - consumidos(u,t), k)
+```
+
 Es razonable como piso de cordura: el modelo debe superarlo en relevancia. Su diversidad y
 cobertura pueden ser altas, pero no tienen valor si la lista no es relevante.
 
@@ -568,6 +586,9 @@ Es un rival más fuerte conceptualmente porque incorpora personalización básic
 si le gusta fantasía -> recomendar fantasía popular
 ```
 
+Si el usuario tiene varios géneros positivos, B2 usa la unión de esos géneros y aplica el mismo
+`pop_score` histórico de B1. No usa el género del holdout futuro.
+
 Superar B2 sería evidencia de que el espacio multidimensional aporta más que una regla simple de
 género.
 
@@ -581,6 +602,18 @@ Modelo y baselines comparten:
 - los mismos `k`;
 - la exclusión de libros consumidos;
 - popularidad calculada solo con evidencia anterior al corte.
+
+El pool común se define como:
+
+```text
+C(u,t) =
+    libros disponibles en t
+    ∩ ids/títulos/vectores/clusters técnicamente válidos
+    - libros consumidos por u hasta t
+```
+
+B1 y B2 ordenan todo `C(u,t)`; el modelo añade retrieval por clusters. Por eso
+`candidate_recall` se reporta solo para el modelo.
 
 ---
 
@@ -760,6 +793,18 @@ También se reportan:
 - novedad: menor probabilidad histórica implica mayor valor;
 - mezcla de exposición `tail/mid/head`.
 
+V1.1 añade:
+
+```text
+candidate_recall =
+    objetivos futuros elegibles presentes en el pool recuperado
+    / objetivos futuros elegibles
+```
+
+Esta métrica separa E1 (el objetivo nunca llegó a scoring) de E2 (sí llegó, pero perdió en el
+ranking). El CLI opcional `--bootstrap-ci` remuestrea usuarios y genera intervalos percentiles
+reproducibles para Recall, Precision, NDCG y MAP.
+
 ### 8.3 Precision, Recall y NDCG
 
 | Sistema | k | Precision | Recall | NDCG | MAP |
@@ -786,6 +831,17 @@ Interpretación:
   B1.
 - B2 queda muy cerca de B1, lo que muestra que la popularidad sigue siendo una señal predictiva
   dominante en este dataset.
+
+Bootstrap por usuario (1,000 remuestreos, IC 95%) para `k=10`:
+
+| Sistema | Recall medio | IC 95% Recall | NDCG medio | IC 95% NDCG |
+|---|---:|---:|---:|---:|
+| Modelo | 0.004745 | [0.003238, 0.006635] | 0.006773 | [0.004970, 0.008899] |
+| B1 popularidad | 0.025292 | [0.021059, 0.030366] | 0.034830 | [0.029536, 0.041232] |
+| B2 género-popularidad | 0.024151 | [0.020206, 0.028930] | 0.032898 | [0.027732, 0.038813] |
+
+Los intervalos del modelo y B1 no se solapan en estas métricas: la brecha observada no parece una
+fluctuación pequeña de la cohorte evaluada.
 
 ### 8.4 Descubrimiento, diversidad y exposición
 
@@ -837,10 +893,26 @@ causado**, porque nadie en el dataset fue expuesto al sistema.
 
 ### 8.7 Veredicto
 
-El criterio definido exigía superar B1 en Recall y NDCG sin perder descubrimiento. V1 cumple la
-parte de descubrimiento, pero no la de relevancia.
+El criterio predictivo N0 exigía superar B1 en Recall y NDCG sin perder descubrimiento. V1 cumple
+la parte de descubrimiento, pero no la de relevancia. La decisión de negocio posterior separa esta
+lectura: B1 es baseline de exposición observada, no métrica norte; BigBook debe reportar
+superioridad predictiva N0 solo si gana a B1, y alineamiento de hábito si además mejora
+descubrimiento, exposición no-head y proxies N1 sin afirmar causalidad.
 
 > **Veredicto N0: V1 no validada.**
+
+### 8.8 Estado experimental de V1.1
+
+El código incorpora tres evaluaciones adicionales:
+
+- retrieval por modo y ablaciones de clusters/MMR/exploración;
+- comparación temporal train-only entre contenido, coocurrencia PMI y user-kNN;
+- backtest con refit independiente en varios snapshots.
+
+Estos jobs son manuales y costosos sobre `interactions_curated.parquet` (110,450,288 filas). Este
+informe no atribuye una mejora ni declara una señal colaborativa ganadora hasta que existan
+`ablation_results.csv`, `collaborative_ab_results.csv` y `multi_snapshot_backtest.csv` completos.
+La ausencia de esos resultados no se sustituye por métricas estimadas.
 
 ---
 
@@ -1039,9 +1111,9 @@ perfil ni a la actividad del usuario.
 **Explicabilidad limitada.** Cluster y género son explicaciones aproximadas; los componentes PCA
 no producen razones semánticas legibles.
 
-### 9.13 Métricas diagnósticas pendientes
+### 9.13 Métricas diagnósticas implementadas
 
-La siguiente evaluación debería añadir:
+La evaluación ya calcula:
 
 ```text
 candidate_recall =
@@ -1049,7 +1121,7 @@ candidate_recall =
     / objetivos futuros elegibles
 ```
 
-También debe reportar:
+Los CSV regenerados permiten reportar:
 
 - porcentaje de objetivos fuera del retrieval;
 - porcentaje recuperado pero no rankeado;
@@ -1057,8 +1129,9 @@ También debe reportar:
 - duplicados de obra;
 - casos reproducibles con objetivos, clusters y posiciones.
 
-Sin `candidate_recall`, un `Recall@k` no permite distinguir entre un fallo anterior o posterior al
-scoring. El análisis completo se conserva en `docs/error_analysis.md`.
+Además, el bootstrap opcional cuantifica incertidumbre por usuario y el backtest multi-snapshot
+separa sensibilidad temporal de la representación. Los resultados numéricos deben regenerarse
+antes de reemplazar las tablas históricas de esta sección.
 
 ---
 
@@ -1088,34 +1161,31 @@ en etapas concretas y corregibles del pipeline.
 
 ### 10.3 Mejoras para una versión futura
 
-Prioridad alta:
+Implementado en V1.1, pendiente de ejecutar a escala completa:
+
+1. Ablation study del ranking con retrieval por modo, distintos presupuestos, MMR y exploración.
+2. Blend contenido-colaborativo calibrado por percentiles, comparando PMI y user-kNN train-only.
+3. `candidate_recall` para separar candidate generation de scoring.
+4. Bootstrap por usuario e intervalos de confianza.
+5. Backtest con PCA/clustering/perfiles reconstruidos por snapshot.
+
+Trabajo futuro:
 
 1. **Crear una identidad canónica de obra**, agrupando ediciones y validando que ninguna
    recomendación represente un libro ya consumido bajo otro `book_id`.
-2. **Ablation study del ranking:** coseno puro, coseno + MMR, sin exploración, distintos números de
-   clusters recuperados y distintos valores de `mmr_lambda`.
-3. **Aumentar el recall de candidatos:** comparar cinco clusters contra búsqueda ANN global o una
-   unión de vecinos por cada centroide del usuario.
-4. **Calibrar la exploración con datos:** probar pisos más altos, explorar dentro de
+2. **Aumentar el recall de candidatos:** comparar retrieval por modo contra búsqueda ANN global.
+3. **Calibrar la exploración con datos:** probar pisos más altos, explorar dentro de
    macro-clusters hermanos y reducir slots cuando la confianza sea baja.
-5. **Modelo híbrido contenido-colaborativo:** combinar el vector de contenido con señales de
-   co-consumo, matrix factorization o nearest-neighbor usuario-ítem.
-6. **Usar negativos y preferencias relativas:** incorporar ratings bajos y pares
+4. **Usar negativos y preferencias relativas:** incorporar ratings bajos y pares
    positivo/negativo en un modelo de ranking.
-
-Prioridad metodológica:
-
-7. Aplicar validación temporal con varios cortes.
-8. Reconstruir PCA y clustering por snapshot para eliminar fuga transductiva.
-9. Reportar intervalos de confianza o bootstrap por usuario.
-10. Evaluar por actividad, amplitud de gusto, cold-start y popularidad de los objetivos.
+5. Evaluar por amplitud de gusto, cold-start y popularidad de los objetivos.
 
 Prioridad de producto:
 
-11. Instrumentar impresiones, clicks, guardados, inicios y finalizaciones posteriores a una
-    recomendación.
-12. Medir novedad individual, satisfacción y repetición de sesiones.
-13. Ejecutar un A/B test para estimar impacto causal en frecuencia, completion y retención.
+6. Instrumentar impresiones, clicks, guardados, inicios y finalizaciones posteriores a una
+   recomendación.
+7. Medir novedad individual, satisfacción y repetición de sesiones.
+8. Ejecutar un A/B test online para estimar impacto causal en frecuencia, completion y retención.
 
 ### 10.4 Cierre
 

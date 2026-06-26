@@ -1,13 +1,19 @@
-"""Temporal offline evaluation for the recommender and B0/B1/B2 baselines."""
+"""Temporal offline evaluation driver for the recommender and B0/B1/B2 baselines.
+
+This is the orchestrator: it wires together chronological splitting
+(:mod:`src.reduction.temporal_split`), historical popularity/baselines
+(:mod:`src.reduction.baselines`), N0 ranking metrics (:mod:`src.reduction.metrics`) and
+N1 habit-proxy metrics (:mod:`src.reduction.habit_proxies`) into one evaluation run, plus
+the user-sampling helpers and CLI used to invoke it.
+"""
 
 from __future__ import annotations
 
 import argparse
 import math
-import zlib
-from dataclasses import dataclass, replace
+from dataclasses import replace
 from pathlib import Path
-from typing import Sequence
+from typing import Callable, Sequence
 
 import numpy as np
 import pandas as pd
@@ -19,17 +25,41 @@ from src.config import (
     PROJECT_ROOT,
     USER_FEATURES_GLOBAL_PATH,
 )
+from src.reduction.baselines import (
+    baseline_recommendations,
+    historical_catalog_mask,
+    historical_popularity_snapshot,
+    popularity_from_training,
+    prepare_baseline_rankings,
+)
 from src.reduction.build_user_centroids import compute_engagement_weight
-from src.reduction.recommend import GENRE_COLUMNS, Recommender, popularity_segments
+from src.reduction.habit_proxies import _consumed_books, _positive_mask, build_habit_proxy_table, summarize_by_activity
+from src.reduction.metrics import (
+    _binary_metrics,
+    _candidate_recall,
+    _intra_list_diversity,
+    _slot_metrics,
+    bootstrap_confidence_intervals,
+)
+from src.reduction.ranking import HybridV12Weights
+from src.reduction.recommend import GENRE_COLUMNS, Recommender
+from src.reduction.retrieval import popularity_segments
+from src.reduction.temporal_split import (
+    MIN_VALID_DATE,
+    RANDOM_STATE,
+    _utc_timestamp,
+    choose_global_cutoff,
+    global_temporal_split,
+    temporal_split,
+)
 from src.utils.io import safe_write_parquet
 
-RANDOM_STATE = 42
-MIN_VALID_DATE = pd.Timestamp("2006-01-01", tz="UTC")
 EVALUATION_MODE = "global_historical_snapshot_frozen_representation"
 EVALUATION_DIR = PROJECT_ROOT / "data" / "outputs" / "recommendations"
 EVALUATION_OUTPUT = EVALUATION_DIR / "temporal_evaluation.csv"
 EVALUATION_USERS_OUTPUT = EVALUATION_DIR / "temporal_evaluation_users.parquet"
 EVALUATION_ACTIVITY_OUTPUT = EVALUATION_DIR / "temporal_evaluation_by_activity.csv"
+EVALUATION_BOOTSTRAP_OUTPUT = EVALUATION_DIR / "temporal_evaluation_bootstrap_ci.csv"
 INTERACTION_COLUMNS = [
     "user_id",
     "book_id",
@@ -39,499 +69,6 @@ INTERACTION_COLUMNS = [
     "reading_duration_days",
     "date_added",
 ]
-POPULARITY_COLUMNS = ["book_id", "rating_clean", "date_added"]
-
-
-@dataclass(frozen=True)
-class HistoricalSnapshot:
-    """Catalog evidence observed in the canonical interaction log."""
-
-    rating_count: np.ndarray
-    average_rating: np.ndarray
-    first_observed: np.ndarray
-    invalid_date_count: int
-
-
-@dataclass(frozen=True)
-class BaselineRankings:
-    """Precomputed historical rankings shared by every evaluated user."""
-
-    eligible_rows: np.ndarray
-    global_popularity_rows: np.ndarray
-    genre_popularity_rows: dict[int, np.ndarray]
-
-
-def _utc_timestamp(value: pd.Timestamp | str) -> pd.Timestamp:
-    timestamp = pd.Timestamp(value)
-    return timestamp.tz_localize("UTC") if timestamp.tzinfo is None else timestamp.tz_convert("UTC")
-
-
-def _valid_dates(values: pd.Series) -> tuple[pd.Series, np.ndarray]:
-    dates = pd.to_datetime(values, errors="coerce", utc=True)
-    valid = dates.notna() & (dates >= MIN_VALID_DATE)
-    return dates, valid.to_numpy(dtype=bool)
-
-
-def temporal_split(
-    interactions: pd.DataFrame, train_fraction: float = 0.8
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Chronological per-user split with at least one row on each side."""
-    data = interactions.copy()
-    data["user_id"] = data["user_id"].astype(str)
-    data["book_id"] = data["book_id"].astype(str)
-    dates, valid = _valid_dates(data["date_added"])
-    data["date_added"] = dates
-    data = data.loc[valid].sort_values(["user_id", "date_added"], kind="stable")
-    if data.empty:
-        return data.copy(), data.copy()
-    position = data.groupby("user_id").cumcount()
-    size = data.groupby("user_id")["user_id"].transform("size")
-    cutoff = np.floor(size * train_fraction).astype(int).clip(lower=1)
-    cutoff = np.minimum(cutoff, size - 1)
-    train_mask = (size > 1) & (position < cutoff)
-    return data.loc[train_mask].copy(), data.loc[~train_mask].copy()
-
-
-def global_temporal_split(
-    interactions: pd.DataFrame,
-    cutoff: pd.Timestamp,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Split every user at one shared timestamp; invalid dates are not evaluable."""
-    data = interactions.copy()
-    data["user_id"] = data["user_id"].astype(str)
-    data["book_id"] = data["book_id"].astype(str)
-    dates, valid = _valid_dates(data["date_added"])
-    data["date_added"] = dates
-    cutoff = _utc_timestamp(cutoff)
-    return (
-        data.loc[valid & (data["date_added"] <= cutoff)].copy(),
-        data.loc[valid & (data["date_added"] > cutoff)].copy(),
-    )
-
-
-def choose_global_cutoff(interactions: pd.DataFrame, train_fraction: float) -> pd.Timestamp:
-    """Choose one chronological cutoff from the bounded evaluation cohort."""
-    if not 0.0 < train_fraction < 1.0:
-        raise ValueError("train_fraction must be between 0 and 1.")
-    dates, valid = _valid_dates(interactions["date_added"])
-    valid_dates = dates.loc[valid]
-    if valid_dates.empty:
-        raise ValueError("Cannot choose a temporal cutoff without valid date_added values.")
-    return pd.Timestamp(valid_dates.quantile(train_fraction))
-
-
-def popularity_from_training(
-    train: pd.DataFrame,
-    book_ids: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Build rating count and mean using training rows only."""
-    frame = train[["book_id", "rating_clean"]].copy()
-    frame["book_id"] = frame["book_id"].astype(str)
-    frame["rating_clean"] = pd.to_numeric(frame["rating_clean"], errors="coerce")
-    rated = frame.dropna(subset=["rating_clean"])
-    grouped = rated.groupby("book_id", sort=False)["rating_clean"].agg(["count", "mean"])
-    aligned = grouped.reindex(pd.Index(book_ids.astype(str), name="book_id"))
-    return (
-        aligned["count"].fillna(0).to_numpy(dtype=np.float64),
-        aligned["mean"].fillna(0.0).to_numpy(dtype=np.float64),
-    )
-
-
-def historical_popularity_snapshot(
-    interactions_path: Path,
-    book_ids: np.ndarray,
-    cutoff: pd.Timestamp,
-    batch_size: int = 500_000,
-) -> HistoricalSnapshot:
-    """Aggregate rating evidence and first observation from one canonical scan."""
-    cutoff = _utc_timestamp(cutoff)
-    if cutoff < MIN_VALID_DATE:
-        raise ValueError(f"cutoff must be on or after {MIN_VALID_DATE.date()}.")
-    book_row = {str(book_id): row for row, book_id in enumerate(book_ids)}
-    counts = np.zeros(len(book_ids), dtype=np.int64)
-    sums = np.zeros(len(book_ids), dtype=np.float64)
-    first_observed_ns = np.full(len(book_ids), np.iinfo(np.int64).max, dtype=np.int64)
-    invalid_date_count = 0
-
-    parquet = pq.ParquetFile(interactions_path)
-    for batch in parquet.iter_batches(columns=POPULARITY_COLUMNS, batch_size=batch_size):
-        frame = batch.to_pandas()
-        dates, valid_dates = _valid_dates(frame["date_added"])
-        invalid_date_count += int((~valid_dates).sum())
-        mapped = frame["book_id"].astype(str).map(book_row)
-        observed = valid_dates & mapped.notna().to_numpy()
-        if observed.any():
-            observed_rows = mapped.loc[observed].to_numpy(dtype=np.int64)
-            observed_ns = (
-                dates.loc[observed]
-                .dt.tz_localize(None)
-                .to_numpy(dtype="datetime64[ns]")
-                .view(np.int64)
-            )
-            np.minimum.at(first_observed_ns, observed_rows, observed_ns)
-
-        ratings = pd.to_numeric(frame["rating_clean"], errors="coerce")
-        keep = valid_dates & (dates <= cutoff).to_numpy() & ratings.notna().to_numpy()
-        if not keep.any():
-            continue
-        rated_rows = mapped.loc[keep]
-        present = rated_rows.notna()
-        rows = rated_rows.loc[present].to_numpy(dtype=np.int64)
-        values = ratings.loc[keep].loc[present].to_numpy(dtype=np.float64)
-        np.add.at(counts, rows, 1)
-        np.add.at(sums, rows, values)
-
-    averages = np.divide(
-        sums,
-        counts,
-        out=np.zeros(len(book_ids), dtype=np.float64),
-        where=counts > 0,
-    )
-    first_observed = np.full(len(book_ids), np.datetime64("NaT"), dtype="datetime64[ns]")
-    observed = first_observed_ns != np.iinfo(np.int64).max
-    first_observed[observed] = first_observed_ns[observed].astype("datetime64[ns]")
-    return HistoricalSnapshot(
-        rating_count=counts.astype(np.float64),
-        average_rating=averages,
-        first_observed=first_observed,
-        invalid_date_count=invalid_date_count,
-    )
-
-
-def historical_catalog_mask(
-    books_path: Path,
-    book_ids: np.ndarray,
-    cutoff: pd.Timestamp,
-    first_observed: np.ndarray,
-) -> np.ndarray:
-    """Catalog availability from publication year or observed interaction evidence."""
-    books = pd.read_parquet(books_path, columns=["book_id", "publication_year"])
-    books["book_id"] = books["book_id"].astype(str)
-    years = pd.to_numeric(
-        books.set_index("book_id").reindex(book_ids.astype(str))["publication_year"],
-        errors="coerce",
-    ).to_numpy(dtype=np.float64)
-    observed = np.asarray(first_observed, dtype="datetime64[ns]")
-    if len(observed) != len(book_ids):
-        raise ValueError("first_observed must align 1:1 with book_ids.")
-    cutoff = _utc_timestamp(cutoff)
-    known_year = np.isfinite(years)
-    observed_before_cutoff = ~np.isnat(observed) & (
-        observed <= cutoff.tz_localize(None).to_datetime64()
-    )
-    return (known_year & (years <= cutoff.year)) | (~known_year & observed_before_cutoff)
-
-
-def _positive_mask(frame: pd.DataFrame) -> np.ndarray:
-    is_read = frame["is_read"].fillna(False).to_numpy(dtype=bool)
-    rating = pd.to_numeric(frame["rating_clean"], errors="coerce").to_numpy(dtype=np.float64)
-    return is_read & (rating >= 4.0)
-
-
-def _consumed_books(frame: pd.DataFrame) -> set[str]:
-    read = frame["is_read"].fillna(False).to_numpy(dtype=bool)
-    return set(frame.loc[read, "book_id"].astype(str))
-
-
-def habit_proxy_features(
-    interactions: pd.DataFrame,
-    genres: pd.DataFrame,
-    prefix: str,
-    reference_date: pd.Timestamp,
-) -> pd.DataFrame:
-    """Compute descriptive reading-habit proxies for one temporal window."""
-    columns = [
-        "user_id",
-        f"{prefix}_interaction_count",
-        f"{prefix}_completed_reads",
-        f"{prefix}_active_span_days",
-        f"{prefix}_reading_frequency_monthly",
-        f"{prefix}_activity_recency_days",
-        f"{prefix}_completion_rate",
-        f"{prefix}_reading_breadth",
-    ]
-    if interactions.empty:
-        return pd.DataFrame(columns=columns)
-
-    data = interactions.copy()
-    data["user_id"] = data["user_id"].astype(str)
-    data["book_id"] = data["book_id"].astype(str)
-    dates, valid = _valid_dates(data["date_added"])
-    data["date_added"] = dates
-    data = data.loc[valid].copy()
-    if data.empty:
-        return pd.DataFrame(columns=columns)
-
-    data["is_read"] = data["is_read"].fillna(False).astype(bool)
-    grouped = data.groupby("user_id", sort=False)
-    stats = grouped.agg(
-        interaction_count=("book_id", "size"),
-        completed_reads=("is_read", "sum"),
-        first_interaction=("date_added", "min"),
-        last_interaction=("date_added", "max"),
-    )
-    stats["active_span_days"] = (
-        stats["last_interaction"] - stats["first_interaction"]
-    ).dt.total_seconds() / 86_400.0
-    exposure_days = stats["active_span_days"].clip(lower=1.0)
-    stats["reading_frequency_monthly"] = (
-        stats["completed_reads"] * 30.4375 / exposure_days
-    )
-    reference = _utc_timestamp(reference_date)
-    stats["activity_recency_days"] = (
-        reference - stats["last_interaction"]
-    ).dt.total_seconds().div(86_400.0).clip(lower=0.0)
-    stats["completion_rate"] = stats["completed_reads"] / stats["interaction_count"]
-
-    read_rows = data.loc[data["is_read"], ["user_id", "book_id"]]
-    if read_rows.empty:
-        breadth = pd.Series(dtype=np.int64, name="reading_breadth")
-    else:
-        genre_flags = genres.reindex(read_rows["book_id"])[GENRE_COLUMNS].fillna(0).to_numpy()
-        read_genres = pd.DataFrame(genre_flags, columns=GENRE_COLUMNS)
-        read_genres["user_id"] = read_rows["user_id"].to_numpy()
-        breadth = (
-            read_genres.groupby("user_id", sort=False)[GENRE_COLUMNS]
-            .max()
-            .sum(axis=1)
-            .astype(np.int64)
-            .rename("reading_breadth")
-        )
-    stats = stats.join(breadth, how="left")
-    stats["reading_breadth"] = stats["reading_breadth"].fillna(0).astype(np.int64)
-    stats = stats.reset_index()
-
-    rename = {
-        column: f"{prefix}_{column}"
-        for column in [
-            "interaction_count",
-            "completed_reads",
-            "active_span_days",
-            "reading_frequency_monthly",
-            "activity_recency_days",
-            "completion_rate",
-            "reading_breadth",
-        ]
-    }
-    return stats.rename(columns=rename)[columns]
-
-
-def assign_activity_segments(completed_reads: pd.Series) -> pd.Series:
-    """Assign low/mid/high by p33/p67 while keeping equal values together."""
-    values = pd.to_numeric(completed_reads, errors="coerce").fillna(0.0)
-    if values.empty:
-        return pd.Series(dtype="string", index=values.index, name="activity_segment")
-    low_cut, high_cut = values.quantile([1 / 3, 2 / 3]).tolist()
-    labels = np.full(len(values), "mid", dtype=object)
-    labels[values.to_numpy() <= low_cut] = "low"
-    labels[values.to_numpy() > high_cut] = "high"
-    return pd.Series(labels, index=values.index, dtype="string", name="activity_segment")
-
-
-def build_habit_proxy_table(
-    train: pd.DataFrame,
-    future: pd.DataFrame,
-    genres: pd.DataFrame,
-    temporal_cutoff: pd.Timestamp | None,
-) -> pd.DataFrame:
-    """Build train/future N1 proxies and prior-activity segments per user."""
-    if temporal_cutoff is not None:
-        train_reference = _utc_timestamp(temporal_cutoff)
-    else:
-        train_reference = pd.to_datetime(train["date_added"], utc=True).max()
-    future_reference = pd.to_datetime(future["date_added"], utc=True).max()
-    if pd.isna(train_reference):
-        train_reference = MIN_VALID_DATE
-    if pd.isna(future_reference):
-        future_reference = train_reference
-
-    train_features = habit_proxy_features(train, genres, "train", train_reference)
-    future_features = habit_proxy_features(future, genres, "future", future_reference)
-    proxies = train_features.merge(future_features, on="user_id", how="outer")
-    numeric = [column for column in proxies.columns if column != "user_id"]
-    proxies[numeric] = proxies[numeric].fillna(0.0)
-    proxies["activity_segment"] = assign_activity_segments(
-        proxies["train_completed_reads"]
-    )
-    return proxies
-
-
-def _binary_metrics(recommended: list[str], relevant: set[str], k: int) -> dict[str, float]:
-    top = recommended[:k]
-    hits = np.array([book_id in relevant for book_id in top], dtype=np.float64)
-    recall = float(hits.sum() / len(relevant)) if relevant else 0.0
-    precision = float(hits.sum() / k) if k > 0 else 0.0
-    discounts = 1.0 / np.log2(np.arange(2, len(hits) + 2))
-    dcg = float((hits * discounts).sum())
-    ideal_n = min(len(relevant), k)
-    idcg = float((1.0 / np.log2(np.arange(2, ideal_n + 2))).sum()) if ideal_n else 0.0
-    precision_at_hits = np.cumsum(hits) / np.arange(1, len(hits) + 1)
-    average_precision = (
-        float((precision_at_hits * hits).sum() / ideal_n) if ideal_n else 0.0
-    )
-    return {
-        "recall": recall,
-        "precision": precision,
-        "ndcg": dcg / idcg if idcg else 0.0,
-        "average_precision": average_precision,
-    }
-
-
-def _intra_list_diversity(recommender: Recommender, recommended: list[str]) -> float:
-    """Mean pairwise cosine distance in the ranking taste subspace."""
-    rows = [
-        recommender._book_row[book_id]
-        for book_id in recommended
-        if book_id in recommender._book_row
-    ]
-    if len(rows) < 2:
-        return 0.0
-    vectors = recommender.book_taste_norm[np.asarray(rows, dtype=np.int64)]
-    similarities = np.clip(vectors @ vectors.T, -1.0, 1.0)
-    upper = similarities[np.triu_indices(len(rows), k=1)]
-    return float(np.mean(1.0 - upper))
-
-
-def _slot_metrics(model: pd.DataFrame, relevant: set[str], slot: str) -> dict[str, float]:
-    """Precision and user-level hit rate for one model slot type."""
-    selected = model.loc[model["slot"] == slot, "book_id"].astype(str).tolist()
-    if not selected:
-        return {f"{slot}_precision": np.nan, f"{slot}_hit_rate": np.nan}
-    hits = sum(book_id in relevant for book_id in selected)
-    return {
-        f"{slot}_precision": hits / len(selected),
-        f"{slot}_hit_rate": float(hits > 0),
-    }
-
-
-def _ranked_candidates(
-    candidate_rows: np.ndarray,
-    scores: np.ndarray,
-    book_ids: np.ndarray,
-    k: int,
-) -> np.ndarray:
-    if not len(candidate_rows):
-        return np.array([], dtype=np.int64)
-    ids = np.asarray(book_ids, dtype=str)[candidate_rows]
-    order = np.lexsort((ids, -np.asarray(scores, dtype=np.float64)))
-    return candidate_rows[order[:k]]
-
-
-def prepare_baseline_rankings(
-    recommender: Recommender,
-    popularity_count: np.ndarray,
-    average_rating: np.ndarray,
-) -> BaselineRankings:
-    """Sort B1 and every B2 genre combination once per evaluation run."""
-    rows = np.nonzero(recommender.eligible_mask)[0]
-    pop_score = np.log1p(popularity_count[rows]) * average_rating[rows]
-    global_rows = _ranked_candidates(
-        rows,
-        pop_score,
-        recommender.book_ids,
-        len(rows),
-    )
-    genre_flags = (
-        recommender.genres.reindex(recommender.book_ids)[GENRE_COLUMNS]
-        .fillna(0)
-        .to_numpy(dtype=np.int8)
-    )
-    genre_orders: dict[int, np.ndarray] = {0: global_rows}
-    for mask in range(1, 1 << len(GENRE_COLUMNS)):
-        selected = np.array(
-            [(mask >> bit) & 1 for bit in range(len(GENRE_COLUMNS))],
-            dtype=np.int8,
-        )
-        genre_rows = rows[(genre_flags[rows] @ selected) > 0]
-        scores = np.log1p(popularity_count[genre_rows]) * average_rating[genre_rows]
-        genre_orders[mask] = _ranked_candidates(
-            genre_rows,
-            scores,
-            recommender.book_ids,
-            len(genre_rows),
-        )
-    return BaselineRankings(rows, global_rows, genre_orders)
-
-
-def _take_unconsumed(
-    ordered_rows: np.ndarray,
-    book_ids: np.ndarray,
-    consumed: set[str],
-    k: int,
-) -> list[str]:
-    selected: list[str] = []
-    for row in ordered_rows:
-        book_id = str(book_ids[int(row)])
-        if book_id not in consumed:
-            selected.append(book_id)
-            if len(selected) >= k:
-                break
-    return selected
-
-
-def _random_unconsumed(
-    rows: np.ndarray,
-    book_ids: np.ndarray,
-    consumed: set[str],
-    user_id: str,
-    k: int,
-) -> list[str]:
-    seed = RANDOM_STATE + zlib.crc32(user_id.encode("utf-8"))
-    rng = np.random.default_rng(seed)
-    selected: list[str] = []
-    seen: set[int] = set()
-    while len(selected) < k and len(seen) < len(rows):
-        position = int(rng.integers(0, len(rows)))
-        if position in seen:
-            continue
-        seen.add(position)
-        book_id = str(book_ids[int(rows[position])])
-        if book_id not in consumed:
-            selected.append(book_id)
-    return selected
-
-
-def baseline_recommendations(
-    recommender: Recommender,
-    popularity_count: np.ndarray,
-    average_rating: np.ndarray,
-    consumed: set[str],
-    train_genres: np.ndarray,
-    user_id: str,
-    k: int,
-    rankings: BaselineRankings | None = None,
-) -> dict[str, list[str]]:
-    """Return B0 random, B1 global popularity and B2 genre popularity."""
-    rankings = rankings or prepare_baseline_rankings(
-        recommender,
-        popularity_count,
-        average_rating,
-    )
-    genre_mask = sum(
-        (1 << bit) for bit, enabled in enumerate(train_genres) if bool(enabled)
-    )
-
-    return {
-        "B0_random": _random_unconsumed(
-            rankings.eligible_rows,
-            recommender.book_ids,
-            consumed,
-            user_id,
-            k,
-        ),
-        "B1_popularity": _take_unconsumed(
-            rankings.global_popularity_rows,
-            recommender.book_ids,
-            consumed,
-            k,
-        ),
-        "B2_genre_popularity": _take_unconsumed(
-            rankings.genre_popularity_rows[genre_mask],
-            recommender.book_ids,
-            consumed,
-            k,
-        ),
-    }
 
 
 def evaluate_temporal(
@@ -546,6 +83,16 @@ def evaluate_temporal(
     invalid_date_count: int = 0,
     evaluation_mode: str | None = None,
     users_selected: int | None = None,
+    additional_score_fn: Callable[[np.ndarray, str], np.ndarray] | None = None,
+    blend_alpha: float = 1.0,
+    model_label: str = "model",
+    hybrid_v12_weights: HybridV12Weights | dict[str, float] | None = None,
+    cooccurrence_score_fn: Callable[[np.ndarray, str], np.ndarray] | None = None,
+    user_knn_score_fn: Callable[[np.ndarray, str], np.ndarray] | None = None,
+    hybrid_extra_candidate_rows_fn: Callable[[str], np.ndarray] | None = None,
+    hybrid_source_limit: int = 250,
+    progress_every_users: int = 0,
+    progress_label: str = "evaluate_temporal",
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Evaluate with fold-local or historical popularity, never full-catalog future aggregates."""
     cutoffs = sorted({int(k) for k in (ks or (recommender.config.k,)) if int(k) > 0})
@@ -614,7 +161,13 @@ def evaluate_temporal(
     )
 
     try:
-        for user_id, train_user in train_groups.items():
+        for user_idx, (user_id, train_user) in enumerate(train_groups.items(), start=1):
+            if progress_every_users and user_idx % progress_every_users == 0:
+                print(
+                    f"[ranker_grid] {progress_label}: processed_train_users="
+                    f"{user_idx:,}/{len(train_groups):,}; metric_rows={len(rows):,}",
+                    flush=True,
+                )
             future_user = future_groups.get(user_id)
             if future_user is None:
                 continue
@@ -652,6 +205,9 @@ def evaluate_temporal(
                 if positive_rows
                 else np.zeros(len(GENRE_COLUMNS), dtype=int)
             )
+            genre_mask = sum(
+                (1 << bit) for bit, enabled in enumerate(train_genres) if bool(enabled)
+            )
             for k in cutoffs:
                 original_config = recommender.config
                 recommender.config = replace(
@@ -660,13 +216,61 @@ def evaluate_temporal(
                     explore_slots=min(original_config.explore_slots, k),
                 )
                 try:
-                    model = recommender.recommend_from_modes(
-                        str(user_id), modes[0], modes[1], consumed
+                    near_clusters, candidate_rows = recommender.retrieved_candidate_rows(
+                        modes[0], modes[1], consumed
                     )
+                    content_candidate_ids = set(recommender.book_ids[candidate_rows])
+                    if hybrid_v12_weights is not None:
+                        global_rows = baseline_rankings.global_popularity_rows
+                        genre_rows = baseline_rankings.genre_popularity_rows[genre_mask]
+                        model = recommender.recommend_hybrid_v12(
+                            str(user_id),
+                            modes[0],
+                            modes[1],
+                            consumed,
+                            popularity_count,
+                            average_rating,
+                            train_genres,
+                            global_rows,
+                            genre_rows,
+                            weights=hybrid_v12_weights,
+                            cooccurrence_score_fn=cooccurrence_score_fn,
+                            user_knn_score_fn=user_knn_score_fn,
+                            extra_candidate_rows_fn=hybrid_extra_candidate_rows_fn,
+                            source_limit=hybrid_source_limit,
+                        )
+                        extra_rows = (
+                            hybrid_extra_candidate_rows_fn(str(user_id))
+                            if hybrid_extra_candidate_rows_fn is not None
+                            else np.array([], dtype=np.int64)
+                        )
+                        candidate_rows = np.unique(
+                            np.concatenate(
+                                [
+                                    candidate_rows,
+                                    recommender._ordered_unseen_rows(
+                                        global_rows, consumed, hybrid_source_limit
+                                    ),
+                                    recommender._ordered_unseen_rows(
+                                        genre_rows, consumed, hybrid_source_limit
+                                    ),
+                                    recommender._ordered_unseen_rows(
+                                        extra_rows, consumed, hybrid_source_limit
+                                    ),
+                                ]
+                            ).astype(np.int64)
+                        )
+                    else:
+                        model = recommender.recommend_from_modes(
+                            str(user_id), modes[0], modes[1], consumed,
+                            additional_score_fn=additional_score_fn,
+                            blend_alpha=blend_alpha,
+                        )
+                    candidate_ids = set(recommender.book_ids[candidate_rows])
                 finally:
                     recommender.config = original_config
 
-                systems = {"model": model["book_id"].astype(str).tolist()}
+                systems = {model_label: model["book_id"].astype(str).tolist()}
                 systems.update(
                     baseline_recommendations(
                         recommender,
@@ -708,10 +312,20 @@ def evaluate_temporal(
                             "tail_share": segments.count("tail") / len(segments) if segments else 0.0,
                             "mid_share": segments.count("mid") / len(segments) if segments else 0.0,
                             "head_share": segments.count("head") / len(segments) if segments else 0.0,
+                            "candidate_recall": (
+                                _candidate_recall(candidate_ids, relevant)
+                                if system == model_label
+                                else np.nan
+                            ),
+                            "content_candidate_recall": (
+                                _candidate_recall(content_candidate_ids, relevant)
+                                if system == model_label
+                                else np.nan
+                            ),
                             **user_habit,
                             **(
                                 model_slot_metrics
-                                if system == "model"
+                                if system == model_label
                                 else {
                                     "interest_precision": np.nan,
                                     "interest_hit_rate": np.nan,
@@ -786,6 +400,8 @@ def evaluate_temporal(
                 "tail_share": float(group["tail_share"].mean()),
                 "mid_share": float(group["mid_share"].mean()),
                 "head_share": float(group["head_share"].mean()),
+                "candidate_recall": float(group["candidate_recall"].mean()),
+                "content_candidate_recall": float(group["content_candidate_recall"].mean()),
                 "interest_precision": float(group["interest_precision"].mean()),
                 "interest_hit_rate": float(group["interest_hit_rate"].mean()),
                 "exploration_precision": float(group["exploration_precision"].mean()),
@@ -794,42 +410,6 @@ def evaluate_temporal(
             }
         )
     return pd.DataFrame(summary_rows), per_user
-
-
-def summarize_by_activity(per_user: pd.DataFrame) -> pd.DataFrame:
-    """Summarize N0 and descriptive N1 outcomes by prior activity segment."""
-    if per_user.empty:
-        return pd.DataFrame()
-    metrics = [
-        "recall",
-        "precision",
-        "ndcg",
-        "average_precision",
-        "diversity",
-        "novelty",
-        "tail_share",
-        "mid_share",
-        "head_share",
-        "train_completed_reads",
-        "train_active_span_days",
-        "train_reading_frequency_monthly",
-        "train_activity_recency_days",
-        "train_completion_rate",
-        "train_reading_breadth",
-        "future_completed_reads",
-        "future_active_span_days",
-        "future_reading_frequency_monthly",
-        "future_activity_recency_days",
-        "future_completion_rate",
-        "future_reading_breadth",
-    ]
-    available = [column for column in metrics if column in per_user.columns]
-    summary = (
-        per_user.groupby(["activity_segment", "system", "k"], observed=True, sort=True)
-        .agg(users=("user_id", "nunique"), **{column: (column, "mean") for column in available})
-        .reset_index()
-    )
-    return summary.rename(columns={"average_precision": "map"})
 
 
 def collect_valid_user_ids(
@@ -853,19 +433,34 @@ def collect_valid_user_ids(
     return sorted(selected.tolist())
 
 
-def collect_users(path: Path, user_ids: Sequence[str]) -> pd.DataFrame:
+def collect_users(
+    path: Path,
+    user_ids: Sequence[str],
+    progress_every_batches: int = 0,
+) -> pd.DataFrame:
     """Scan the canonical parquet while retaining complete histories for selected users."""
     selected = {str(user_id) for user_id in user_ids}
     if not selected:
         return pd.DataFrame(columns=INTERACTION_COLUMNS)
     chunks: list[pd.DataFrame] = []
     parquet = pq.ParquetFile(path)
-    for batch in parquet.iter_batches(columns=INTERACTION_COLUMNS, batch_size=250_000):
+    kept_rows = 0
+    for batch_idx, batch in enumerate(
+        parquet.iter_batches(columns=INTERACTION_COLUMNS, batch_size=250_000),
+        start=1,
+    ):
         frame = batch.to_pandas()
         frame["user_id"] = frame["user_id"].astype(str)
         kept = frame[frame["user_id"].isin(selected)]
         if len(kept):
             chunks.append(kept)
+            kept_rows += len(kept)
+        if progress_every_batches and batch_idx % progress_every_batches == 0:
+            print(
+                "[ranker_grid] collect_users "
+                f"batch={batch_idx:,}, kept_rows={kept_rows:,}",
+                flush=True,
+            )
     return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame(columns=INTERACTION_COLUMNS)
 
 
@@ -879,7 +474,27 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=EVALUATION_OUTPUT)
     parser.add_argument("--users-output", type=Path, default=EVALUATION_USERS_OUTPUT)
     parser.add_argument("--activity-output", type=Path, default=EVALUATION_ACTIVITY_OUTPUT)
+    parser.add_argument("--bootstrap-ci", action="store_true")
+    parser.add_argument("--bootstrap-resamples", type=int, default=1_000)
+    parser.add_argument("--bootstrap-output", type=Path, default=EVALUATION_BOOTSTRAP_OUTPUT)
+    parser.add_argument(
+        "--bootstrap-from-users",
+        type=Path,
+        help="Read an existing per-user parquet and write CIs without rerunning recommendation.",
+    )
     args = parser.parse_args()
+
+    if args.bootstrap_from_users is not None:
+        per_user = pd.read_parquet(args.bootstrap_from_users)
+        bootstrap = bootstrap_confidence_intervals(
+            per_user,
+            n_resamples=args.bootstrap_resamples,
+            random_state=args.random_state,
+        )
+        args.bootstrap_output.parent.mkdir(parents=True, exist_ok=True)
+        bootstrap.to_csv(args.bootstrap_output, index=False)
+        print(f"Wrote bootstrap confidence intervals to {args.bootstrap_output}")
+        return
 
     recommender = Recommender.from_artifacts()
     valid_user_ids = collect_valid_user_ids(
@@ -919,11 +534,23 @@ def main() -> None:
         users_selected=len(valid_user_ids),
     )
     by_activity = summarize_by_activity(per_user)
+    bootstrap = (
+        bootstrap_confidence_intervals(
+            per_user,
+            n_resamples=args.bootstrap_resamples,
+            random_state=args.random_state,
+        )
+        if args.bootstrap_ci
+        else pd.DataFrame()
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     summary.to_csv(args.output, index=False)
     safe_write_parquet(per_user, args.users_output)
     args.activity_output.parent.mkdir(parents=True, exist_ok=True)
     by_activity.to_csv(args.activity_output, index=False)
+    if args.bootstrap_ci:
+        args.bootstrap_output.parent.mkdir(parents=True, exist_ok=True)
+        bootstrap.to_csv(args.bootstrap_output, index=False)
     print(f"Temporal cutoff: {cutoff}")
     print(
         f"Users selected/evaluable/discarded: {len(valid_user_ids):,}/"
@@ -933,6 +560,8 @@ def main() -> None:
     print(f"Wrote temporal evaluation to {args.output}")
     print(f"Wrote per-user evaluation to {args.users_output}")
     print(f"Wrote activity summary to {args.activity_output}")
+    if args.bootstrap_ci:
+        print(f"Wrote bootstrap confidence intervals to {args.bootstrap_output}")
 
 
 if __name__ == "__main__":

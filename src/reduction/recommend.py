@@ -35,12 +35,10 @@ Invoke as a module (writes a small sample, does not batch the whole user base)::
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Callable, Sequence
 
 import numpy as np
 import pandas as pd
-import pyarrow.parquet as pq
 
 from src.config import (
     BOOKS_MASTER_PATH,
@@ -51,6 +49,26 @@ from src.config import (
     USER_MATRIX_PATH,
     USER_META_PATH,
 )
+from src.reduction.collaborative import blend_percentile_scores, percentile_scores
+from src.reduction.ranking import (
+    HybridV12Weights,
+    RankingConfig,
+    accessibility_scores,
+    mmr_select,
+    select_exploration_rows,
+)
+from src.reduction.retrieval import (
+    consumed_books_for_users,
+    eligibility_mask,
+    l2_normalize_rows,
+    nearest_clusters,
+    normalized_title_key,
+    pc_columns,
+    popularity_segments,
+    retrieve_clusters_per_mode,
+    retrieve_top_clusters,
+    taste_pc_indices,
+)
 
 CLUSTERING_DIR = PROJECT_ROOT / "data" / "outputs" / "clustering"
 BOOK_CLUSTERS_PATH = CLUSTERING_DIR / "book_clusters_k100.parquet"
@@ -59,214 +77,6 @@ CENTROIDS_PATH = CLUSTERING_DIR / "kmeans_centroids_k100.npy"
 RECS_SAMPLE_PATH = PROJECT_ROOT / "data" / "outputs" / "recommendations" / "recommendations_v1_sample.csv"
 
 GENRE_COLUMNS = ["genre_fantasy", "genre_mystery", "genre_history", "genre_ya", "genre_romance"]
-
-
-@dataclass(frozen=True)
-class RankingConfig:
-    """Tunables for the four fixes. Defaults are the v1 decisions in the alcance doc."""
-
-    # A1: tabular early axes excluded from the interest cosine (popularity/lang/missingness).
-    tabular_pcs: tuple[int, ...] = (0, 1, 2, 3, 4, 5)
-    k: int = 10
-    # A3: slots reserved for relevant tail/mid books outside the retrieved macros.
-    explore_slots: int = 2
-    popularity_tail_quantile: float = 0.25
-    popularity_head_quantile: float = 0.90
-    # Exploration candidates must retain this fraction of the best interest similarity.
-    explore_min_relevance_ratio: float = 0.75
-    # Diversity/relevance trade-off for MMR (1.0 = pure relevance, 0.0 = pure diversity).
-    mmr_lambda: float = 0.7
-    # Explicit penalty when a candidate repeats genres already present in the list.
-    genre_diversity_weight: float = 0.15
-    # Soft tie-break toward shorter eligible books in the normal interest ranking.
-    accessibility_weight: float = 0.05
-    # How many nearest fine clusters to pull candidates from (retrieve breadth).
-    n_clusters_retrieve: int = 5
-    # A4: accessibility floor so the cold-start sampler does not surface pamphlets.
-    min_pages_accessible: int = 50
-    # Users with 1-2 positives keep their profile, shrunk toward the nearest catalog cluster.
-    sparse_profile_weight: float = 0.5
-
-
-# --------------------------------------------------------------------------- #
-# Pure, testable helpers
-# --------------------------------------------------------------------------- #
-def pc_columns(frame: pd.DataFrame) -> list[str]:
-    """``pc_*`` columns sorted by integer suffix (matches the item/user matrices)."""
-    cols = [c for c in frame.columns if c.startswith("pc_")]
-    return sorted(cols, key=lambda c: int(c.split("_", 1)[1]))
-
-
-def taste_pc_indices(pc_cols: Sequence[str], tabular_pcs: Iterable[int]) -> np.ndarray:
-    """A1: positional indices of the **taste subspace** (``pc_*`` minus the tabular axes).
-
-    Returned indices address columns of a ``pc``-ordered array, so they can slice both the
-    book matrix and the user matrix (same column order by construction).
-    """
-    excluded = set(int(i) for i in tabular_pcs)
-    return np.array(
-        [i for i, c in enumerate(pc_cols) if int(c.split("_", 1)[1]) not in excluded],
-        dtype=np.int64,
-    )
-
-
-def l2_normalize_rows(matrix: np.ndarray) -> np.ndarray:
-    """Row-wise L2 normalization; zero rows stay zero (cosine with them is 0, not NaN)."""
-    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
-    norms[norms == 0.0] = 1.0
-    return matrix / norms
-
-
-def eligibility_mask(
-    book_ids: np.ndarray,
-    titles: np.ndarray,
-    book_pc: np.ndarray,
-    book_cluster: np.ndarray,
-    n_clusters: int,
-) -> np.ndarray:
-    """A2: technical catalog eligibility without using popularity.
-
-    Eligible books have a non-empty id/title, finite PCA coordinates and a valid cluster.
-    """
-    ids = np.char.strip(np.asarray(book_ids, dtype=str))
-    names = np.asarray(titles, dtype=object)
-    clean_names = np.char.strip(np.asarray(names, dtype=str))
-    title_ok = pd.notna(names) & (np.char.str_len(clean_names) > 0)
-    vector_ok = np.isfinite(np.asarray(book_pc)).all(axis=1)
-    clusters = np.asarray(book_cluster)
-    cluster_ok = np.isfinite(clusters) & (clusters >= 0) & (clusters < n_clusters)
-    return (np.char.str_len(ids) > 0) & title_ok & vector_ok & cluster_ok
-
-
-def popularity_segments(
-    ratings_count: np.ndarray,
-    tail_quantile: float = 0.25,
-    head_quantile: float = 0.90,
-) -> tuple[np.ndarray, float, float]:
-    """Label books ``tail``/``mid``/``head`` using current-catalog quantiles."""
-    counts = np.asarray(ratings_count, dtype=np.float64)
-    finite = counts[np.isfinite(counts)]
-    if not len(finite):
-        return np.full(len(counts), "unknown", dtype=object), np.nan, np.nan
-    tail_cut, head_cut = np.quantile(finite, [tail_quantile, head_quantile])
-    labels = np.full(len(counts), "mid", dtype=object)
-    labels[counts <= tail_cut] = "tail"
-    labels[counts >= head_cut] = "head"
-    labels[~np.isfinite(counts)] = "unknown"
-    return labels, float(tail_cut), float(head_cut)
-
-
-def mmr_select(
-    cand_norm: np.ndarray,
-    relevance: np.ndarray,
-    k: int,
-    lam: float,
-    candidate_genres: np.ndarray | None = None,
-    genre_weight: float = 0.0,
-) -> list[int]:
-    """Maximal Marginal Relevance over the candidate set (diversity vs. relevance).
-
-    ``cand_norm`` are L2-normalized candidate vectors in the **taste subspace**, so the
-    redundancy penalty is itself popularity-free (A1). Greedy, ``O(k·n·d)``; no popularity
-    enters here, only interest similarity, pairwise redundancy and optional genre overlap.
-    """
-    n = len(relevance)
-    if n == 0 or k <= 0:
-        return []
-    selected: list[int] = []
-    remaining = list(range(n))
-    max_sim = np.zeros(n, dtype=np.float64)
-    while remaining and len(selected) < k:
-        if not selected:
-            pick = remaining[int(np.argmax(relevance[remaining]))]
-        else:
-            mmr = lam * relevance[remaining] - (1.0 - lam) * max_sim[remaining]
-            if candidate_genres is not None and genre_weight > 0:
-                selected_genres = candidate_genres[selected].max(axis=0)
-                overlap = candidate_genres[remaining] @ selected_genres
-                denom = np.maximum(candidate_genres[remaining].sum(axis=1), 1.0)
-                mmr -= genre_weight * (overlap / denom)
-            pick = remaining[int(np.argmax(mmr))]
-        selected.append(pick)
-        remaining.remove(pick)
-        sims = cand_norm @ cand_norm[pick]
-        max_sim = np.maximum(max_sim, sims)
-    return selected
-
-
-def accessibility_scores(num_pages: np.ndarray, min_pages: int) -> np.ndarray:
-    """Soft accessibility score: shorter valid books rank higher; missing/too short get zero."""
-    pages = np.asarray(num_pages, dtype=np.float64)
-    valid = np.isfinite(pages) & (pages >= min_pages)
-    scores = np.zeros(len(pages), dtype=np.float64)
-    if not valid.any():
-        return scores
-    log_pages = np.log1p(pages[valid])
-    low, high = float(log_pages.min()), float(log_pages.max())
-    scores[valid] = 1.0 if high == low else 1.0 - ((log_pages - low) / (high - low))
-    return scores
-
-
-def nearest_clusters(user_taste_norm: np.ndarray, centroids_taste_norm: np.ndarray) -> np.ndarray:
-    """Cluster ids ordered by cosine closeness of their centroid to the user (retrieve)."""
-    sims = centroids_taste_norm @ user_taste_norm
-    return np.argsort(-sims)
-
-
-def select_exploration_rows(
-    rows: np.ndarray,
-    relevance: np.ndarray,
-    popularity_segment: np.ndarray,
-    k: int,
-    best_relevance: float,
-    min_relevance_ratio: float,
-) -> np.ndarray:
-    """A3: select relevant exploration books from tail/mid only.
-
-    Head books are never eligible for exploration. Tail is preferred over mid among
-    candidates that pass the relevance floor. Returned values are catalog row ids.
-    """
-    if not len(rows) or k <= 0:
-        return np.array([], dtype=np.int64)
-    floor = best_relevance * min_relevance_ratio if best_relevance > 0 else best_relevance
-    segments = popularity_segment[rows]
-    keep = (relevance >= floor) & np.isin(segments, ["tail", "mid"])
-    if not keep.any():
-        return np.array([], dtype=np.int64)
-    eligible_rows = rows[keep]
-    eligible_rel = relevance[keep]
-    priority = {"tail": 0, "mid": 1}
-    segment_priority = np.array(
-        [priority.get(str(popularity_segment[row]), 3) for row in eligible_rows]
-    )
-    order = np.lexsort((-eligible_rel, segment_priority))
-    return eligible_rows[order[:k]].astype(np.int64)
-
-
-def consumed_books_for_users(
-    interactions_path: Path,
-    user_ids: Sequence[str],
-) -> dict[str, set[str]]:
-    """Load completed books for a small user set using parquet predicate pushdown."""
-    users = [str(user_id) for user_id in user_ids]
-    consumed = {user_id: set() for user_id in users}
-    if not users:
-        return consumed
-
-    table = pq.read_table(
-        interactions_path,
-        columns=["user_id", "book_id", "is_read"],
-        filters=[("user_id", "in", users), ("is_read", "=", True)],
-    )
-    frame = table.to_pandas()
-    if frame.empty:
-        return consumed
-
-    frame["user_id"] = frame["user_id"].astype(str)
-    frame["book_id"] = frame["book_id"].astype(str)
-    for user_id, group in frame.groupby("user_id", sort=False):
-        consumed[user_id] = set(group["book_id"])
-    return consumed
 
 
 # --------------------------------------------------------------------------- #
@@ -345,6 +155,30 @@ class Recommender:
             rows = np.array([r for r in rows if self.book_ids[r] not in exclude], dtype=np.int64)
         return rows
 
+    def retrieved_candidate_rows(
+        self,
+        modes_pc: np.ndarray,
+        mode_weights: np.ndarray,
+        exclude: set[str],
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Cluster ids retrieved for these modes, and the technically-eligible candidate rows in them."""
+        modes_taste_norm = l2_normalize_rows(modes_pc[:, self.taste_idx].astype(np.float64))
+        weights = np.asarray(mode_weights, dtype=np.float64)
+        weights = weights / (weights.sum() or 1.0)
+        if self.config.clusters_per_mode is not None:
+            near = retrieve_clusters_per_mode(
+                modes_taste_norm,
+                self.centroids_taste_norm,
+                self.config.clusters_per_mode,
+                self.config.retrieve_budget,
+            )
+        else:
+            near = retrieve_top_clusters(
+                modes_taste_norm, weights, self.centroids_taste_norm, self.config.n_clusters_retrieve
+            )
+        rows = self._candidate_rows(near, exclude)
+        return near, rows
+
     def _explain(self, row: int, slot: str) -> dict:
         bid = self.book_ids[row]
         grow = self.genres.loc[bid] if bid in self.genres.index else None
@@ -364,6 +198,136 @@ class Recommender:
             "popularity_segment": str(self.popularity_segment[row]),
             "num_pages": float(self.num_pages[row]) if np.isfinite(self.num_pages[row]) else np.nan,
         }
+
+    def _ordered_unseen_rows(
+        self,
+        ordered_rows: np.ndarray,
+        exclude: set[str],
+        limit: int,
+    ) -> np.ndarray:
+        picked: list[int] = []
+        seen: set[int] = set()
+        for row in np.asarray(ordered_rows, dtype=np.int64):
+            if len(picked) >= limit:
+                break
+            if row in seen:
+                continue
+            seen.add(int(row))
+            book_id = str(self.book_ids[int(row)])
+            if self.eligible_mask[int(row)] and book_id not in exclude:
+                picked.append(int(row))
+        return np.asarray(picked, dtype=np.int64)
+
+    def recommend_hybrid_v12(
+        self,
+        user_id: str,
+        modes_pc: np.ndarray,
+        mode_weights: np.ndarray,
+        exclude: set[str],
+        popularity_count: np.ndarray,
+        average_rating: np.ndarray,
+        train_genres: np.ndarray,
+        global_popularity_rows: np.ndarray,
+        genre_popularity_rows: np.ndarray,
+        weights: HybridV12Weights | dict[str, float] | None = None,
+        cooccurrence_score_fn: Callable[[np.ndarray, str], np.ndarray] | None = None,
+        user_knn_score_fn: Callable[[np.ndarray, str], np.ndarray] | None = None,
+        extra_candidate_rows_fn: Callable[[str], np.ndarray] | None = None,
+        source_limit: int = 250,
+    ) -> pd.DataFrame:
+        """V1.2 ranker: union retrieval plus percentile-calibrated historical signals."""
+        cfg = self.config
+        hybrid_weights = (
+            weights if isinstance(weights, HybridV12Weights) else HybridV12Weights.from_mapping(weights)
+        )
+        exclude = {str(book_id) for book_id in exclude}
+        modes_taste_norm = l2_normalize_rows(modes_pc[:, self.taste_idx].astype(np.float64))
+        mode_weights = np.asarray(mode_weights, dtype=np.float64)
+        mode_weights = mode_weights / (mode_weights.sum() or 1.0)
+
+        _, content_rows = self.retrieved_candidate_rows(modes_pc, mode_weights, exclude)
+        global_rows = self._ordered_unseen_rows(global_popularity_rows, exclude, source_limit)
+        genre_rows = self._ordered_unseen_rows(genre_popularity_rows, exclude, source_limit)
+        extra_rows = (
+            self._ordered_unseen_rows(extra_candidate_rows_fn(str(user_id)), exclude, source_limit)
+            if extra_candidate_rows_fn is not None
+            else np.array([], dtype=np.int64)
+        )
+        rows = np.unique(
+            np.concatenate([content_rows, global_rows, genre_rows, extra_rows]).astype(np.int64)
+        )
+        if not len(rows):
+            return self.recommend_from_modes(user_id, modes_pc, mode_weights, exclude)
+
+        mode_sim = modes_taste_norm @ self.book_taste_norm[rows].T
+        content_score = (mode_weights[:, None] * mode_sim).max(axis=0)
+        popularity_count = np.asarray(popularity_count, dtype=np.float64)
+        average_rating = np.asarray(average_rating, dtype=np.float64)
+        global_popularity_score = np.log1p(popularity_count[rows]) * average_rating[rows]
+        train_genres = np.asarray(train_genres, dtype=np.float64)
+        genre_overlap = (self.genre_matrix[rows] @ train_genres) > 0
+        genre_popularity_score = np.where(genre_overlap, global_popularity_score, 0.0)
+        cooccurrence_score = (
+            np.asarray(cooccurrence_score_fn(rows, str(user_id)), dtype=np.float64)
+            if cooccurrence_score_fn is not None
+            else np.zeros(len(rows), dtype=np.float64)
+        )
+        user_knn_score = (
+            np.asarray(user_knn_score_fn(rows, str(user_id)), dtype=np.float64)
+            if user_knn_score_fn is not None
+            else np.zeros(len(rows), dtype=np.float64)
+        )
+        if len(cooccurrence_score) != len(rows) or len(user_knn_score) != len(rows):
+            raise ValueError("Hybrid V1.2 score callbacks must return one score per candidate.")
+
+        final_score = (
+            hybrid_weights.content * percentile_scores(content_score)
+            + hybrid_weights.global_popularity * percentile_scores(global_popularity_score)
+            + hybrid_weights.genre_popularity * percentile_scores(genre_popularity_score)
+            + hybrid_weights.cooccurrence * percentile_scores(cooccurrence_score)
+            + hybrid_weights.user_knn * percentile_scores(user_knn_score)
+        )
+        titles = self.genres.reindex(self.book_ids[rows])["title"].map(normalized_title_key).to_numpy()
+        ids = self.book_ids[rows].astype(str)
+        order = np.lexsort((ids, -final_score))
+
+        selected: list[int] = []
+        selected_titles: set[str] = set()
+        deferred: list[int] = []
+        for idx in order:
+            title_key = str(titles[int(idx)])
+            if title_key and title_key in selected_titles:
+                deferred.append(int(idx))
+                continue
+            selected.append(int(idx))
+            if title_key:
+                selected_titles.add(title_key)
+            if len(selected) >= cfg.k:
+                break
+        for idx in deferred:
+            if len(selected) >= cfg.k:
+                break
+            selected.append(idx)
+
+        records: list[dict] = []
+        for idx in selected[: cfg.k]:
+            row = int(rows[idx])
+            record = self._explain(row, "hybrid_v12")
+            record.update(
+                {
+                    "content_score": float(content_score[idx]),
+                    "global_popularity_score": float(global_popularity_score[idx]),
+                    "genre_popularity_score": float(genre_popularity_score[idx]),
+                    "cooccurrence_score": float(cooccurrence_score[idx]),
+                    "user_knn_score": float(user_knn_score[idx]),
+                    "hybrid_score": float(final_score[idx]),
+                }
+            )
+            records.append(record)
+        out = pd.DataFrame(records)
+        out.insert(0, "user_id", user_id)
+        out.insert(1, "rank", range(1, len(out) + 1))
+        return out
 
     def _profile_modes(self, user_id: str) -> tuple[np.ndarray, np.ndarray] | None:
         """Return one or more taste modes for a known user."""
@@ -468,6 +432,8 @@ class Recommender:
         modes_pc: np.ndarray,
         mode_weights: np.ndarray,
         exclude: set[str],
+        additional_score_fn: Callable[[np.ndarray, str], np.ndarray] | None = None,
+        blend_alpha: float = 1.0,
     ) -> pd.DataFrame:
         """Rank with one or more user taste modes in the shared PCA space."""
 
@@ -477,11 +443,7 @@ class Recommender:
         weights = weights / (weights.sum() or 1.0)
 
         # RETRIEVE: use the strongest weighted taste mode for each cluster.
-        cluster_mode_sim = modes_taste_norm @ self.centroids_taste_norm.T
-        cluster_relevance = (weights[:, None] * cluster_mode_sim).max(axis=0)
-        ranked_clusters = np.argsort(-cluster_relevance)
-        near = ranked_clusters[: cfg.n_clusters_retrieve]
-        rows = self._candidate_rows(near, exclude)
+        near, rows = self.retrieved_candidate_rows(modes_pc, mode_weights, exclude)
 
         records: list[dict] = []
         interest_order: list[int] = []
@@ -490,6 +452,11 @@ class Recommender:
             # SCORE: interest cosine in taste subspace; popularity does not order or filter.
             mode_sim = modes_taste_norm @ self.book_taste_norm[rows].T
             relevance = (weights[:, None] * mode_sim).max(axis=0)
+            if additional_score_fn is not None:
+                extra = np.asarray(additional_score_fn(rows, user_id), dtype=np.float64)
+                relevance = blend_percentile_scores(relevance, extra, blend_alpha)
+            elif not 0.0 <= float(blend_alpha) <= 1.0:
+                raise ValueError("blend_alpha must be between 0.0 and 1.0.")
             best_relevance = float(relevance.max())
             ranking_relevance = relevance + (
                 cfg.accessibility_weight

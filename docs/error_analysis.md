@@ -98,6 +98,27 @@ Usuarios con cientos de positivos y cinco géneros pueden tener muchos modos de 
 conserva como máximo cuatro centroides y recupera cinco clusters globales. Una preferencia futura
 minoritaria puede quedar fuera.
 
+### Corrección V1.2: union retrieval y popularidad calibrada
+
+La ruta `hybrid_v12` se diseñó para atacar especialmente E1 sin ocultar el riesgo de sesgo de
+popularidad. En lugar de puntuar solo libros de clusters cercanos, forma una unión de candidatos:
+clusters de gusto, B1 histórico, B2 histórico por géneros de train y señales colaborativas
+históricas cuando existen. La evaluación reporta `content_candidate_recall` y `candidate_recall`:
+la diferencia entre ambas columnas mide cuánto recuperó la unión V1.2 por encima del retrieval de
+contenido puro.
+
+La popularidad entra como percentil histórico calibrado, no como filtro de elegibilidad. Si ayuda a
+recuperar un futuro positivo típico de B1, debe verse como mejora en `Recall@k`/`NDCG@k`; si solo
+arrastra el ranking hacia bestsellers, debe aparecer como peor `Novelty`, `Long-tail Coverage` o
+`head_share`. Por eso el selector de grilla solo acepta una configuración si supera B1 en
+relevancia y mantiene sus pisos de descubrimiento.
+
+La decisión de negocio posterior a V1.2 separa dos lecturas: si la grilla no supera B1, no se puede
+declarar superioridad predictiva N0; aun así, la comparación de errores debe seguir reportando si
+el sistema recupera y ordena mejor futuros no-head, reduce dependencia de bestsellers y conserva
+valor de descubrimiento. Ese criterio queda fijado en
+[decisiones_negocio.md](decisiones_negocio.md).
+
 ## 3. Caso fuerte A: acierto en el primer puesto
 
 Usuario:
@@ -303,7 +324,7 @@ mostrar la edición concreta.
 | E5 etiqueta | recomendado no observado | telemetría de exposición y feedback |
 | E6 perfil amplio | muchos modos futuros dispersos | más modos o retrieval proporcional a amplitud |
 
-## 10. Qué debe reportarse en futuras evaluaciones
+## 10. Diagnósticos implementados y pendientes de regenerar
 
 Además de métricas agregadas:
 
@@ -315,7 +336,7 @@ Además de métricas agregadas:
 - duplicados de obra en recomendaciones;
 - ejemplos reproducibles con historial, objetivos futuros, clusters y ranks.
 
-La métrica prioritaria para separar retrieval de ranking es:
+La evaluación V1.1 calcula:
 
 ```text
 candidate_recall =
@@ -323,5 +344,6 @@ candidate_recall =
     / objetivos futuros elegibles
 ```
 
-Sin esta métrica, un `Recall@k` bajo no permite saber si el problema ocurrió antes o después del
-scoring.
+Los CSV históricos del informe deben regenerarse para incorporar el agregado de esta métrica. Un
+`Recall@k` bajo junto con `candidate_recall` permite localizar si el problema ocurrió antes o
+después del scoring.

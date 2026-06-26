@@ -238,3 +238,5 @@ graphify-out/cache/
 #ignore  all graphify-out except graph.json
 graphify-out/*
 !graphify-out/graph.json
+# superpowers scratch (subagent-driven-development ledger/briefs)
+.superpowers/

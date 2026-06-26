@@ -227,7 +227,7 @@ Reconstructed examples under the exact historical protocol include:
 - a broad-history user where relevant books were split between retrieval misses and ranking
   misses.
 
-The next diagnostic metric is candidate recall:
+The evaluator now reports candidate recall:
 
 ```text
 candidate_recall =
@@ -324,6 +324,20 @@ With the current catalog, `ratings_count` has minimum 49, p25 436 and p90 6,017.
 `ratings_count >= 5` rule retained all 108,227 books and therefore was not a meaningful gate.
 Discovery in v1 means improving measurable exposure within this curated catalog, not solving
 coverage of books outside the dataset or item cold start.
+
+### Business Validation Decision
+
+The V1.2 evaluation clarified an important product decision: `B1_popularity` is the principal
+baseline for **observed relevance**, but it is not the product north-star. B1 is strong because the
+Goodreads log is observational and popularity reflects external exposure. Beating B1 in
+`Recall@k`/`NDCG@k` is strong evidence that the model predicts future logged reads, but copying B1
+would violate the goal of motivating discovery and reading habit.
+
+BigBook therefore treats `Recall@k`/`NDCG@k` as an N0 relevance gate, not as the full business
+objective. A valid habit-aligned recommender must also improve discovery and exposure diagnostics:
+`Coverage`, `Long-tail Coverage`, `Novelty`, lower `head_share`, diversity, low duplicate-title
+rate and N1 habit proxies reported without causal claims. The decision record is
+[`docs/decisiones_negocio.md`](docs/decisiones_negocio.md).
 
 ## Dataset
 
@@ -463,16 +477,57 @@ Run temporal evaluation over the reproducible 5,000-user cohort:
 env/bin/python -m src.reduction.evaluate_recommender --max-users 5000 --random-state 42 --k 5 10 20
 ```
 
+Add reproducible user-bootstrap confidence intervals without rerunning recommendation:
+
+```bash
+env/bin/python -m src.reduction.evaluate_recommender \
+  --bootstrap-from-users data/outputs/recommendations/temporal_evaluation_users.parquet
+```
+
 The runner uniformly samples globally `valid` users, keeps complete histories, and writes:
 
 ```text
 data/outputs/recommendations/temporal_evaluation.csv
 data/outputs/recommendations/temporal_evaluation_users.parquet
 data/outputs/recommendations/temporal_evaluation_by_activity.csv
+data/outputs/recommendations/temporal_evaluation_bootstrap_ci.csv  # with --bootstrap-ci
 ```
 
 It reports N0 relevance/exposure and descriptive N1 habit proxies. Pass `--cutoff YYYY-MM-DD` for
 an explicit snapshot; otherwise `--train-fraction` selects the global date percentile.
+
+Run ranking ablations, the strict train-only collaborative A/B, and the expensive isolated
+multi-snapshot backtest:
+
+```bash
+env/bin/python scripts/run_ablation.py --max-users 1000 --k 10
+env/bin/python scripts/run_collaborative_ab.py --max-users 1000 --k 10
+env/bin/python scripts/run_ranker_grid.py --max-users 5000 --k 5 10 20
+env/bin/python scripts/run_multi_snapshot_backtest.py --max-users 1000 --k 5 10 20
+```
+
+The collaborative runner compares content-only, positive-PMI item co-occurrence and exact
+user-kNN at several blend weights. Both content and collaborative scores are calibrated to
+per-user candidate-pool percentiles before blending. Co-occurrence, neighbours and neighbour
+reading histories are built only from rows at or before the temporal cutoff. These jobs scan the
+large canonical parquet and are manual research runs, not CI tasks.
+
+`run_ranker_grid.py` is the V1.2 stronger-system selector. It evaluates `content_only` plus a fixed
+`hybrid_v12` weight grid over the same temporal protocol. A hybrid configuration is selected only
+if it beats B1 in `Recall@k` and `NDCG@k` for every requested `k` while preserving B1's coverage,
+novelty and long-tail floors. It writes:
+
+```text
+data/outputs/recommendations/ranker_grid_results.csv
+data/outputs/recommendations/ranker_grid_winner.json
+data/outputs/recommendations/temporal_evaluation_v12.csv
+data/outputs/recommendations/temporal_evaluation_v12_users.parquet
+data/outputs/recommendations/temporal_evaluation_v12_bootstrap_ci.csv
+```
+
+Each multi-snapshot run writes to an isolated `data/outputs/snapshots/YYYY-MM-DD/` directory,
+refits PCA/KMeans/user profiles for that date, and compares only final aggregate metrics across
+snapshots. PCA axes and cluster IDs are intentionally never compared between dates.
 
 Validate artifact contracts and generate the closure report:
 
@@ -487,7 +542,7 @@ Run tests:
 env/bin/python -m pytest
 ```
 
-The academic V1 explicitly excludes API/UI, live telemetry, N2 causal claims, A/B tests, strict
+The academic V1 explicitly excludes API/UI, live telemetry, N2 causal claims, online A/B tests,
 per-cutoff PCA/clustering rebuilds, item cold-start and adaptive bandits.
 
 ## Master Merge

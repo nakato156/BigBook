@@ -119,6 +119,8 @@ Para evitar fuga operativa:
 - el perfil se reconstruye solo con positivos de `train`;
 - consumidos se obtienen solo de `train`;
 - B1/B2 usan ratings observados hasta `t`;
+- `hybrid_v12` usa popularidad, coocurrencia PMI y user-kNN construidos solo con filas de train
+  observadas hasta `t`;
 - los segmentos `tail/mid/head` usan popularidad hasta `t`;
 - un objetivo futuro solo entra si el libro estaba disponible en `t`;
 - libros con año conocido requieren `publication_year <= year(t)`;
@@ -146,6 +148,8 @@ Los baselines y el modelo comparten ese universo inicial. Luego:
 - B1 ordena `C(u,t)` por popularidad global histórica;
 - B2 filtra `C(u,t)` por géneros de train y ordena por popularidad;
 - el modelo recupera clusters cercanos dentro de `C(u,t)` y añade exploración elegible.
+- `hybrid_v12` toma la unión de clusters, B1, B2 y candidatos colaborativos históricos; todos se
+  filtran por disponibilidad, elegibilidad técnica y consumidos de train antes de puntuar.
 
 Esto evita comparar sistemas con libros futuros o consumidos, pero el modelo puede perder recall
 en su etapa de recuperación aunque el libro relevante exista en `C(u,t)`.

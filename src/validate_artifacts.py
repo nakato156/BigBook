@@ -6,11 +6,14 @@ import argparse
 from pathlib import Path
 from typing import Iterable
 
+import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 
 from src.config import (
     BOOKS_MASTER_PATH,
+    BOOK_COOCCURRENCE_PATH,
+    BOOK_GRAPH_NODES_PATH,
     INTERACTIONS_CURATED_PATH,
     MASTER_FEATURE_MATRIX_PATH,
     PROJECT_ROOT,
@@ -100,6 +103,8 @@ def validate_artifacts(
     user_matrix_path: Path = USER_MATRIX_PATH,
     user_meta_path: Path = USER_META_PATH,
     user_centroids_path: Path = USER_CENTROIDS_PATH,
+    cooccurrence_path: Path | None = BOOK_COOCCURRENCE_PATH,
+    book_graph_nodes_path: Path | None = BOOK_GRAPH_NODES_PATH,
 ) -> dict[str, int]:
     """Raise on contract violations and return useful artifact row counts."""
     _require_columns(books_path, BOOKS_REQUIRED)
@@ -151,6 +156,44 @@ def validate_artifacts(
     if not centroid_users.issubset(set(matrix_users)):
         raise ValueError("user_centroids contains users absent from user_matrix.")
 
+    if cooccurrence_path is not None and cooccurrence_path.exists():
+        _require_columns(
+            cooccurrence_path,
+            {"book_id_a", "book_id_b", "pmi", "co_count"},
+        )
+        pairs = pd.read_parquet(cooccurrence_path)
+        pairs["book_id_a"] = pairs["book_id_a"].astype(str)
+        pairs["book_id_b"] = pairs["book_id_b"].astype(str)
+        if not (pairs["book_id_a"] < pairs["book_id_b"]).all():
+            raise ValueError("book_cooccurrence pairs must satisfy book_id_a < book_id_b.")
+        if pairs[["book_id_a", "book_id_b"]].duplicated().any():
+            raise ValueError("book_cooccurrence contains duplicate pairs.")
+        if not set(pairs["book_id_a"]).union(pairs["book_id_b"]).issubset(set(book_ids)):
+            raise ValueError("book_cooccurrence references book IDs outside books_master.")
+        pmi = pd.to_numeric(pairs["pmi"], errors="coerce").to_numpy(dtype=np.float64)
+        co_count = pd.to_numeric(pairs["co_count"], errors="coerce")
+        if not np.isfinite(pmi).all() or (pmi < 0).any():
+            raise ValueError("book_cooccurrence PMI must be finite and non-negative.")
+        if co_count.isna().any() or (co_count < 3).any():
+            raise ValueError("book_cooccurrence co_count must be at least 3.")
+
+    if book_graph_nodes_path is not None and book_graph_nodes_path.exists():
+        _require_columns(
+            book_graph_nodes_path,
+            {"book_id", "degree", "weighted_degree", "pagerank", "component_id"},
+        )
+        graph_nodes = pd.read_parquet(book_graph_nodes_path)
+        graph_nodes["book_id"] = graph_nodes["book_id"].astype(str)
+        if graph_nodes["book_id"].duplicated().any():
+            raise ValueError("book_graph_nodes contains duplicate book_id values.")
+        if not set(graph_nodes["book_id"]).issubset(set(book_ids)):
+            raise ValueError("book_graph_nodes references book IDs outside books_master.")
+        pagerank = pd.to_numeric(graph_nodes["pagerank"], errors="coerce").to_numpy(dtype=np.float64)
+        if not np.isfinite(pagerank).all() or (pagerank < 0).any():
+            raise ValueError("book_graph_nodes pagerank must be finite and non-negative.")
+        if not np.isclose(pagerank.sum(), 1.0, atol=1e-3):
+            raise ValueError("book_graph_nodes pagerank must sum to ~1.0 across all nodes.")
+
     paths = {
         "books": books_path,
         "features": features_path,
@@ -161,6 +204,10 @@ def validate_artifacts(
         "user_meta": user_meta_path,
         "user_centroids": user_centroids_path,
     }
+    if cooccurrence_path is not None and cooccurrence_path.exists():
+        paths["book_cooccurrence"] = cooccurrence_path
+    if book_graph_nodes_path is not None and book_graph_nodes_path.exists():
+        paths["book_graph_nodes"] = book_graph_nodes_path
     return {
         label: pq.ParquetFile(path).metadata.num_rows
         for label, path in paths.items()

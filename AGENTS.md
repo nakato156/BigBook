@@ -18,6 +18,10 @@ env/bin/python -m src.reduction.build_user_matrix           # build user_matrix 
 env/bin/python -m src.reduction.build_user_centroids        # build multi-centroid taste modes
 env/bin/python -m src.reduction.recommend                   # write a small recommendation sample
 env/bin/python -m src.reduction.evaluate_recommender --max-users 5000 --k 5 10 20
+env/bin/python -m src.reduction.evaluate_recommender --max-users 5000 --k 5 10 20 --bootstrap-ci
+env/bin/python scripts/run_ablation.py --max-users 1000 --k 10
+env/bin/python scripts/run_collaborative_ab.py --max-users 1000 --k 10
+env/bin/python scripts/run_multi_snapshot_backtest.py --max-users 1000 --k 5 10 20
 env/bin/python -m src.validate_artifacts                    # validate schemas and aligned ids
 env/bin/python -m src.report_project_status                 # build docs/estado_v1.md
 env/bin/python -m pytest                                    # run all tests
@@ -49,6 +53,13 @@ does not. All numeric signals are controlled by block standardization/weighting.
 not gate eligibility or order normal `interest` slots. It does control the dedicated exploration
 policy: exploration excludes `head`, prefers `tail` over `mid`, and must pass an interest-similarity
 floor. Popularity also defines exposure diagnostics and the B1/B2 evaluation baselines.
+
+Business validation decision: `B1_popularity` is the principal baseline for observed N0 relevance,
+not the product north-star. `Recall@k` and `NDCG@k` over the Goodreads temporal holdout are valid
+predictive metrics, but they also reflect historical exposure bias. Treat them as a relevance gate.
+A habit-aligned recommendation claim must also report discovery/exposure metrics (`Coverage`,
+`Long-tail Coverage`, `Novelty`, `head_share`, duplicate-title/work rate) and N1 habit proxies
+without causal attribution. See `docs/decisiones_negocio.md`.
 
 ## Pipeline Architecture
 
@@ -135,10 +146,11 @@ Outputs go to `data/outputs/clustering/`: `book_clusters_k{K}.parquet` (book_id 
 
 ## V1 Scope Boundary
 
-The academic V1 includes reproducible artifacts, ranking, N0 temporal evaluation, descriptive N1
-habit proxies, validation and a generated status report. API/UI, live telemetry, N2 causal claims,
-A/B testing, per-cutoff PCA/clustering rebuilds, item cold-start and adaptive bandits are explicitly
-out of scope.
+The academic V1.1 includes reproducible artifacts, ranking, N0 temporal evaluation, descriptive N1
+habit proxies, offline ablations/collaborative comparisons, optional bootstrap confidence
+intervals, strict manual multi-snapshot backtests, validation and a generated status report.
+API/UI, live telemetry, N2 causal claims, online product A/B testing, item cold-start and adaptive
+bandits are explicitly out of scope.
 
 ## Non-Interactive Shell Commands
 
