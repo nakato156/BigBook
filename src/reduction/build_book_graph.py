@@ -20,6 +20,7 @@ Invoke as a module::
 
 from __future__ import annotations
 
+import argparse
 import json
 from typing import Any
 
@@ -37,7 +38,7 @@ from src.utils.io import safe_write_parquet
 
 SENSITIVITY_MIN_CO_COUNTS = [2, 3, 5, 10]
 BETWEENNESS_SAMPLE_SEED = 42
-BETWEENNESS_MAX_SOURCES = 500
+BETWEENNESS_MAX_SOURCES = 50
 
 
 def _build_graph(pairs: pd.DataFrame, book_ids: np.ndarray) -> nx.Graph:
@@ -60,15 +61,34 @@ def _component_assignment(graph: nx.Graph) -> tuple[dict[str, int], dict[int, in
     return component_id, component_size
 
 
-def _sensitivity_table(pairs: pd.DataFrame, book_ids: np.ndarray) -> list[dict[str, Any]]:
+def _sensitivity_table(
+    pairs: pd.DataFrame,
+    book_ids: np.ndarray,
+    min_co_counts: list[int] | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Recompute coarse graph stats at alternate MIN_CO_COUNT thresholds.
 
-    Re-filters the already-built pairs frame (co_count is already a persisted column);
-    does not rerun build_item_cooccurrence.
+    Re-filters the already-built pairs frame (``co_count`` is already a persisted column);
+    does not rerun ``build_item_cooccurrence``. Thresholds below the minimum persisted
+    ``co_count`` are intentionally omitted because the edge list has already discarded
+    those pairs upstream and cannot support a faithful lower-threshold reconstruction.
     """
+    requested = min_co_counts or SENSITIVITY_MIN_CO_COUNTS
+    source_min_co_count = int(pairs["co_count"].min()) if len(pairs) else None
+    usable = [
+        int(min_co_count)
+        for min_co_count in requested
+        if source_min_co_count is None or min_co_count >= source_min_co_count
+    ]
+    omitted = [
+        int(min_co_count)
+        for min_co_count in requested
+        if source_min_co_count is not None and min_co_count < source_min_co_count
+    ]
+
     rows = []
     n_nodes = len(book_ids)
-    for min_co_count in SENSITIVITY_MIN_CO_COUNTS:
+    for min_co_count in usable:
         filtered = pairs[pairs["co_count"] >= min_co_count]
         graph = _build_graph(filtered, book_ids)
         sizes = [len(c) for c in nx.connected_components(graph)]
@@ -81,14 +101,24 @@ def _sensitivity_table(pairs: pd.DataFrame, book_ids: np.ndarray) -> list[dict[s
                 "largest_component_fraction": float(largest_fraction),
             }
         )
-    return rows
+    meta = {
+        "requested_min_co_counts": [int(value) for value in requested],
+        "source_min_co_count": source_min_co_count,
+        "omitted_min_co_counts": omitted,
+    }
+    return rows, meta
 
 
 def build_book_graph(
     pairs: pd.DataFrame,
     book_ids: np.ndarray,
+    sensitivity_min_co_counts: list[int] | None = None,
+    betweenness_sample_size: int | None = BETWEENNESS_MAX_SOURCES,
 ) -> tuple[nx.Graph, pd.DataFrame, dict[str, Any]]:
     """Build the graph and compute per-node metrics + graph-level diagnostics."""
+    if betweenness_sample_size is not None and betweenness_sample_size < 1:
+        raise ValueError("betweenness_sample_size must be >= 1, or None to skip.")
+
     graph = _build_graph(pairs, book_ids)
     n_nodes = graph.number_of_nodes()
     n_edges = graph.number_of_edges()
@@ -98,10 +128,10 @@ def build_book_graph(
     pagerank = nx.pagerank(graph, weight="pmi") if n_edges else {node: 1.0 / n_nodes for node in graph}
     component_id, component_size = _component_assignment(graph)
 
-    # ponytail: exact betweenness is O(V*E), intractable at catalog scale; sample up to
-    # BETWEENNESS_MAX_SOURCES source nodes instead. Raise the cap only if the report needs
-    # tighter estimates than the sampled approximation gives.
-    k = min(BETWEENNESS_MAX_SOURCES, n_nodes) if n_nodes else 0
+    # Exact betweenness is O(V*E), intractable at catalog scale; sample a bounded
+    # number of source nodes instead. Raise the cap only when the report needs
+    # tighter estimates and the longer runtime is acceptable.
+    k = min(betweenness_sample_size or 0, n_nodes) if n_nodes else 0
     betweenness = (
         nx.betweenness_centrality(graph, k=k, weight="pmi", seed=BETWEENNESS_SAMPLE_SEED)
         if k
@@ -129,6 +159,11 @@ def build_book_graph(
     component_sizes = list(component_size.values())
     largest_component_fraction = (max(component_sizes) / n_nodes) if component_sizes else 0.0
     density = nx.density(graph) if n_nodes > 1 else 0.0
+    sensitivity_rows, sensitivity_meta = _sensitivity_table(
+        pairs,
+        book_ids,
+        sensitivity_min_co_counts,
+    )
 
     diagnostics: dict[str, Any] = {
         "n_nodes": n_nodes,
@@ -138,12 +173,33 @@ def build_book_graph(
         "largest_component_fraction": float(largest_component_fraction),
         "isolated_node_count": isolated_node_count,
         "betweenness_sample_size": k,
-        "min_co_count_sensitivity": _sensitivity_table(pairs, book_ids),
+        "min_co_count_sensitivity": sensitivity_rows,
+        "min_co_count_sensitivity_meta": sensitivity_meta,
     }
     return graph, nodes, diagnostics
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--sensitivity-min-co-counts",
+        type=int,
+        nargs="+",
+        default=SENSITIVITY_MIN_CO_COUNTS,
+    )
+    parser.add_argument(
+        "--betweenness-sample-size",
+        type=int,
+        default=BETWEENNESS_MAX_SOURCES,
+        help="sampled source nodes for approximate betweenness",
+    )
+    parser.add_argument(
+        "--skip-betweenness",
+        action="store_true",
+        help="write betweenness_centrality=0.0 for a fast structural rebuild",
+    )
+    args = parser.parse_args()
+
     if not BOOK_COOCCURRENCE_PATH.exists():
         raise FileNotFoundError(
             f"{BOOK_COOCCURRENCE_PATH} does not exist. "
@@ -152,7 +208,12 @@ def main() -> None:
     pairs = pd.read_parquet(BOOK_COOCCURRENCE_PATH)
     book_ids = pd.read_parquet(BOOKS_MASTER_PATH, columns=["book_id"])["book_id"].astype(str).to_numpy()
 
-    _graph, nodes, diagnostics = build_book_graph(pairs, book_ids)
+    _graph, nodes, diagnostics = build_book_graph(
+        pairs,
+        book_ids,
+        sensitivity_min_co_counts=args.sensitivity_min_co_counts,
+        betweenness_sample_size=None if args.skip_betweenness else args.betweenness_sample_size,
+    )
 
     safe_write_parquet(nodes, BOOK_GRAPH_NODES_PATH)
     BOOK_GRAPH_DIAGNOSTICS_PATH.parent.mkdir(parents=True, exist_ok=True)

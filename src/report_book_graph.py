@@ -14,10 +14,17 @@ from src.config import (
     BOOKS_MASTER_PATH,
     PROJECT_ROOT,
 )
-from src.reduction.graph_comparison import compare_to_collaborative_ab, compare_to_popularity
+from src.reduction.graph_comparison import (
+    compare_to_collaborative_ab,
+    compare_to_hybrid_ranker_grid,
+    compare_to_popularity,
+)
 
 COLLABORATIVE_AB_RESULTS_PATH = (
     PROJECT_ROOT / "data" / "outputs" / "recommendations" / "collaborative_ab_results.csv"
+)
+RANKER_GRID_RESULTS_PATH = (
+    PROJECT_ROOT / "data" / "outputs" / "recommendations" / "ranker_grid_results.csv"
 )
 REPORT_PATH = PROJECT_ROOT / "docs" / "grafo_libros.md"
 
@@ -41,6 +48,23 @@ def _sensitivity_table(rows: list[dict]) -> str:
     return "\n".join([header, separator, body])
 
 
+def _sensitivity_scope(diagnostics: dict) -> str:
+    meta = diagnostics.get("min_co_count_sensitivity_meta", {})
+    requested = meta.get("requested_min_co_counts", [])
+    omitted = meta.get("omitted_min_co_counts", [])
+    source_min = meta.get("source_min_co_count")
+    shown = [row["min_co_count"] for row in diagnostics["min_co_count_sensitivity"]]
+
+    if omitted:
+        return (
+            f"recomputado para {shown} sobre el mismo `book_cooccurrence.parquet`. "
+            f"Los umbrales {omitted} no se reportan porque el edge list persistido ya "
+            f"empieza en `co_count >= {source_min}`; para medirlos exactamente hay que "
+            "regenerar `book_cooccurrence.parquet` con un `--min-co-count` menor."
+        )
+    return f"recomputado para {shown} sobre el mismo `book_cooccurrence.parquet`."
+
+
 def build_report(
     nodes_path: Path = BOOK_GRAPH_NODES_PATH,
     diagnostics_path: Path = BOOK_GRAPH_DIAGNOSTICS_PATH,
@@ -58,8 +82,11 @@ def build_report(
 
     popularity_comparison = compare_to_popularity(nodes)
     collaborative_summary = compare_to_collaborative_ab(COLLABORATIVE_AB_RESULTS_PATH)
+    if collaborative_summary is None:
+        collaborative_summary = compare_to_hybrid_ranker_grid(RANKER_GRID_RESULTS_PATH)
 
     isolated_fraction = diagnostics["isolated_node_count"] / diagnostics["n_nodes"] if diagnostics["n_nodes"] else 0.0
+    sensitivity_scope = _sensitivity_scope(diagnostics)
 
     return f"""# Grafo de co-lectura de libros
 
@@ -155,8 +182,7 @@ observada.
   catálogo) sin ninguna arista que califique.
 - **Estructura de componentes**: {diagnostics['n_components']:,} componentes conexas; la más
   grande concentra {diagnostics['largest_component_fraction']:.2%} de los nodos no aislados.
-- **Sensibilidad a `MIN_CO_COUNT`**: recomputado en {{2, 3, 5, 10}} sobre el mismo
-  `book_cooccurrence.parquet`, sin volver a escanear interacciones:
+- **Sensibilidad a `MIN_CO_COUNT`**: {sensitivity_scope}
 
 {_sensitivity_table(diagnostics['min_co_count_sensitivity'])}
 
@@ -170,7 +196,7 @@ observada.
 - **¿Por qué betweenness aproximado?** Betweenness exacto es O(V·E); a escala de catálogo es
   intratable. Se usa el muestreo estándar de networkx
   (`k={diagnostics['betweenness_sample_size']}` fuentes, semilla fija) — ver el comentario
-  `ponytail:` en `build_book_graph.py`.
+  en `build_book_graph.py`.
 - **¿Por qué comparar contra B1 y no contra el ranker de producción?** El grafo es un análisis
   estructural independiente; compararlo contra B1 (popularidad histórica) aísla si el grafo
   aporta señal más allá de la popularidad cruda, sin acoplar esta entrega a cambios del ranker

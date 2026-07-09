@@ -67,6 +67,23 @@ def test_min_co_count_filter_drops_low_count_pairs() -> None:
     assert ("b0", "b2") not in pairs
 
 
+def test_min_co_count_can_be_lowered_for_sensitivity_runs() -> None:
+    item_matrix = _item_matrix(["b0", "b1", "b2"])
+    rows = [
+        ("u1", "b0", True, 5.0), ("u1", "b2", True, 5.0),
+        ("u2", "b0", True, 4.0), ("u2", "b2", True, 4.0),
+    ]
+    result, diag = build_item_cooccurrence(
+        item_matrix,
+        [_interactions(rows)],
+        min_co_count=2,
+    )
+
+    assert diag["min_co_count"] == 2
+    assert diag["n_pairs_after_min_count"] == 1
+    assert set(zip(result["book_id_a"], result["book_id_b"])) == {("b0", "b2")}
+
+
 def test_positive_floor_clips_negative_raw_pmi() -> None:
     # b0 and b1 are both very popular (count=10 each) but only co-occur 3 times
     # (>= MIN_CO_COUNT, so it survives the count filter). Raw PMI = log(3*N/(10*10))

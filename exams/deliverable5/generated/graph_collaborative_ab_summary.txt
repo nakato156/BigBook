@@ -1,0 +1,19 @@
+     config_label        system  cooccurrence_weight  k   recall     ndcg  candidate_recall
+     content_only  content_only                  0.0  5 0.002733 0.006181          0.379758
+     content_only B1_popularity                  0.0  5 0.015553 0.037230               NaN
+     content_only  content_only                  0.0 10 0.004745 0.006773          0.379758
+     content_only B1_popularity                  0.0 10 0.025292 0.034830               NaN
+     content_only  content_only                  0.0 20 0.011873 0.009256          0.379758
+     content_only B1_popularity                  0.0 20 0.036133 0.034181               NaN
+hybrid_v12_grid_1    hybrid_v12                  0.1  5 0.009068 0.020949          0.450584
+hybrid_v12_grid_1    hybrid_v12                  0.1 10 0.015355 0.020371          0.450584
+hybrid_v12_grid_1    hybrid_v12                  0.1 20 0.024528 0.021888          0.450584
+hybrid_v12_grid_2    hybrid_v12                  0.1  5 0.010260 0.021251          0.450584
+hybrid_v12_grid_2    hybrid_v12                  0.1 10 0.016419 0.021429          0.450584
+hybrid_v12_grid_2    hybrid_v12                  0.1 20 0.025930 0.022706          0.450584
+hybrid_v12_grid_3    hybrid_v12                  0.1  5 0.010747 0.022143          0.450584
+hybrid_v12_grid_3    hybrid_v12                  0.1 10 0.016441 0.021814          0.450584
+hybrid_v12_grid_3    hybrid_v12                  0.1 20 0.026619 0.023405          0.450584
+hybrid_v12_grid_4    hybrid_v12                  0.1  5 0.011405 0.023244          0.450584
+hybrid_v12_grid_4    hybrid_v12                  0.1 10 0.017446 0.023057          0.450584
+hybrid_v12_grid_4    hybrid_v12                  0.1 20 0.028738 0.024678          0.450584

@@ -28,6 +28,7 @@ Invoke as a module::
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 from typing import Any, Iterable, Iterator
 
@@ -112,8 +113,12 @@ class PositiveCollector:
 def build_item_cooccurrence(
     feature_matrix: pd.DataFrame,
     interaction_chunks: Iterable[pd.DataFrame],
+    min_co_count: int = MIN_CO_COUNT,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     """Collect positives, aggregate per-user, and normalize co-occurrence into PMI."""
+    if min_co_count < 1:
+        raise ValueError("min_co_count must be >= 1.")
+
     space = ItemSpace(feature_matrix)
     collector = PositiveCollector()
     for chunk in interaction_chunks:
@@ -177,7 +182,7 @@ def build_item_cooccurrence(
 
     n_pairs_total = len(co_rows)
 
-    min_count_mask = co_counts >= MIN_CO_COUNT
+    min_count_mask = co_counts >= min_co_count
     co_rows = co_rows[min_count_mask]
     co_cols = co_cols[min_count_mask]
     co_counts = co_counts[min_count_mask]
@@ -219,6 +224,7 @@ def build_item_cooccurrence(
         "dropped_positive_rows": collector.dropped_positive_rows,
         "n_pairs_total": int(n_pairs_total),
         "n_pairs_after_min_count": int(n_pairs_after_min_count),
+        "min_co_count": int(min_co_count),
         "pmi_min": float(result["pmi"].min()) if len(result) else None,
         "pmi_max": float(result["pmi"].max()) if len(result) else None,
         "pmi_mean": float(result["pmi"].mean()) if len(result) else None,
@@ -259,7 +265,10 @@ def print_validations(result: pd.DataFrame, diagnostics: dict[str, Any]) -> None
     print(f"Books with >=1 positive: {diagnostics['n_books_with_positive']:,}")
     print(f"Positive rows dropped (book_id absent): {diagnostics['dropped_positive_rows']:,}")
     print(f"Pairs before MIN_CO_COUNT filter: {diagnostics['n_pairs_total']:,}")
-    print(f"Pairs after MIN_CO_COUNT filter:  {diagnostics['n_pairs_after_min_count']:,}")
+    print(
+        f"Pairs after MIN_CO_COUNT>={diagnostics['min_co_count']} filter:  "
+        f"{diagnostics['n_pairs_after_min_count']:,}"
+    )
     if diagnostics["pmi_min"] is not None:
         print(
             f"pmi range: [{diagnostics['pmi_min']:.4f}, {diagnostics['pmi_max']:.4f}], "
@@ -271,13 +280,17 @@ def print_validations(result: pd.DataFrame, diagnostics: dict[str, Any]) -> None
             raise ValueError("book_cooccurrence rows are not canonicalized (book_id_a < book_id_b).")
         if (result["pmi"] < 0).any():
             raise ValueError("book_cooccurrence contains negative pmi values.")
-        if (result["co_count"] < MIN_CO_COUNT).any():
+        if (result["co_count"] < diagnostics["min_co_count"]).any():
             raise ValueError("book_cooccurrence contains pairs below MIN_CO_COUNT.")
         if not np.isfinite(result["pmi"].to_numpy()).all():
             raise ValueError("book_cooccurrence contains non-finite pmi values.")
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--min-co-count", type=int, default=MIN_CO_COUNT)
+    args = parser.parse_args()
+
     if not MASTER_FEATURE_MATRIX_PATH.exists():
         raise FileNotFoundError(
             f"{MASTER_FEATURE_MATRIX_PATH} does not exist. "
@@ -291,7 +304,9 @@ def main() -> None:
 
     feature_matrix = pd.read_parquet(MASTER_FEATURE_MATRIX_PATH)
     result, diagnostics = build_item_cooccurrence(
-        feature_matrix, _interaction_chunks(INTERACTIONS_CURATED_PATH)
+        feature_matrix,
+        _interaction_chunks(INTERACTIONS_CURATED_PATH),
+        min_co_count=args.min_co_count,
     )
     safe_write_parquet(result, BOOK_COOCCURRENCE_PATH)
     print_validations(result, diagnostics)

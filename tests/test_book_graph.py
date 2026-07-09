@@ -82,3 +82,37 @@ def test_min_co_count_sensitivity_is_monotonic_in_edges() -> None:
     assert sensitivity[3] == 1
     assert sensitivity[5] == 1
     assert sensitivity[10] == 0
+
+
+def test_sensitivity_omits_thresholds_below_persisted_edge_list_minimum() -> None:
+    book_ids = np.array(["b0", "b1", "b2"])
+    pairs = _pairs(
+        [
+            ("b0", "b1", 1.0, 3),
+            ("b1", "b2", 1.0, 5),
+        ]
+    )
+    _graph, _nodes, diagnostics = build_book_graph(
+        pairs,
+        book_ids,
+        sensitivity_min_co_counts=[2, 3, 5],
+    )
+    sensitivity = diagnostics["min_co_count_sensitivity"]
+    meta = diagnostics["min_co_count_sensitivity_meta"]
+
+    assert [row["min_co_count"] for row in sensitivity] == [3, 5]
+    assert meta["source_min_co_count"] == 3
+    assert meta["omitted_min_co_counts"] == [2]
+
+
+def test_betweenness_can_be_skipped_for_fast_regeneration() -> None:
+    book_ids = np.array(["b0", "b1"])
+    pairs = _pairs([("b0", "b1", 1.0, 3)])
+    _graph, nodes, diagnostics = build_book_graph(
+        pairs,
+        book_ids,
+        betweenness_sample_size=None,
+    )
+
+    assert diagnostics["betweenness_sample_size"] == 0
+    assert (nodes["betweenness_centrality"] == 0.0).all()

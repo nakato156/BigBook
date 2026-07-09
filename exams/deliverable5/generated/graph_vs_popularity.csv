@@ -1,0 +1,6 @@
+metric,value
+pagerank_vs_popularity_spearman,0.19679147779062897
+weighted_degree_vs_popularity_spearman,-0.037657340631323324
+pagerank_top_k_overlap,0.11
+weighted_degree_top_k_overlap,0.05
+k,100.0
