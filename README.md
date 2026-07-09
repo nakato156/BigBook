@@ -542,7 +542,53 @@ Run tests:
 env/bin/python -m pytest
 ```
 
-The academic V1 explicitly excludes API/UI, live telemetry, N2 causal claims, online A/B tests,
+## Local Recommendation App
+
+The finished demo app is split into a persistent Python API and a Next.js frontend. The API loads
+the large recommender artifacts once at startup, then the browser talks to the model only through
+HTTP.
+
+Start both services with the configured launcher:
+
+```bash
+./run_bigbook_app.sh
+```
+
+By default it binds both services to `0.0.0.0`, using API port `8000` and web port `3000`.
+Override them with `HOST`, `API_PORT` or `WEB_PORT` when needed.
+
+Install the frontend dependencies once:
+
+```bash
+npm --prefix apps/web install
+```
+
+Run the API in one terminal:
+
+```bash
+env/bin/python -m uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Run the web app in another terminal:
+
+```bash
+npm --prefix apps/web run dev
+```
+
+Open `http://localhost:3000`. The default flow lets a reader search for books they like and asks
+the FastAPI recommender for a top-k list. The User tab accepts an existing Goodreads `user_id`.
+If `FASTAPI_BASE_URL` is not set, Next.js proxies to `http://127.0.0.1:8000`.
+
+Useful app checks:
+
+```bash
+env/bin/python -m pytest tests/test_api.py
+npm --prefix apps/web run typecheck
+npm --prefix apps/web run test
+npm --prefix apps/web run build
+```
+
+The academic V1 evaluation scope explicitly excludes live telemetry, N2 causal claims, online A/B tests,
 per-cutoff PCA/clustering rebuilds, item cold-start and adaptive bandits.
 
 ## Master Merge

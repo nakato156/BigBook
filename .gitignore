@@ -15,9 +15,17 @@ data/interim/*
 data/embeddings/*
 !data/embeddings/.gitkeep
 outputs/
+.run/
+node_modules/
+.next/
 *.parquet
 *.csv
 *.json
+!apps/web/package.json
+!apps/web/package-lock.json
+!apps/web/tsconfig.json
+!apps/web/lib/
+!apps/web/lib/**
 *.pkl
 *.h5
 *.hdf5
@@ -41,6 +49,8 @@ downloads/
 eggs/
 .eggs/
 lib/
+!apps/web/lib/
+!apps/web/lib/**
 lib64/
 parts/
 sdist/
