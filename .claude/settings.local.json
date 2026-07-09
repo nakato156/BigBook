@@ -61,7 +61,8 @@
       "Bash(iptables -L -n)",
       "Bash(ufw status *)",
       "Bash(disown)",
-      "Bash(netstat -tln)"
+      "Bash(netstat -tln)",
+      "Bash(netlify --version)"
     ]
   },
   "enabledPlugins": {

@@ -240,3 +240,6 @@ graphify-out/*
 !graphify-out/graph.json
 # superpowers scratch (subagent-driven-development ledger/briefs)
 .superpowers/
+
+# Local Netlify folder
+.netlify
