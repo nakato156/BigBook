@@ -3,6 +3,45 @@
 This is the canonical agent-instructions file for this repository. It is read by both
 **Claude Code** and **Codex** (and any agent following the `AGENTS.md` convention). `CLAUDE.md`
 is a symlink to this file, so there is a single source of truth — edit this file, not the symlink.
+Keep the symlink in Git (`test -L CLAUDE.md`) so both assistants receive the same instructions.
+
+## Fresh environment and evaluation handoff
+
+The project is tested with Python 3.12.3. From a clean clone, create the required virtualenv and
+install the pinned direct dependencies before running any Python command:
+
+```bash
+python3.12 -m venv env
+env/bin/python -m pip install --upgrade pip
+env/bin/python -m pip install -r requirements.txt
+env/bin/python -m pytest
+```
+
+Node.js >= 18.18 is required only for the Next.js demo. Install its locked frontend dependencies
+with `npm --prefix apps/web ci`, then launch both services through `./run_bigbook_app.sh`.
+
+Git intentionally excludes `data/raw/`, `data/processed/`, `data/features/`,
+`data/embeddings/` and generated outputs. For a professor/evaluator, the recommended flow is to
+restore the delivered data/artifact package at the repository root, preserving paths. The minimal
+demo input set is:
+
+```text
+data/processed/books_master.parquet
+data/features/master_feature_matrix.parquet
+data/features/user_matrix.parquet
+data/features/user_meta.parquet
+data/features/user_centroids.parquet
+data/outputs/clustering/book_clusters_k100.parquet
+data/outputs/clustering/macro_cluster_assignments_k100.csv
+data/outputs/clustering/kmeans_centroids_k100.npy
+```
+
+`interactions_curated.parquet` and `user_features_global.parquet` are additionally needed for
+the full validation/evaluation workflow. Do not commit any of these large inputs or outputs. The
+complete raw rebuild needs five Goodreads book dumps, five interaction dumps, the five
+`books_curated.parquet` inputs, and (when the embedding cache is absent) an `HF_TOKEN` for the
+gated `google/embeddinggemma-300m` model. README is the evaluator-facing source of truth for
+filenames, setup modes and the full data-rebuild prerequisites.
 
 ## Commands
 

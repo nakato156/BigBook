@@ -4,6 +4,132 @@ Course project for Big Data. The project builds a hybrid book representation for
 
 The business goal is to build a book recommendation platform that helps users discover books aligned with their interests and, more importantly, supports the habit of reading: ayudar a mas personas a tener el habito de lectura. The system should recommend books that feel approachable, relevant and motivating for each reader, not only the books that are already the most popular.
 
+## Instalación y evaluación desde cero
+
+Esta sección es el punto de entrada para evaluar el proyecto en una máquina nueva. El
+repositorio contiene el código, notebooks y documentación; los datos y artefactos binarios se
+excluyen de Git deliberadamente por su tamaño. Hay dos formas válidas de levantarlo:
+
+1. **Evaluación recomendada:** restaurar el paquete de artefactos entregado junto con el
+   proyecto y ejecutar pruebas, validaciones y la aplicación local. No requiere volver a
+   procesar decenas de millones de interacciones.
+2. **Reconstrucción completa:** descargar los datos Goodreads, ejecutar la curación por género
+   y luego el pipeline. Requiere más tiempo, almacenamiento y una cuenta de Hugging Face que
+   haya aceptado la licencia de `google/embeddinggemma-300m` si no se restaura el cache de
+   embeddings.
+
+### Requisitos de sistema
+
+- Python **3.12** (el entorno entregado fue probado con 3.12.3) y `pip` reciente.
+- Node.js **>= 18.18** y `npm` solo para la interfaz web; la API y el pipeline no lo necesitan.
+- Para la reconstrucción completa, se recomienda al menos 32 GB de RAM y 60 GB libres. Los
+  dumps de interacciones y los parquets intermedios son grandes.
+- Acceso a Internet solo para instalar dependencias, descargar datos o reconstruir embeddings.
+
+Clone el repositorio y, desde su raíz, cree el entorno:
+
+```bash
+git clone https://github.com/nakato156/BigBook.git
+cd BigBook
+python3.12 -m venv env
+env/bin/python -m pip install --upgrade pip
+env/bin/python -m pip install -r requirements.txt
+npm --prefix apps/web ci                 # solo para la interfaz web
+```
+
+Compruebe que el entorno de código quedó operativo antes de cargar datos:
+
+```bash
+env/bin/python -m pytest
+```
+
+`requirements.txt` fija las dependencias directas usadas por el pipeline, pruebas, API y
+notebooks. No instala paquetes CUDA manualmente: `torch` resuelve el wheel apropiado para la
+plataforma. No se requiere GPU; la generación de embeddings funciona en CPU, aunque es más lenta.
+
+### Datos y artefactos que no viajan en Git
+
+Los directorios `data/raw`, `data/processed`, `data/features`, `data/embeddings` y los outputs
+generados están ignorados por Git. Para evaluar la versión entregada, copie el contenido del
+**paquete de datos/artefactos proporcionado con la entrega** sobre la raíz del repositorio,
+conservando esta estructura. No renombre los archivos.
+
+```text
+data/
+  processed/
+    books_master.parquet
+    interactions_curated.parquet
+    user_features_global.parquet
+  embeddings/
+    description_embeddings.parquet
+  features/
+    master_feature_matrix.parquet
+    master_pca_model.joblib
+    master_pca_meta.json
+    user_matrix.parquet
+    user_meta.parquet
+    user_centroids.parquet
+  outputs/clustering/
+    book_clusters_k100.parquet
+    macro_cluster_assignments_k100.csv
+    kmeans_centroids_k100.npy
+```
+
+El subconjunto mínimo para abrir la demo local es `books_master.parquet`, la matriz PCA, los tres
+artefactos de usuario y los tres artefactos de clustering listados arriba. Para ejecutar la
+validación, las evaluaciones y la recomendación de muestra, restaure también
+`interactions_curated.parquet` y `user_features_global.parquet`. El archivo de interacciones
+canónico ocupa varios GB; su ausencia no es un error de Git ni se puede sustituir por los antiguos
+parquets por género.
+
+Después de restaurar los artefactos, ejecute:
+
+```bash
+env/bin/python -m src.validate_artifacts
+env/bin/python -m src.reduction.recommend
+env/bin/python -m src.report_project_status
+./run_bigbook_app.sh
+```
+
+La aplicación queda disponible en `http://localhost:3000`; el launcher inicia FastAPI en el
+puerto 8000 y Next.js en el 3000. Use `Ctrl+C` para detener ambos procesos. Puede cambiar los
+puertos con `API_PORT` y `WEB_PORT`.
+
+### Reconstrucción completa de los datos
+
+La fuente original es la [Goodreads Dataset Collection de UCSD](https://cseweb.ucsd.edu/~jmcauley/datasets/goodreads.html).
+Descargue en `data/raw/` los cinco pares de archivos con **estos nombres exactos**:
+
+```text
+goodreads_books_fantasy_paranormal.json.gz
+goodreads_books_history_biography.json.gz
+goodreads_books_mystery_thriller_crime.json.gz
+goodreads_books_romance.json.gz
+goodreads_books_young_adult.json.gz
+goodreads_interactions_fantasy_paranormal.json.gz
+goodreads_interactions_history_biography.json.gz
+goodreads_interactions_mystery_thriller_crime.json.gz
+goodreads_interactions_romance.json.gz
+goodreads_interactions_young_adult.json.gz
+```
+
+Ejecute los notebooks de curación/reducción de cada género para producir
+`data/processed/<category>/books_curated.parquet`. Es el límite entre los notebooks históricos y
+el pipeline reproducible en módulos Python. Como alternativa, puede restaurar esos parquets desde
+los artefactos de la entrega. La curación de interacciones **no** usa los parquets antiguos por
+género: siempre se reconstruye desde los cinco dumps crudos.
+
+Si `data/embeddings/description_embeddings.parquet` no se restaura, antes de construir la matriz
+PCA acepte la licencia del modelo en Hugging Face y exporte un token de acceso:
+
+```bash
+export HF_TOKEN='...'
+```
+
+Luego ejecute el pipeline en el orden indicado en [Running the Pipeline](#running-the-pipeline).
+El proceso crea el cache de embeddings incrementalmente; conservarlo permite repetir el pipeline
+sin volver a codificar descripciones ya procesadas.
+
 ## Problem Definition
 
 This is the core statement of what the system does. Everything else in this README (representation, clustering, ranking) exists to serve it.
@@ -355,6 +481,10 @@ External project artifacts:
 - [Cleaned and reduced data by genre](https://drive.google.com/drive/folders/1un4RNi8W0dvh7cRwx_0Ovgmb9Q4nNh7X?usp=drive_link)
 - [books_master](https://drive.google.com/drive/folders/17vpKc3Q4OvQtRkkvOc4GL8sTpjJB-7bv)
 
+These external files are intentionally separate from the Git repository. Follow
+[Datos y artefactos que no viajan en Git](#datos-y-artefactos-que-no-viajan-en-git) for the
+required placement and the minimum set for each evaluation mode.
+
 Project documentation:
 
 - [Task framing](docs/task_framing.md)
@@ -428,6 +558,10 @@ Schema of the canonical `interactions_curated.parquet`: `interaction_key` (uint6
 ## Running the Pipeline
 
 Run commands from the repository root. With `python -m`, use the module name, not the filename with `.py`.
+First create `env/` and install the pinned environment as described in
+[Instalación y evaluación desde cero](#instalación-y-evaluación-desde-cero). The full raw-data
+path also requires the five curated `books_curated.parquet` inputs and, unless its cache is
+restored, Hugging Face authentication for description embeddings.
 
 Build the master book table:
 
